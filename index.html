@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅游攻略海报生成器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">🗺️ 旅游攻略海报生成器</h1>
+                <p class="subtitle">输入任意中国城市名称，一键生成完整旅游攻略与精美海报</p>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="features">
+                <div class="feature">
+                    <span class="feature-icon">🏙️</span>
+                    <span class="feature-text">全国城市支持</span>
+                    <span class="feature-desc">支持全国所有城市，智能生成专属攻略</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🗺️</span>
+                    <span class="feature-text">智能行程规划</span>
+                    <span class="feature-desc">基于城市特色，自动生成最优游玩路线</span>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🎨</span>
+                    <span class="feature-text">精美海报生成</span>
+                    <span class="feature-desc">行程地标可视化，箭头串联展示路线</span>
+                </div>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="cityInput" placeholder="输入城市名称，如：北京、上海、成都...">
+                <button id="generateBtn">生成攻略</button>
+            </div>
+
+            <div class="quick-btns">
+                <button class="quick-btn" data-city="北京">北京</button>
+                <button class="quick-btn" data-city="上海">上海</button>
+                <button class="quick-btn" data-city="成都">成都</button>
+                <button class="quick-btn" data-city="杭州">杭州</button>
+                <button class="quick-btn" data-city="西安">西安</button>
+                <button class="quick-btn" data-city="重庆">重庆</button>
+                <button class="quick-btn" data-city="广州">广州</button>
+                <button class="quick-btn" data-city="厦门">厦门</button>
+                <button class="quick-btn" data-city="南京">南京</button>
+                <button class="quick-btn" data-city="青岛">青岛</button>
+                <button class="quick-btn" data-city="苏州">苏州</button>
+                <button class="quick-btn" data-city="丽江">丽江</button>
+                <button class="quick-btn" data-city="三亚">三亚</button>
+                <button class="quick-btn" data-city="哈尔滨">哈尔滨</button>
+                <button class="quick-btn" data-city="武汉">武汉</button>
+                <button class="quick-btn" data-city="长沙">长沙</button>
+                <button class="quick-btn" data-city="天津">天津</button>
+                <button class="quick-btn" data-city="大理">大理</button>
+                <button class="quick-btn" data-city="桂林">桂林</button>
+                <button class="quick-btn" data-city="香港">香港</button>
+                <button class="quick-btn" data-city="洛阳">洛阳</button>
+                <button class="quick-btn" data-city="张家界">张家界</button>
+                <button class="quick-btn" data-city="深圳">深圳</button>
+                <button class="quick-btn" data-city="珠海">珠海</button>
+                <button class="quick-btn" data-city="昆明">昆明</button>
+                <button class="quick-btn" data-city="拉萨">拉萨</button>
+                <button class="quick-btn" data-city="乌鲁木齐">乌鲁木齐</button>
+                <button class="quick-btn" data-city="兰州">兰州</button>
+                <button class="quick-btn" data-city="沈阳">沈阳</button>
+                <button class="quick-btn" data-city="郑州">郑州</button>
+                <button class="quick-btn" data-city="贵阳">贵阳</button>
+                <button class="quick-btn" data-city="济南">济南</button>
+                <button class="quick-btn" data-city="太原">太原</button>
+                <button class="quick-btn" data-city="南宁">南宁</button>
+                <button class="quick-btn" data-city="西宁">西宁</button>
+                <button class="quick-btn" data-city="银川">银川</button>
+                <button class="quick-btn" data-city="海口">海口</button>
+                <button class="quick-btn" data-city="福州">福州</button>
+                <button class="quick-btn" data-city="呼和浩特">呼和浩特</button>
+                <button class="quick-btn" data-city="大连">大连</button>
+                <button class="quick-btn" data-city="宁波">宁波</button>
+                <button class="quick-btn" data-city="黄山">黄山</button>
+                <button class="quick-btn" data-city="敦煌">敦煌</button>
+            </div>
+
+            <div class="custom-days-section">
+                <h3>🧳 自定义旅行天数</h3>
+                <div class="days-selector">
+                    <button class="day-btn" data-days="1">1天</button>
+                    <button class="day-btn" data-days="2">2天1晚</button>
+                    <button class="day-btn" data-days="3">3天2晚</button>
+                    <button class="day-btn" data-days="4">4天3晚</button>
+                    <button class="day-btn" data-days="5">5天4晚</button>
+                    <button class="day-btn" data-days="6">6天5晚</button>
+                    <button class="day-btn" data-days="7">7天6晚</button>
+                    <div class="custom-input">
+                        <input type="number" id="customDays" min="1" max="30" placeholder="自定义天数">
+                        <button id="applyCustomDays">应用</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ranking-section">
+                <div class="ranking-header">
+                    <div class="ranking-title">
+                        <span class="ranking-icon">🏆</span>
+                        <span>热门城市排行榜</span>
+                        <span id="seasonBadge" class="season-badge">🌸 春季推荐</span>
+                    </div>
+                    <div class="live-indicator">
+                        <span class="live-dot"></span>
+                        <span class="live-text">实时更新</span>
+                    </div>
+                </div>
+                <div id="aiRecommendSection" class="ai-recommend-section">
+                    <div class="ai-recommend-title">🤖 AI智能推荐</div>
+                    <div id="aiRecommendList" class="ai-recommend-list"></div>
+                </div>
+                <div id="rankingList" class="ranking-list"></div>
+                <div class="ranking-footer">
+                    <span class="ranking-update-time">最后更新：--</span>
+                    <span class="ranking-total">总搜索：<span id="totalSearches">0</span>次</span>
+                </div>
+            </div>
+        </main>
+
+        <div id="loading" class="loading hidden">
+            <div class="loading-spinner"></div>
+            <p>正在生成专属攻略...</p>
+        </div>
+
+        <div id="result" class="result hidden"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
