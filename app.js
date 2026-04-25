@@ -3129,8 +3129,7 @@ const cityDatabase = {
                 budget: '600-1000元'
             }
         }
-    }
-},
+    },
 '呼和浩特': {
     tags: ['草原文化', '塞上青城', '蒙古族风情'],
     season: '6-9月',
@@ -3490,6 +3489,7 @@ const cityDatabase = {
             budget: '800-1500元'
         }
     }
+}
 };
 
 const cityAliases = {
@@ -3767,10 +3767,10 @@ function generatePosterHTML(cityData, cityName) {
             </div>
 
             <div class="poster-body">
-                <h3 class="section-title">� 行程规划</h3>
+                <h3 class="section-title">🧳 行程规划</h3>
                 ${itinerarySelectorHTML}
                 
-                <h3 class="section-title" style="margin-top: 30px;">��️ 经典路线</h3>
+                <h3 class="section-title" style="margin-top: 30px;">🗺️ 经典路线</h3>
                 <div class="route-list">${routeItems}</div>
 
                 <h3 class="section-title" style="margin-top: 30px;">🍜 美食推荐</h3>
