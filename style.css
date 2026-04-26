@@ -1430,6 +1430,46 @@ input:focus {
     position: relative;
 }
 
+.province-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.province-selector label {
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
+
+.province-selector select {
+    padding: 10px 15px;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: linear-gradient(145deg, #f8f9fa, #fff);
+    box-shadow: 
+        inset 4px 4px 10px rgba(163, 177, 198, 0.2),
+        inset -4px -4px 10px rgba(255, 255, 255, 0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.province-selector select:focus {
+    border-color: #667eea;
+    box-shadow: 
+        0 0 0 4px rgba(102, 126, 234, 0.15),
+        inset 4px 4px 10px rgba(163, 177, 198, 0.1),
+        inset -4px -4px 10px rgba(255, 255, 255, 0.9);
+}
+
+.province-selector select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .search-box input {
     width: 100%;
     padding: 15px 20px 15px 50px;

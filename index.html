@@ -36,6 +36,15 @@
             </div>
 
             <div class="search-box">
+                <div class="province-selector">
+                    <label for="provinceSelect">按省份查找：</label>
+                    <select id="provinceSelect">
+                        <option value="">选择省份</option>
+                    </select>
+                    <select id="citySelect" disabled>
+                        <option value="">选择城市</option>
+                    </select>
+                </div>
                 <input type="text" id="cityInput" placeholder="输入城市名称，如：北京、上海、成都...">
                 <button id="generateBtn">生成攻略</button>
             </div>
@@ -135,6 +144,6 @@
         <div id="result" class="result hidden"></div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app_fixed.js"></script>
 </body>
 </html>
