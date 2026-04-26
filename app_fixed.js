@@ -1656,6 +1656,510 @@ const cityDatabase = {
                 budget: '600-1200元'
             }
         }
+    },
+    '南京': {
+        tags: ['历史古都', '文化名城', '江南水乡'],
+        season: '春秋两季',
+        atmosphere: '历史悠久，文化底蕴深厚',
+        days: '3-4天',
+        routes: ['中山陵 → 明孝陵 → 灵谷寺', '夫子庙 → 秦淮河 → 中华门', '总统府 → 玄武湖', '雨花台 → 莫愁湖'],
+        foods: [
+            { name: '南京盐水鸭', desc: '南京特色美食', price: '50-80元/只', mustTry: true },
+            { name: '鸭血粉丝汤', desc: '南京特色小吃', price: '15-25元/碗' },
+            { name: '南京小笼包', desc: '南京传统点心', price: '20-30元/笼' },
+            { name: '南京糕团', desc: '南京传统小吃', price: '10-15元/份' },
+            { name: '南京板鸭', desc: '南京特色美食', price: '60-100元/只' }
+        ],
+        accommodations: [
+            { area: '秦淮区', pros: '市中心，景点集中', cons: '价格较高，人流量大' },
+            { area: '玄武区', pros: '环境优美，交通便利', cons: '价格较高' },
+            { area: '建邺区', pros: '现代化，交通便利', cons: '距离市中心较远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁网络发达，建议使用地铁出行' },
+            { type: '外部交通', info: '禄口国际机场；南京站、南京南站等多个火车站' }
+        ],
+        budget: { low: '1000', medium: '2000', high: '3500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+            avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+        },
+        links: {
+            official: 'https://www.nanjing.gov.cn/',
+            attractions: [
+                { name: '中山陵', url: 'https://www.z钟山-中山陵', mustVisit: true },
+                { name: '夫子庙', url: 'https://www.fuzimiao.com/', mustVisit: true },
+                { name: '总统府', url: 'https://www.njztf.gov.cn/' }
+            ],
+            booking: [
+                { name: '中山陵门票', url: 'https://www.z钟山-中山陵/tickets/' }
+            ],
+            food: [
+                { name: '南京美食', url: 'https://www.dianping.com/nanjing/food' }
+            ]
+        },
+        poster: {
+            title: '金陵古都',
+            subtitle: '历史南京，文化名城',
+            elements: ['中山陵', '夫子庙', '秦淮河', '总统府'],
+            layout: '顶部中山陵，中央秦淮河，底部夫子庙',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '中山陵 → 明孝陵' },
+                    { time: '12:00-14:00', afternoon: '午餐（南京盐水鸭）' },
+                    { time: '14:00-17:00', afternoon2: '夫子庙 → 秦淮河' },
+                    { time: '18:00-21:00', evening: '秦淮河夜景' }
+                ],
+                tips: ['中山陵需要半天时间', '秦淮河夜景很美'],
+                budget: '250-500元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-12:00', morning: 'Day1: 中山陵 → 明孝陵 → 灵谷寺' },
+                    { time: '12:00-14:00', afternoon: 'Day1: 午餐（南京盐水鸭）' },
+                    { time: '14:00-17:00', afternoon2: 'Day1: 夫子庙 → 秦淮河 → 中华门' },
+                    { time: '18:00-21:00', evening: 'Day1: 秦淮河夜景' },
+                    { time: '09:00-17:00', morning2: 'Day2: 总统府 → 玄武湖 → 雨花台' }
+                ],
+                tips: ['总统府需要半天时间', '玄武湖建议步行或骑行'],
+                budget: '600-1200元'
+            }
+        }
+    },
+    '杭州': {
+        tags: ['人间天堂', '西湖风光', '江南水乡'],
+        season: '春秋两季',
+        atmosphere: '山水如画，人文荟萃',
+        days: '3-4天',
+        routes: ['西湖环游', '灵隐寺 → 飞来峰', '千岛湖一日游', '宋城 → 西溪湿地'],
+        foods: [
+            { name: '西湖醋鱼', desc: '杭州特色美食', price: '50-80元/份', mustTry: true },
+            { name: '龙井虾仁', desc: '杭州传统名菜', price: '80-120元/份' },
+            { name: '叫花鸡', desc: '杭州特色美食', price: '60-100元/只' },
+            { name: '杭州小笼包', desc: '杭州传统点心', price: '20-30元/笼' },
+            { name: '西湖莼菜汤', desc: '杭州特色汤品', price: '30-50元/份' }
+        ],
+        accommodations: [
+            { area: '西湖区', pros: '靠近西湖，环境优美', cons: '价格较高，人流量大' },
+            { area: '上城区', pros: '市中心，交通便利', cons: '价格较高，车流量大' },
+            { area: '余杭区', pros: '价格实惠，环境安静', cons: '距离市中心较远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交系统发达，建议使用公交出行' },
+            { type: '外部交通', info: '萧山国际机场；杭州站、杭州东站等多个火车站' }
+        ],
+        budget: { low: '1200', medium: '2500', high: '4000+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+            avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+        },
+        links: {
+            official: 'https://www.hangzhou.gov.cn/',
+            attractions: [
+                { name: '西湖', url: 'https://www.west-lake.com/', mustVisit: true },
+                { name: '灵隐寺', url: 'https://www.lingyinsi.com/', mustVisit: true },
+                { name: '千岛湖', url: 'https://www.qiandaohu.com/' }
+            ],
+            booking: [
+                { name: '灵隐寺门票', url: 'https://www.lingyinsi.com/tickets/' }
+            ],
+            food: [
+                { name: '杭州美食', url: 'https://www.dianping.com/hangzhou/food' }
+            ]
+        },
+        poster: {
+            title: '人间天堂',
+            subtitle: '西湖风光，江南水乡',
+            elements: ['西湖', '灵隐寺', '千岛湖', '西溪湿地'],
+            layout: '顶部西湖，中央灵隐寺，底部千岛湖',
+            colors: ['#3498db', '#27ae60', '#f39c12', '#e74c3c', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '西湖环游（断桥 → 白堤 → 苏堤）' },
+                    { time: '12:00-14:00', afternoon: '午餐（西湖醋鱼）' },
+                    { time: '14:00-17:00', afternoon2: '灵隐寺 → 飞来峰' },
+                    { time: '18:00-21:00', evening: '西湖夜景' }
+                ],
+                tips: ['西湖建议骑行或步行', '灵隐寺建议早去'],
+                budget: '300-600元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-12:00', morning: 'Day1: 西湖环游（断桥 → 白堤 → 苏堤）' },
+                    { time: '12:00-14:00', afternoon: 'Day1: 午餐（西湖醋鱼）' },
+                    { time: '14:00-17:00', afternoon2: 'Day1: 灵隐寺 → 飞来峰' },
+                    { time: '18:00-21:00', evening: 'Day1: 西湖夜景' },
+                    { time: '09:00-17:00', morning2: 'Day2: 千岛湖一日游' }
+                ],
+                tips: ['千岛湖需要一整天时间', '建议跟团或自驾'],
+                budget: '800-1500元'
+            }
+        }
+    },
+    '成都': {
+        tags: ['休闲之都', '美食天堂', '天府之国'],
+        season: '春秋两季',
+        atmosphere: '悠闲舒适，美食文化',
+        days: '3-4天',
+        routes: ['宽窄巷子 → 锦里 → 武侯祠', '大熊猫繁育研究基地 → 春熙路', '都江堰一日游', '青城山一日游'],
+        foods: [
+            { name: '火锅', desc: '成都特色美食', price: '80-150元/人', mustTry: true },
+            { name: '串串香', desc: '成都特色小吃', price: '50-100元/人' },
+            { name: '担担面', desc: '成都特色面食', price: '15-25元/碗' },
+            { name: '龙抄手', desc: '成都特色小吃', price: '15-25元/碗' },
+            { name: '三大炮', desc: '成都传统小吃', price: '10-15元/份' }
+        ],
+        accommodations: [
+            { area: '锦江区', pros: '市中心，交通便利', cons: '价格较高，人流量大' },
+            { area: '青羊区', pros: '靠近景点，环境优美', cons: '价格较高' },
+            { area: '成华区', pros: '价格实惠，交通便利', cons: '距离市中心较远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁网络发达，建议使用地铁出行' },
+            { type: '外部交通', info: '双流国际机场；成都站、成都东站等多个火车站' }
+        ],
+        budget: { low: '1000', medium: '2000', high: '3500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+            avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+        },
+        links: {
+            official: 'https://www.chengdu.gov.cn/',
+            attractions: [
+                { name: '大熊猫繁育研究基地', url: 'https://www.panda.org.cn/', mustVisit: true },
+                { name: '武侯祠', url: 'https://www.wuhouci.net.cn/', mustVisit: true },
+                { name: '都江堰', url: 'https://www.dujiangyan.gov.cn/' }
+            ],
+            booking: [
+                { name: '大熊猫基地门票', url: 'https://www.panda.org.cn/tickets/' }
+            ],
+            food: [
+                { name: '成都美食', url: 'https://www.dianping.com/chengdu/food' }
+            ]
+        },
+        poster: {
+            title: '天府之国',
+            subtitle: '休闲成都，美食天堂',
+            elements: ['大熊猫', '宽窄巷子', '武侯祠', '都江堰'],
+            layout: '顶部大熊猫，中央宽窄巷子，底部武侯祠',
+            colors: ['#27ae60', '#f39c12', '#e74c3c', '#3498db', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '大熊猫繁育研究基地' },
+                    { time: '12:00-14:00', afternoon: '午餐（火锅）' },
+                    { time: '14:00-17:00', afternoon2: '宽窄巷子 → 锦里 → 武侯祠' },
+                    { time: '18:00-21:00', evening: '春熙路' }
+                ],
+                tips: ['大熊猫基地建议早去', '宽窄巷子建议傍晚去'],
+                budget: '250-500元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-12:00', morning: 'Day1: 大熊猫繁育研究基地' },
+                    { time: '12:00-14:00', afternoon: 'Day1: 午餐（火锅）' },
+                    { time: '14:00-17:00', afternoon2: 'Day1: 宽窄巷子 → 锦里 → 武侯祠' },
+                    { time: '18:00-21:00', evening: 'Day1: 春熙路' },
+                    { time: '09:00-17:00', morning2: 'Day2: 都江堰一日游' }
+                ],
+                tips: ['都江堰需要一整天时间', '建议跟团或自驾'],
+                budget: '600-1200元'
+            }
+        }
+    },
+    '西安': {
+        tags: ['十三朝古都', '历史文化名城', '丝绸之路起点'],
+        season: '春秋两季',
+        atmosphere: '历史厚重，文化底蕴深厚',
+        days: '3-4天',
+        routes: ['兵马俑 → 华清池', '大雁塔 → 小雁塔 → 陕西历史博物馆', '城墙 → 钟鼓楼 → 回民街', '乾陵 → 法门寺'],
+        foods: [
+            { name: '肉夹馍', desc: '西安特色美食', price: '10-15元/个', mustTry: true },
+            { name: '凉皮', desc: '西安特色小吃', price: '10-15元/份' },
+            { name: '羊肉泡馍', desc: '西安传统名菜', price: '25-40元/碗' },
+            { name: '油泼面', desc: '西安特色面食', price: '15-25元/碗' },
+            { name: '葫芦头', desc: '西安特色小吃', price: '20-30元/碗' }
+        ],
+        accommodations: [
+            { area: '碑林区', pros: '市中心，景点集中', cons: '价格较高，人流量大' },
+            { area: '雁塔区', pros: '靠近景点，环境优美', cons: '价格较高' },
+            { area: '未央区', pros: '价格实惠，交通便利', cons: '距离市中心较远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁网络发达，建议使用地铁出行' },
+            { type: '外部交通', info: '咸阳国际机场；西安站、西安北站等多个火车站' }
+        ],
+        budget: { low: '1000', medium: '2000', high: '3500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+            avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+        },
+        links: {
+            official: 'https://www.xian.gov.cn/',
+            attractions: [
+                { name: '兵马俑', url: 'https://www.bmy.com.cn/', mustVisit: true },
+                { name: '大雁塔', url: 'https://www.dayanta.com/', mustVisit: true },
+                { name: '陕西历史博物馆', url: 'https://www.sxhm.com/' }
+            ],
+            booking: [
+                { name: '兵马俑门票', url: 'https://www.bmy.com.cn/tickets/' }
+            ],
+            food: [
+                { name: '西安美食', url: 'https://www.dianping.com/xian/food' }
+            ]
+        },
+        poster: {
+            title: '古都西安',
+            subtitle: '十三朝古都，历史名城',
+            elements: ['兵马俑', '大雁塔', '城墙', '回民街'],
+            layout: '顶部兵马俑，中央大雁塔，底部城墙',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '兵马俑 → 华清池' },
+                    { time: '12:00-14:00', afternoon: '午餐（羊肉泡馍）' },
+                    { time: '14:00-17:00', afternoon2: '大雁塔 → 陕西历史博物馆' },
+                    { time: '18:00-21:00', evening: '回民街' }
+                ],
+                tips: ['兵马俑需要半天时间', '陕西历史博物馆需要提前预约'],
+                budget: '250-500元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-12:00', morning: 'Day1: 兵马俑 → 华清池' },
+                    { time: '12:00-14:00', afternoon: 'Day1: 午餐（羊肉泡馍）' },
+                    { time: '14:00-17:00', afternoon2: 'Day1: 大雁塔 → 陕西历史博物馆' },
+                    { time: '18:00-21:00', evening: 'Day1: 回民街' },
+                    { time: '09:00-17:00', morning2: 'Day2: 城墙 → 钟鼓楼 → 乾陵 → 法门寺' }
+                ],
+                tips: ['乾陵和法门寺需要一整天时间', '建议跟团或自驾'],
+                budget: '600-1200元'
+            }
+        }
+    },
+    '重庆': {
+        tags: ['山城', '雾都', '火锅之都'],
+        season: '春秋两季',
+        atmosphere: '热情火辣，山城特色',
+        days: '3-4天',
+        routes: ['解放碑 → 洪崖洞 → 千厮门大桥', '长江索道 → 南山一棵树', '磁器口古镇 → 渣滓洞', '武隆天生三桥一日游'],
+        foods: [
+            { name: '火锅', desc: '重庆特色美食', price: '80-150元/人', mustTry: true },
+            { name: '小面', desc: '重庆特色面食', price: '10-15元/碗' },
+            { name: '酸辣粉', desc: '重庆特色小吃', price: '10-15元/份' },
+            { name: '毛血旺', desc: '重庆传统名菜', price: '40-60元/份' },
+            { name: '重庆烤鱼', desc: '重庆特色美食', price: '60-100元/份' }
+        ],
+        accommodations: [
+            { area: '渝中区', pros: '市中心，景点集中', cons: '价格较高，人流量大' },
+            { area: '江北区', pros: '商业中心，交通便利', cons: '价格较高' },
+            { area: '南岸区', pros: '环境优美，价格实惠', cons: '距离市中心较远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交系统发达，建议使用公交出行' },
+            { type: '外部交通', info: '江北国际机场；重庆站、重庆北站等多个火车站' }
+        ],
+        budget: { low: '1000', medium: '2000', high: '3500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+            avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+        },
+        links: {
+            official: 'https://www.cq.gov.cn/',
+            attractions: [
+                { name: '洪崖洞', url: 'https://www.hongyadong.com/', mustVisit: true },
+                { name: '长江索道', url: 'https://www.cqropeway.com/', mustVisit: true },
+                { name: '磁器口古镇', url: 'https://www.cqcq古镇.com/' }
+            ],
+            booking: [
+                { name: '长江索道门票', url: 'https://www.cqropeway.com/tickets/' }
+            ],
+            food: [
+                { name: '重庆美食', url: 'https://www.dianping.com/chongqing/food' }
+            ]
+        },
+        poster: {
+            title: '山城重庆',
+            subtitle: '火锅之都，雾都风光',
+            elements: ['洪崖洞', '长江索道', '解放碑', '磁器口古镇'],
+            layout: '顶部洪崖洞，中央长江索道，底部解放碑',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '解放碑 → 洪崖洞' },
+                    { time: '12:00-14:00', afternoon: '午餐（火锅）' },
+                    { time: '14:00-17:00', afternoon2: '长江索道 → 南山一棵树' },
+                    { time: '18:00-21:00', evening: '千厮门大桥夜景' }
+                ],
+                tips: ['洪崖洞夜景很美', '长江索道建议早去'],
+                budget: '250-500元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-12:00', morning: 'Day1: 解放碑 → 洪崖洞' },
+                    { time: '12:00-14:00', afternoon: 'Day1: 午餐（火锅）' },
+                    { time: '14:00-17:00', afternoon2: 'Day1: 长江索道 → 南山一棵树' },
+                    { time: '18:00-21:00', evening: 'Day1: 千厮门大桥夜景' },
+                    { time: '09:00-17:00', morning2: 'Day2: 磁器口古镇 → 渣滓洞 → 武隆天生三桥' }
+                ],
+                tips: ['武隆天生三桥需要一整天时间', '建议跟团或自驾'],
+                budget: '600-1200元'
+            }
+        }
+    },
+    '厦门': {
+        tags: ['海上花园', '鼓浪屿', '闽南风情'],
+        season: '春秋两季',
+        atmosphere: '温馨浪漫，海滨风情',
+        days: '3-4天',
+        routes: ['鼓浪屿一日游', '厦门大学 → 南普陀寺', '曾厝垵 → 环岛路', '集美学村 → 园博园'],
+        foods: [
+            { name: '沙茶面', desc: '厦门特色美食', price: '20-30元/碗', mustTry: true },
+            { name: '土笋冻', desc: '厦门特色小吃', price: '15-25元/份' },
+            { name: '烧肉粽', desc: '厦门传统小吃', price: '10-15元/个' },
+            { name: '海蛎煎', desc: '厦门特色美食', price: '20-30元/份' },
+            { name: '花生汤', desc: '厦门传统饮品', price: '10-15元/碗' }
+        ],
+        accommodations: [
+            { area: '思明区', pros: '市中心，景点集中', cons: '价格较高，人流量大' },
+            { area: '鼓浪屿', pros: '环境优美，浪漫氛围', cons: '价格昂贵，交通不便' },
+            { area: '湖里区', pros: '价格实惠，交通便利', cons: '距离市中心较远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交系统发达，建议使用公交出行' },
+            { type: '外部交通', info: '高崎国际机场；厦门站、厦门北站等多个火车站' }
+        ],
+        budget: { low: '1200', medium: '2500', high: '4000+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '防晒用品'],
+            avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+        },
+        links: {
+            official: 'https://www.xm.gov.cn/',
+            attractions: [
+                { name: '鼓浪屿', url: 'https://www.gulangyu.com/', mustVisit: true },
+                { name: '厦门大学', url: 'https://www.xmu.edu.cn/', mustVisit: true },
+                { name: '南普陀寺', url: 'https://www.nanputuo.com/' }
+            ],
+            booking: [
+                { name: '鼓浪屿船票', url: 'https://www.gulangyu.com/tickets/' }
+            ],
+            food: [
+                { name: '厦门美食', url: 'https://www.dianping.com/xiamen/food' }
+            ]
+        },
+        poster: {
+            title: '海上花园',
+            subtitle: '鼓浪屿，闽南风情',
+            elements: ['鼓浪屿', '厦门大学', '环岛路', '曾厝垵'],
+            layout: '顶部鼓浪屿，中央环岛路，底部厦门大学',
+            colors: ['#3498db', '#27ae60', '#f39c12', '#e74c3c', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '鼓浪屿一日游' },
+                    { time: '12:00-14:00', afternoon: '午餐（沙茶面）' },
+                    { time: '14:00-17:00', afternoon2: '厦门大学 → 南普陀寺' },
+                    { time: '18:00-21:00', evening: '曾厝垵' }
+                ],
+                tips: ['鼓浪屿需要大半天时间', '厦门大学需要提前预约'],
+                budget: '300-600元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-12:00', morning: 'Day1: 鼓浪屿一日游' },
+                    { time: '12:00-14:00', afternoon: 'Day1: 午餐（沙茶面）' },
+                    { time: '14:00-17:00', afternoon2: 'Day1: 厦门大学 → 南普陀寺' },
+                    { time: '18:00-21:00', evening: 'Day1: 曾厝垵' },
+                    { time: '09:00-17:00', morning2: 'Day2: 环岛路 → 集美学村 → 园博园' }
+                ],
+                tips: ['环岛路建议骑行', '集美学村建议早去'],
+                budget: '800-1500元'
+            }
+        }
+    },
+    '青岛': {
+        tags: ['海滨城市', '啤酒之都', '帆船之都'],
+        season: '夏季',
+        atmosphere: '海滨风情，啤酒文化',
+        days: '3-4天',
+        routes: ['栈桥 → 八大关 → 五四广场', '崂山一日游', '啤酒博物馆 → 啤酒街', '金沙滩 → 银沙滩'],
+        foods: [
+            { name: '青岛啤酒', desc: '青岛特产', price: '10-15元/瓶', mustTry: true },
+            { name: '海鲜', desc: '青岛特色美食', price: '80-150元/人' },
+            { name: '青岛大包', desc: '青岛传统小吃', price: '10-15元/个' },
+            { name: '蛤蜊', desc: '青岛特色美食', price: '30-50元/份' },
+            { name: '鲅鱼水饺', desc: '青岛特色美食', price: '30-50元/份' }
+        ],
+        accommodations: [
+            { area: '市南区', pros: '市中心，海滨风光', cons: '价格较高，人流量大' },
+            { area: '市北区', pros: '商业中心，交通便利', cons: '价格较高' },
+            { area: '黄岛区', pros: '价格实惠，海滨风光', cons: '距离市中心较远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交系统发达，建议使用公交出行' },
+            { type: '外部交通', info: '流亭国际机场；青岛站、青岛北站等多个火车站' }
+        ],
+        budget: { low: '1200', medium: '2500', high: '4000+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '防晒用品'],
+            avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+        },
+        links: {
+            official: 'https://www.qingdao.gov.cn/',
+            attractions: [
+                { name: '崂山', url: 'https://www.laoshan.com.cn/', mustVisit: true },
+                { name: '栈桥', url: 'https://www.zhanqiao.com/', mustVisit: true },
+                { name: '啤酒博物馆', url: 'https://www.qdbeer.com/' }
+            ],
+            booking: [
+                { name: '崂山门票', url: 'https://www.laoshan.com.cn/tickets/' }
+            ],
+            food: [
+                { name: '青岛美食', url: 'https://www.dianping.com/qingdao/food' }
+            ]
+        },
+        poster: {
+            title: '啤酒之都',
+            subtitle: '海滨青岛，帆船之都',
+            elements: ['栈桥', '崂山', '啤酒博物馆', '金沙滩'],
+            layout: '顶部崂山，中央栈桥，底部金沙滩',
+            colors: ['#3498db', '#27ae60', '#f39c12', '#e74c3c', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '栈桥 → 八大关' },
+                    { time: '12:00-14:00', afternoon: '午餐（海鲜）' },
+                    { time: '14:00-17:00', afternoon2: '五四广场 → 啤酒博物馆' },
+                    { time: '18:00-21:00', evening: '啤酒街' }
+                ],
+                tips: ['八大关建议步行', '啤酒博物馆建议早去'],
+                budget: '300-600元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-12:00', morning: 'Day1: 栈桥 → 八大关 → 五四广场' },
+                    { time: '12:00-14:00', afternoon: 'Day1: 午餐（海鲜）' },
+                    { time: '14:00-17:00', afternoon2: 'Day1: 啤酒博物馆 → 啤酒街' },
+                    { time: '18:00-21:00', evening: 'Day1: 青岛夜景' },
+                    { time: '09:00-17:00', morning2: 'Day2: 崂山一日游 → 金沙滩' }
+                ],
+                tips: ['崂山需要一整天时间', '金沙滩建议下午去'],
+                budget: '800-1500元'
+            }
+        }
     }
 };
 
