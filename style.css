@@ -175,6 +175,7 @@ body::before {
     display: flex;
     gap: 15px;
     margin-bottom: 20px;
+    flex-direction: column;
 }
 
 input {
