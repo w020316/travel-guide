@@ -1,29 +1,377 @@
-// 城市数据库 - 从后端API加载
+// 城市数据库 - 内嵌数据（GitHub Pages静态部署使用）
 let cityDatabase = {};
 let searchHistory = [];
 let selectedDays = 3;
 
+// 内嵌城市数据 - 确保GitHub Pages可以正常工作
+const EMBEDDED_CITIES = {
+  '北京': {
+    tags: ['历史古都', '文化名城', '现代化大都市'],
+    season: '春秋两季',
+    atmosphere: '历史与现代交融，文化底蕴深厚',
+    days: '4-5天',
+    routes: ['天安门广场 → 故宫 → 景山公园', '颐和园 → 圆明园', '八达岭长城 → 明十三陵'],
+    foods: [
+      { name: '北京烤鸭', desc: '北京特色，皮脆肉嫩', price: '150-300元/只', mustTry: true },
+      { name: '炸酱面', desc: '老北京特色面食', price: '20-40元/碗' },
+      { name: '豆汁', desc: '老北京传统饮品', price: '5-10元/碗' },
+      { name: '焦圈', desc: '油炸面食，香脆可口', price: '5-10元/份' },
+      { name: '炒肝', desc: '老北京传统小吃', price: '10-20元/碗' }
+    ],
+    accommodations: [
+      { area: '天安门/王府井', pros: '地理位置优越，交通便利', cons: '价格较高，人流量大' },
+      { area: '西单/金融街', pros: '商业中心，购物方便', cons: '交通拥堵，价格较高' },
+      { area: '三里屯/国贸', pros: '现代化，国际化氛围', cons: '价格昂贵，消费较高' }
+    ],
+    transport: [
+      { type: '内部交通', info: '地铁网络发达，建议使用地铁出行' },
+      { type: '外部交通', info: '首都国际机场；北京南站、北京西站等多个火车站' }
+    ],
+    budget: { low: '1500', medium: '3000', high: '5000+' },
+    tips: {
+      prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+      avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+    },
+    links: {
+      official: 'https://www.ebeijing.gov.cn/',
+      attractions: [
+        { name: '故宫', url: 'https://www.dpm.org.cn/', mustVisit: true },
+        { name: '长城', url: 'https://www.badaling.gov.cn/', mustVisit: true },
+        { name: '颐和园', url: 'https://www.summerpalace-china.com/' }
+      ],
+      booking: [{ name: '故宫门票', url: 'https://gugong.228.com.cn/' }],
+      food: [{ name: '北京美食', url: 'https://www.dianping.com/beijing/food' }]
+    },
+    poster: {
+      title: '京城时光',
+      subtitle: '穿越千年，遇见北京',
+      elements: ['故宫', '长城', '天安门', '颐和园'],
+      layout: '顶部故宫剪影，中央长城，底部天安门',
+      colors: ['#c0392b', '#34495e', '#f39c12', '#27ae60', '#e74c3c']
+    },
+    itineraries: {
+      '1天': {
+        routes: [
+          { time: '09:00-12:00', morning: '天安门广场 → 故宫' },
+          { time: '12:00-14:00', afternoon: '午餐（北京烤鸭）' },
+          { time: '14:00-17:00', afternoon2: '景山公园 → 北海公园' },
+          { time: '18:00-21:00', evening: '王府井步行街' }
+        ],
+        tips: ['故宫需要提前预约', '王府井是购物天堂'],
+        budget: '400-800元'
+      },
+      '2天1晚': {
+        routes: [
+          { time: '09:00-12:00', morning: 'Day1: 天安门广场 → 故宫' },
+          { time: '12:00-14:00', afternoon: 'Day1: 午餐（北京烤鸭）' },
+          { time: '14:00-17:00', afternoon2: 'Day1: 景山公园 → 北海公园' },
+          { time: '18:00-21:00', evening: 'Day1: 王府井步行街' },
+          { time: '09:00-17:00', morning2: 'Day2: 八达岭长城 → 明十三陵' }
+        ],
+        tips: ['长城需要一整天时间', '建议穿舒适的鞋子'],
+        budget: '800-1500元'
+      }
+    }
+  },
+  '上海': {
+    tags: ['国际大都市', '现代化', '时尚之都'],
+    season: '春秋两季',
+    atmosphere: '国际化大都市，现代与传统交融',
+    days: '3-4天',
+    routes: ['外滩 → 南京路 → 人民广场', '豫园 → 城隍庙 → 新天地', '迪士尼乐园一日游', '东方明珠 → 陆家嘴金融区'],
+    foods: [
+      { name: '小笼包', desc: '上海特色点心，皮薄馅多', price: '30-50元/笼', mustTry: true },
+      { name: '生煎包', desc: '上海传统小吃，底部焦脆', price: '20-30元/份' },
+      { name: '葱油拌面', desc: '上海特色面食', price: '15-25元/碗' },
+      { name: '排骨年糕', desc: '上海传统小吃', price: '25-35元/份' },
+      { name: '蟹粉豆腐', desc: '上海特色菜品', price: '40-60元/份' }
+    ],
+    accommodations: [
+      { area: '外滩/南京路', pros: '地理位置优越，交通便利', cons: '价格较高，人流量大' },
+      { area: '陆家嘴', pros: '现代化，景观好', cons: '价格昂贵，商业氛围浓' },
+      { area: '徐家汇', pros: '交通便利，购物方便', cons: '价格较高，车流量大' }
+    ],
+    transport: [
+      { type: '内部交通', info: '地铁网络发达，建议使用地铁出行' },
+      { type: '外部交通', info: '虹桥国际机场、浦东国际机场；上海站、上海南站、虹桥站等多个火车站' }
+    ],
+    budget: { low: '1200', medium: '2500', high: '4000+' },
+    tips: {
+      prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+      avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+    },
+    links: {
+      official: 'https://www.shanghai.gov.cn/',
+      attractions: [
+        { name: '外滩', url: 'https://www.thebund.cn/', mustVisit: true },
+        { name: '东方明珠', url: 'https://www.shanghaiorientalpearl.com/', mustVisit: true },
+        { name: '豫园', url: 'https://www.yugarden.com.cn/' }
+      ],
+      booking: [{ name: '迪士尼门票', url: 'https://www.shanghaidisneyresort.com/' }],
+      food: [{ name: '上海美食', url: 'https://www.dianping.com/shanghai/food' }]
+    },
+    poster: {
+      title: '魔都印象',
+      subtitle: '东方巴黎，繁华之都',
+      elements: ['外滩', '东方明珠', '陆家嘴', '豫园'],
+      layout: '顶部东方明珠，中央外滩，底部豫园',
+      colors: ['#2980b9', '#8e44ad', '#f39c12', '#27ae60', '#e74c3c']
+    },
+    itineraries: {
+      '1天': {
+        routes: [
+          { time: '09:00-12:00', morning: '外滩 → 南京路步行街' },
+          { time: '12:00-14:00', afternoon: '午餐（小笼包）' },
+          { time: '14:00-17:00', afternoon2: '豫园 → 城隍庙' },
+          { time: '18:00-21:00', evening: '陆家嘴夜景' }
+        ],
+        tips: ['外滩夜景很美，建议傍晚去', '南京路是购物天堂'],
+        budget: '400-800元'
+      },
+      '2天1晚': {
+        routes: [
+          { time: '09:00-12:00', morning: 'Day1: 外滩 → 南京路步行街' },
+          { time: '12:00-14:00', afternoon: 'Day1: 午餐（小笼包）' },
+          { time: '14:00-17:00', afternoon2: 'Day1: 豫园 → 城隍庙' },
+          { time: '18:00-21:00', evening: 'Day1: 陆家嘴夜景' },
+          { time: '09:00-17:00', morning2: 'Day2: 迪士尼乐园' }
+        ],
+        tips: ['迪士尼建议买早享卡', '建议提前下载迪士尼APP'],
+        budget: '800-1500元'
+      }
+    }
+  },
+  '成都': {
+    tags: ['美食之都', '天府之国', '大熊猫故乡'],
+    season: '春秋两季',
+    atmosphere: '悠闲自在，美食天堂',
+    days: '3-4天',
+    routes: ['宽窄巷子 → 锦里 → 武侯祠', '大熊猫繁育研究基地', '都江堰 → 青城山', '春熙路 → 太古里'],
+    foods: [
+      { name: '火锅', desc: '成都特色，麻辣鲜香', price: '80-150元/人', mustTry: true },
+      { name: '串串香', desc: '成都特色小吃', price: '40-80元/人' },
+      { name: '担担面', desc: '成都传统面食', price: '10-20元/碗' },
+      { name: '龙抄手', desc: '成都特色馄饨', price: '15-25元/份' },
+      { name: '钟水饺', desc: '成都传统小吃', price: '10-20元/份' }
+    ],
+    accommodations: [
+      { area: '春熙路/太古里', pros: '商业中心，交通便利', cons: '价格较高，人流量大' },
+      { area: '宽窄巷子附近', pros: '文化氛围浓，步行游览方便', cons: '价格较高，周边嘈杂' },
+      { area: '武侯祠附近', pros: '历史文化氛围，周边美食多', cons: '交通稍远，周边设施一般' }
+    ],
+    transport: [
+      { type: '内部交通', info: '地铁网络发达，建议使用地铁出行' },
+      { type: '外部交通', info: '双流国际机场；成都东站、成都南站等多个火车站' }
+    ],
+    budget: { low: '1000', medium: '2000', high: '3500+' },
+    tips: {
+      prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+      avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+    },
+    links: {
+      official: 'https://www.cdgov.cn/',
+      attractions: [
+        { name: '大熊猫基地', url: 'https://www.panda.org.cn/', mustVisit: true },
+        { name: '武侯祠', url: 'https://www.wuhouci.net.cn/', mustVisit: true },
+        { name: '都江堰', url: 'https://www.dujiangyan.gov.cn/' }
+      ],
+      booking: [{ name: '大熊猫基地门票', url: 'https://www.panda.org.cn/' }],
+      food: [{ name: '成都美食', url: 'https://www.dianping.com/chengdu/food' }]
+    },
+    poster: {
+      title: '天府印象',
+      subtitle: '悠闲时光，美食天堂',
+      elements: ['大熊猫', '宽窄巷子', '武侯祠', '都江堰'],
+      layout: '顶部大熊猫，中央宽窄巷子，底部武侯祠',
+      colors: ['#27ae60', '#8e44ad', '#f39c12', '#2980b9', '#e74c3c']
+    },
+    itineraries: {
+      '1天': {
+        routes: [
+          { time: '09:00-12:00', morning: '宽窄巷子 → 锦里' },
+          { time: '12:00-14:00', afternoon: '午餐（火锅）' },
+          { time: '14:00-17:00', afternoon2: '武侯祠' },
+          { time: '18:00-21:00', evening: '春熙路 → 太古里' }
+        ],
+        tips: ['宽窄巷子适合慢慢逛', '火锅建议去当地人推荐的店'],
+        budget: '300-600元'
+      },
+      '2天1晚': {
+        routes: [
+          { time: '09:00-12:00', morning: 'Day1: 宽窄巷子 → 锦里' },
+          { time: '12:00-14:00', afternoon: 'Day1: 午餐（火锅）' },
+          { time: '14:00-17:00', afternoon2: 'Day1: 武侯祠' },
+          { time: '18:00-21:00', evening: 'Day1: 春熙路 → 太古里' },
+          { time: '09:00-17:00', morning2: 'Day2: 大熊猫繁育研究基地' }
+        ],
+        tips: ['大熊猫基地建议早上去', '建议穿舒适的鞋子'],
+        budget: '600-1200元'
+      }
+    }
+  },
+  '杭州': {
+    tags: ['人间天堂', '西湖美景', '江南水乡'],
+    season: '春秋两季',
+    atmosphere: '山水交融，诗意江南',
+    days: '3-4天',
+    routes: ['西湖十景环湖游', '灵隐寺 → 飞来峰', '千岛湖一日游', '宋城 → 西溪湿地'],
+    foods: [
+      { name: '西湖醋鱼', desc: '杭州特色菜，酸甜可口', price: '60-120元/份', mustTry: true },
+      { name: '龙井虾仁', desc: '杭州名菜，茶香四溢', price: '80-150元/份' },
+      { name: '东坡肉', desc: '杭州传统名菜', price: '40-80元/份' },
+      { name: '叫化鸡', desc: '杭州特色菜', price: '80-150元/份' },
+      { name: '片儿川', desc: '杭州特色面食', price: '15-25元/碗' }
+    ],
+    accommodations: [
+      { area: '西湖附近', pros: '风景优美，步行游览方便', cons: '价格较高，旺季人多' },
+      { area: '武林广场', pros: '商业中心，交通便利', cons: '距离西湖稍远' },
+      { area: '钱江新城', pros: '现代化，景观好', cons: '距离景区远，价格高' }
+    ],
+    transport: [
+      { type: '内部交通', info: '地铁网络发达，建议使用地铁出行' },
+      { type: '外部交通', info: '萧山国际机场；杭州东站、杭州站等火车站' }
+    ],
+    budget: { low: '1000', medium: '2000', high: '3500+' },
+    tips: {
+      prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+      avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+    },
+    links: {
+      official: 'https://www.hangzhou.gov.cn/',
+      attractions: [
+        { name: '西湖', url: 'https://www.westlake.com.cn/', mustVisit: true },
+        { name: '灵隐寺', url: 'https://www.lingyinsi.org/', mustVisit: true },
+        { name: '千岛湖', url: 'https://www.qiandaohu.gov.cn/' }
+      ],
+      booking: [{ name: '西湖游船', url: 'https://www.westlake.com.cn/' }],
+      food: [{ name: '杭州美食', url: 'https://www.dianping.com/hangzhou/food' }]
+    },
+    poster: {
+      title: '西湖印象',
+      subtitle: '人间天堂，诗意江南',
+      elements: ['西湖', '灵隐寺', '千岛湖', '龙井茶园'],
+      layout: '顶部西湖全景，中央灵隐寺，底部千岛湖',
+      colors: ['#27ae60', '#3498db', '#f39c12', '#8e44ad', '#e74c3c']
+    },
+    itineraries: {
+      '1天': {
+        routes: [
+          { time: '09:00-12:00', morning: '西湖十景环湖游' },
+          { time: '12:00-14:00', afternoon: '午餐（西湖醋鱼）' },
+          { time: '14:00-17:00', afternoon2: '灵隐寺 → 飞来峰' },
+          { time: '18:00-21:00', evening: '河坊街 → 南宋御街' }
+        ],
+        tips: ['西湖适合骑行或步行', '灵隐寺门票含飞来峰'],
+        budget: '300-600元'
+      },
+      '2天1晚': {
+        routes: [
+          { time: '09:00-12:00', morning: 'Day1: 西湖十景环湖游' },
+          { time: '12:00-14:00', afternoon: 'Day1: 午餐（西湖醋鱼）' },
+          { time: '14:00-17:00', afternoon2: 'Day1: 灵隐寺 → 飞来峰' },
+          { time: '18:00-21:00', evening: 'Day1: 河坊街 → 南宋御街' },
+          { time: '09:00-17:00', morning2: 'Day2: 千岛湖一日游' }
+        ],
+        tips: ['千岛湖建议提前订票', '建议穿舒适的鞋子'],
+        budget: '600-1200元'
+      }
+    }
+  },
+  '西安': {
+    tags: ['历史古都', '兵马俑', '丝绸之路起点'],
+    season: '春秋两季',
+    atmosphere: '千年古都，文化底蕴深厚',
+    days: '3-4天',
+    routes: ['兵马俑 → 华清池', '大雁塔 → 大唐不夜城', '城墙骑行 → 钟鼓楼', '回民街 → 书院门'],
+    foods: [
+      { name: '羊肉泡馍', desc: '西安特色，汤鲜馍香', price: '20-40元/碗', mustTry: true },
+      { name: '肉夹馍', desc: '西安传统小吃', price: '10-20元/个' },
+      { name: '凉皮', desc: '西安特色面食', price: '8-15元/份' },
+      { name: 'biangbiang面', desc: '西安特色面食', price: '12-20元/碗' },
+      { name: '胡辣汤', desc: '西安传统早餐', price: '5-10元/碗' }
+    ],
+    accommodations: [
+      { area: '钟楼/鼓楼附近', pros: '市中心，交通便利', cons: '价格较高，人流量大' },
+      { area: '大雁塔附近', pros: '文化氛围浓，周边景点多', cons: '距离市中心稍远' },
+      { area: '回民街附近', pros: '美食集中，夜生活丰富', cons: '周边嘈杂，价格较高' }
+    ],
+    transport: [
+      { type: '内部交通', info: '地铁网络发达，建议使用地铁出行' },
+      { type: '外部交通', info: '咸阳国际机场；西安北站、西安站等火车站' }
+    ],
+    budget: { low: '1000', medium: '2000', high: '3500+' },
+    tips: {
+      prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+      avoid: ['不要在景点周边买纪念品', '不要乘坐黑车', '避开旅游高峰期']
+    },
+    links: {
+      official: 'https://www.xa.gov.cn/',
+      attractions: [
+        { name: '兵马俑', url: 'https://www.bmy.com.cn/', mustVisit: true },
+        { name: '大雁塔', url: 'https://www.dayanta.com/', mustVisit: true },
+        { name: '城墙', url: 'https://www.xacitywall.com/' }
+      ],
+      booking: [{ name: '兵马俑门票', url: 'https://www.bmy.com.cn/' }],
+      food: [{ name: '西安美食', url: 'https://www.dianping.com/xian/food' }]
+    },
+    poster: {
+      title: '长安印象',
+      subtitle: '千年古都，历史长河',
+      elements: ['兵马俑', '大雁塔', '城墙', '钟鼓楼'],
+      layout: '顶部兵马俑，中央大雁塔，底部城墙',
+      colors: ['#c0392b', '#8e44ad', '#f39c12', '#27ae60', '#2980b9']
+    },
+    itineraries: {
+      '1天': {
+        routes: [
+          { time: '09:00-12:00', morning: '兵马俑 → 华清池' },
+          { time: '12:00-14:00', afternoon: '午餐（羊肉泡馍）' },
+          { time: '14:00-17:00', afternoon2: '大雁塔 → 大唐不夜城' },
+          { time: '18:00-21:00', evening: '回民街 → 钟鼓楼' }
+        ],
+        tips: ['兵马俑建议请导游', '回民街美食众多'],
+        budget: '300-600元'
+      },
+      '2天1晚': {
+        routes: [
+          { time: '09:00-12:00', morning: 'Day1: 兵马俑 → 华清池' },
+          { time: '12:00-14:00', afternoon: 'Day1: 午餐（羊肉泡馍）' },
+          { time: '14:00-17:00', afternoon2: 'Day1: 大雁塔 → 大唐不夜城' },
+          { time: '18:00-21:00', evening: 'Day1: 回民街 → 钟鼓楼' },
+          { time: '09:00-17:00', morning2: 'Day2: 城墙骑行 → 书院门' }
+        ],
+        tips: ['城墙骑行约需2小时', '建议穿舒适的鞋子'],
+        budget: '600-1200元'
+      }
+    }
+  }
+};
+
 // 异步初始化城市数据
 async function initCityDatabase() {
     try {
-        console.log('正在从后端加载城市数据...');
-        const response = await fetch('http://localhost:3001/api/cities/all');
-        if (response.ok) {
-            const data = await response.json();
-            cityDatabase = data;
-            console.log('城市数据加载成功，共', Object.keys(cityDatabase).length, '个城市');
-            initApp();
-        } else {
-            console.error('城市数据加载失败');
-            initApp();
+        cityDatabase = EMBEDDED_CITIES;
+        console.log('内嵌城市数据加载成功，共', Object.keys(cityDatabase).length, '个城市');
+        
+        try {
+            const response = await fetch('http://localhost:3001/api/cities/all');
+            if (response.ok) {
+                const data = await response.json();
+                cityDatabase = data;
+                console.log('后端城市数据加载成功，共', Object.keys(cityDatabase).length, '个城市');
+            }
+        } catch (apiError) {
+            console.log('后端API不可用，使用内嵌数据');
         }
+        
+        initApp();
     } catch (error) {
-        console.error('无法连接到后端服务器:', error);
+        console.error('数据加载失败:', error);
+        cityDatabase = EMBEDDED_CITIES;
         initApp();
     }
 }
 
-// 城市别名
 const cityAliases = {
     '北京': ['beijing', 'bj', '京城', '帝都', '北平'],
     '上海': ['shanghai', 'sh', '魔都', '申城', '沪上'],
@@ -66,37 +414,23 @@ const cityAliases = {
     '敦煌': ['dunhuang', 'dh', '丝路']
 };
 
-// 查找城市
 function findCity(cityName) {
     const normalized = cityName.trim().toLowerCase();
-    
     for (const city of Object.keys(cityDatabase)) {
         if (city.toLowerCase() === normalized) return city;
     }
-    
     for (const [city, aliases] of Object.entries(cityAliases)) {
         for (const alias of aliases) {
             if (alias.toLowerCase() === normalized) return city;
             if (alias.toLowerCase().includes(normalized) || normalized.includes(alias.toLowerCase())) return city;
         }
     }
-    
     for (const city of Object.keys(cityDatabase)) {
         if (city.includes(normalized) || normalized.includes(city)) return city;
         const pinyinMatch = getPinyinInitials(city).toLowerCase().includes(normalized);
         if (pinyinMatch) return city;
     }
-    
-    let bestMatch = null;
-    let bestScore = 0;
-    for (const city of Object.keys(cityDatabase)) {
-        const score = fuzzyMatchScore(normalized, city.toLowerCase());
-        if (score > bestScore && score > 0.5) {
-            bestScore = score;
-            bestMatch = city;
-        }
-    }
-    return bestMatch;
+    return null;
 }
 
 function getPinyinInitials(city) {
@@ -116,20 +450,6 @@ function getPinyinInitials(city) {
     return result;
 }
 
-function fuzzyMatchScore(s1, s2) {
-    if (s1 === s2) return 1;
-    if (s2.includes(s1)) return 0.9;
-    if (s1.includes(s2)) return 0.8;
-    let matchCount = 0;
-    let s1Index = 0;
-    for (let i = 0; i < s2.length && s1Index < s1.length; i++) {
-        if (s1[s1Index] === s2[i]) matchCount++;
-        s1Index++;
-    }
-    return matchCount / s1.length * 0.6;
-}
-
-// 搜索统计
 let searchStats = {
     totalSearches: 0,
     citySearches: {},
@@ -137,27 +457,22 @@ let searchStats = {
     lastUpdated: new Date().toISOString()
 };
 
-// 显示搜索建议
 function showSearchSuggestions(keyword) {
     const suggestionsDiv = document.getElementById('searchSuggestions');
     if (!suggestionsDiv || !keyword.trim()) {
         hideSearchSuggestions();
         return;
     }
-
     const normalized = keyword.trim().toLowerCase();
     const suggestions = [];
-    
     for (const city of Object.keys(cityDatabase)) {
         if (city.toLowerCase().includes(normalized) || 
             normalized.includes(city.toLowerCase()) ||
             getPinyinInitials(city).toLowerCase().includes(normalized)) {
             suggestions.push(city);
         }
-        
         if (suggestions.length >= 8) break;
     }
-    
     for (const [city, aliases] of Object.entries(cityAliases)) {
         for (const alias of aliases) {
             if (alias.toLowerCase().includes(normalized) && !suggestions.includes(city)) {
@@ -165,15 +480,12 @@ function showSearchSuggestions(keyword) {
                 break;
             }
         }
-        
         if (suggestions.length >= 8) break;
     }
-
     if (suggestions.length === 0) {
         hideSearchSuggestions();
         return;
     }
-
     suggestionsDiv.innerHTML = suggestions.map(city => `
         <div class="suggestion-item" data-city="${city}">
             <span class="suggestion-icon">📍</span>
@@ -181,9 +493,7 @@ function showSearchSuggestions(keyword) {
             <span class="suggestion-tags">${cityDatabase[city]?.tags?.slice(0, 2).join(' · ') || ''}</span>
         </div>
     `).join('');
-    
     suggestionsDiv.classList.remove('hidden');
-    
     suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
         item.addEventListener('click', () => {
             const city = item.dataset.city;
@@ -216,10 +526,8 @@ function recordSearch(cityName) {
 function updateRankingDisplay() {
     const rankingList = document.getElementById('rankingList');
     if (!rankingList || searchStats.topCities.length === 0) return;
-    
-    const medals = ['🥇', '🥈', '🥉'];
+    const medals = ['🥇', '🥈', ''];
     const top10 = searchStats.topCities.slice(0, 10);
-    
     rankingList.innerHTML = top10.map((item, index) => `
         <div class="rank-item">
             <div class="rank-left">
@@ -241,29 +549,22 @@ function updateTotalSearches() {
     }
 }
 
-// 应用初始化
 function initApp() {
     updateTotalSearches();
     updateRankingDisplay();
 }
 
-// 生成城市攻略
 async function generateCityGuide(cityName) {
     if (!cityName) {
         showError('请输入城市名称！');
         return;
     }
-
     recordSearch(cityName);
-
     document.getElementById('result').classList.add('hidden');
     document.getElementById('loading').classList.remove('hidden');
-
     await new Promise(resolve => setTimeout(resolve, 800));
-
     const matchedCity = findCity(cityName);
     const resultDiv = document.getElementById('result');
-
     if (matchedCity && cityDatabase[matchedCity]) {
         resultDiv.innerHTML = generatePosterHTML(cityDatabase[matchedCity], matchedCity);
         document.getElementById('loading').classList.add('hidden');
@@ -287,49 +588,37 @@ async function generateCityGuide(cityName) {
     }
 }
 
-function showError(message) {
-    showToast(message, 'error');
+function showError(message) { showToast(message, 'error'); }
+function showSuccess(message) { showToast(message, 'success'); }
+function showInfo(message) { showToast(message, 'info'); }
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.classList.add('show'); }, 100);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
-// 省份城市映射
 const provinceCityMap = {
-    '北京': ['北京'],
-    '上海': ['上海'],
-    '天津': ['天津'],
-    '重庆': ['重庆'],
+    '北京': ['北京'], '上海': ['上海'], '天津': ['天津'], '重庆': ['重庆'],
     '河北': ['石家庄', '保定', '张家口', '承德', '秦皇岛', '唐山', '廊坊'],
-    '山西': ['太原', '大同', '平遥'],
-    '辽宁': ['沈阳', '大连'],
-    '吉林': ['长春', '吉林', '长白山'],
-    '黑龙江': ['哈尔滨'],
-    '江苏': ['南京', '苏州', '无锡'],
-    '浙江': ['杭州', '宁波', '温州', '嘉兴'],
-    '安徽': ['黄山', '合肥'],
-    '福建': ['福州', '厦门'],
-    '江西': ['南昌', '九江', '景德镇'],
-    '山东': ['青岛', '济南', '烟台'],
-    '河南': ['郑州', '洛阳'],
-    '湖北': ['武汉'],
-    '湖南': ['长沙', '张家界'],
-    '广东': ['广州', '深圳', '珠海'],
-    '广西': ['南宁', '桂林'],
-    '海南': ['三亚', '海口'],
-    '四川': ['成都'],
-    '贵州': ['贵阳'],
-    '云南': ['昆明', '丽江', '大理'],
-    '西藏': ['拉萨'],
-    '陕西': ['西安'],
-    '甘肃': ['兰州', '敦煌'],
-    '青海': ['西宁'],
-    '宁夏': ['银川'],
-    '新疆': ['乌鲁木齐'],
-    '内蒙古': ['呼和浩特']
+    '山西': ['太原', '大同', '平遥'], '辽宁': ['沈阳', '大连'],
+    '吉林': ['长春', '吉林', '长白山'], '黑龙江': ['哈尔滨'],
+    '江苏': ['南京', '苏州', '无锡'], '浙江': ['杭州', '宁波', '温州', '嘉兴'],
+    '安徽': ['黄山', '合肥'], '福建': ['福州', '厦门'],
+    '江西': ['南昌', '九江', '景德镇'], '山东': ['青岛', '济南', '烟台'],
+    '河南': ['郑州', '洛阳'], '湖北': ['武汉'], '湖南': ['长沙', '张家界'],
+    '广东': ['广州', '深圳', '珠海'], '广西': ['南宁', '桂林'],
+    '海南': ['三亚', '海口'], '四川': ['成都'], '贵州': ['贵阳'],
+    '云南': ['昆明', '丽江', '大理'], '西藏': ['拉萨'], '陕西': ['西安'],
+    '甘肃': ['兰州', '敦煌'], '青海': ['西宁'], '宁夏': ['银川'],
+    '新疆': ['乌鲁木齐'], '内蒙古': ['呼和浩特']
 };
 
-// 生成海报HTML
 function generatePosterHTML(cityData, cityName) {
     let itineraryTypes = cityData.itineraries ? Object.keys(cityData.itineraries) : [];
-    
     let selectedItinerary = itineraryTypes[0] || '1天';
     
     const routeItems = cityData.routes.map((route, i) => `
@@ -426,9 +715,7 @@ function generatePosterHTML(cityData, cityName) {
         <div class="itinerary-selector">
             <div class="itinerary-tabs">
                 ${itineraryTypes.map(type => `
-                    <button class="itinerary-tab ${type === selectedItinerary ? 'active' : ''}" data-itinerary="${type}">
-                        ${type}
-                    </button>
+                    <button class="itinerary-tab ${type === selectedItinerary ? 'active' : ''}" data-itinerary="${type}">${type}</button>
                 `).join('')}
             </div>
             <div class="itinerary-content">
@@ -450,10 +737,8 @@ function generatePosterHTML(cityData, cityName) {
                                 `).join('')}
                             </div>
                             <div class="itinerary-tips">
-                                <h4> 行程小贴士</h4>
-                                <ul>
-                                    ${itinerary.tips.map(tip => `<li>${tip}</li>`).join('')}
-                                </ul>
+                                <h4>📝 行程小贴士</h4>
+                                <ul>${itinerary.tips.map(tip => `<li>${tip}</li>`).join('')}</ul>
                             </div>
                             <div class="itinerary-budget">
                                 <span class="budget-label">💰 预算参考：</span>
@@ -466,7 +751,6 @@ function generatePosterHTML(cityData, cityName) {
         </div>
     ` : '';
 
-    // 天气信息HTML
     const weatherHTML = cityData.currentWeather ? `
         <div class="weather-card">
             <div class="weather-header">
@@ -486,7 +770,7 @@ function generatePosterHTML(cityData, cityName) {
             </div>
             ${cityData.currentWeather.forecast && cityData.currentWeather.forecast.length > 0 ? `
                 <div class="weather-forecast">
-                    <h4>未来预报</h4>
+                    <h4>📅 未来预报</h4>
                     <div class="forecast-days">
                         ${cityData.currentWeather.forecast.slice(0, 3).map(day => `
                             <div class="forecast-day">
@@ -512,62 +796,33 @@ function generatePosterHTML(cityData, cityName) {
                     <span class="poster-tag">建议${cityData.days}</span>
                 </div>
             </div>
-
             <div class="poster-body">
                 ${weatherHTML}
-                
                 ${itinerarySelectorHTML}
-                
                 <h3 class="section-title" style="margin-top: 30px;">🗺️ 经典路线</h3>
                 <div class="route-list">${routeItems}</div>
-
                 <h3 class="section-title" style="margin-top: 30px;">🍜 美食推荐</h3>
                 <div class="food-grid">${foodCards}</div>
-
-                <h3 class="section-title" style="margin-top: 30px;"> 住宿推荐</h3>
+                <h3 class="section-title" style="margin-top: 30px;">🏨 住宿推荐</h3>
                 <div class="hotel-grid">${hotelCards}</div>
-
                 <div class="transport-section">
                     <h3 class="section-title">🚗 交通指南</h3>
                     <div class="transport-grid">${transportCards}</div>
                 </div>
-
                 <div class="budget-section">
                     <h3 class="section-title">💰 预算估算</h3>
                     <div class="budget-grid">
-                        <div class="budget-card">
-                            <div class="budget-level">经济型</div>
-                            <div class="budget-amount">¥${cityData.budget.low}</div>
-                        </div>
-                        <div class="budget-card">
-                            <div class="budget-level">舒适型</div>
-                            <div class="budget-amount">¥${cityData.budget.medium}</div>
-                        </div>
-                        <div class="budget-card">
-                            <div class="budget-level">豪华型</div>
-                            <div class="budget-amount">¥${cityData.budget.high}</div>
-                        </div>
+                        <div class="budget-card"><div class="budget-level">经济型</div><div class="budget-amount">¥${cityData.budget.low}</div></div>
+                        <div class="budget-card"><div class="budget-level">舒适型</div><div class="budget-amount">¥${cityData.budget.medium}</div></div>
+                        <div class="budget-card"><div class="budget-level">豪华型</div><div class="budget-amount">¥${cityData.budget.high}</div></div>
                     </div>
                 </div>
-
                 <div class="tips-grid">
-                    <div class="tip-card">
-                        <div class="tip-title">🎒 行前准备</div>
-                        <ul class="tip-list">
-                            ${cityData.tips.prepare.map(t => `<li>${t}</li>`).join('')}
-                        </ul>
-                    </div>
-                    <div class="tip-card">
-                        <div class="tip-title">️ 避坑指南</div>
-                        <ul class="tip-list avoid">
-                            ${cityData.tips.avoid.map(t => `<li>${t}</li>`).join('')}
-                        </ul>
-                    </div>
+                    <div class="tip-card"><div class="tip-title">🎒 行前准备</div><ul class="tip-list">${cityData.tips.prepare.map(t => `<li>${t}</li>`).join('')}</ul></div>
+                    <div class="tip-card"><div class="tip-title">⚠️ 避坑指南</div><ul class="tip-list avoid">${cityData.tips.avoid.map(t => `<li>${t}</li>`).join('')}</ul></div>
                 </div>
-
                 ${linksHTML}
             </div>
-
             <div class="poster-design">
                 <h3 class="section-title">🎨 海报视觉设计</h3>
                 <div class="design-main">
@@ -575,21 +830,11 @@ function generatePosterHTML(cityData, cityName) {
                     <div class="design-subtitle">${cityData.poster.subtitle}</div>
                 </div>
                 <div class="design-grid">
-                    <div class="design-item">
-                        <div class="design-label">视觉元素</div>
-                        <div class="design-tags">${elementTags}</div>
-                    </div>
-                    <div class="design-item">
-                        <div class="design-label">构图布局</div>
-                        <div class="design-content">${cityData.poster.layout}</div>
-                    </div>
-                    <div class="design-item">
-                        <div class="design-label">配色方案</div>
-                        <div class="color-list">${colorDots}</div>
-                    </div>
+                    <div class="design-item"><div class="design-label">视觉元素</div><div class="design-tags">${elementTags}</div></div>
+                    <div class="design-item"><div class="design-label">构图布局</div><div class="design-content">${cityData.poster.layout}</div></div>
+                    <div class="design-item"><div class="design-label">配色方案</div><div class="color-list">${colorDots}</div></div>
                 </div>
             </div>
-
             <div class="poster-footer">
                 <div class="footer-text">由 AI 智能生成 | 仅供参考</div>
                 <div class="footer-actions">
@@ -601,150 +846,68 @@ function generatePosterHTML(cityData, cityName) {
     `;
 }
 
-// 保存海报
 function savePoster() {
     const poster = document.querySelector('.poster');
-    if (!poster) {
-        showError('请先生成攻略！');
-        return;
-    }
-
+    if (!poster) { showError('请先生成攻略！'); return; }
     const cityName = document.getElementById('cityInput').value || '旅游攻略';
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    
-    // 使用浏览器打印功能保存
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>${cityName}旅游攻略</title>
-            <link rel="stylesheet" href="http://localhost:8080/style.css">
-            <style>
-                @media print {
-                    body { margin: 0; }
-                    .poster { box-shadow: none; margin: 0; }
-                    .footer-actions { display: none !important; }
-                }
-            </style>
-        </head>
-        <body>
-            ${poster.innerHTML}
-            <script>
-                setTimeout(() => {
-                    window.print();
-                    window.close();
-                }, 500);
-            <\/script>
-        </body>
-        </html>
-    `);
+    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${cityName}旅游攻略</title><style>body{margin:0;font-family:-apple-system,sans-serif;} .poster{box-shadow:none;margin:0;max-width:800px;margin:0 auto;padding:20px;} .footer-actions{display:none!important;}</style></head><body>${poster.innerHTML}<script>setTimeout(()=>{window.print();window.close();},500);<\/script></body></html>`);
     printWindow.document.close();
     showSuccess('正在打开打印对话框，您可以选择"另存为PDF"');
 }
 
-// 分享攻略
 function sharePoster() {
     const url = window.location.href;
     const text = '分享一个旅游攻略，快来看看吧！';
-    
     if (navigator.share) {
-        navigator.share({
-            title: '旅游攻略分享',
-            text: text,
-            url: url
-        }).catch(err => console.log('分享失败:', err));
+        navigator.share({ title: '旅游攻略分享', text, url }).catch(err => console.log('分享失败:', err));
     } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(() => {
-            showSuccess('链接已复制到剪贴板！');
-        }).catch(() => {
-            showError('复制失败，请手动复制链接');
-        });
-    } else {
-        showError('您的浏览器不支持分享功能');
-    }
+        navigator.clipboard.writeText(url).then(() => { showSuccess('链接已复制到剪贴板！'); }).catch(() => { showError('复制失败，请手动复制链接'); });
+    } else { showError('您的浏览器不支持分享功能'); }
 }
 
-// DOM加载完成后初始化事件监听
 document.addEventListener('DOMContentLoaded', function() {
     const cityInput = document.getElementById('cityInput');
     const generateBtn = document.getElementById('generateBtn');
     const suggestionsDiv = document.getElementById('searchSuggestions');
     let selectedIndex = -1;
 
-    // 输入框事件 - 搜索建议
     if (cityInput) {
         cityInput.addEventListener('input', function() {
             const keyword = this.value;
-            if (keyword.trim().length > 0) {
-                showSearchSuggestions(keyword);
-            } else {
-                hideSearchSuggestions();
-            }
+            if (keyword.trim().length > 0) { showSearchSuggestions(keyword); } else { hideSearchSuggestions(); }
         });
-
         cityInput.addEventListener('focus', function() {
-            if (this.value.trim().length > 0) {
-                showSearchSuggestions(this.value);
-            }
+            if (this.value.trim().length > 0) { showSearchSuggestions(this.value); }
         });
-
-        cityInput.addEventListener('blur', function() {
-            setTimeout(() => hideSearchSuggestions(), 200);
-        });
-
+        cityInput.addEventListener('blur', function() { setTimeout(() => hideSearchSuggestions(), 200); });
         cityInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                hideSearchSuggestions();
-                generateCityGuide(this.value.trim());
-                return;
-            }
-
+            if (e.key === 'Enter') { e.preventDefault(); hideSearchSuggestions(); generateCityGuide(this.value.trim()); return; }
             const items = suggestionsDiv?.querySelectorAll('.suggestion-item');
             if (!items || items.length === 0) return;
-
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
-                updateSuggestionSelection(items);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                selectedIndex = Math.max(selectedIndex - 1, 0);
-                updateSuggestionSelection(items);
-            } else if (e.key === 'Escape') {
-                hideSearchSuggestions();
-            }
+            if (e.key === 'ArrowDown') { e.preventDefault(); selectedIndex = Math.min(selectedIndex + 1, items.length - 1); updateSuggestionSelection(items); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); selectedIndex = Math.max(selectedIndex - 1, 0); updateSuggestionSelection(items); }
+            else if (e.key === 'Escape') { hideSearchSuggestions(); }
         });
     }
 
     function updateSuggestionSelection(items) {
-        items.forEach((item, idx) => {
-            item.classList.toggle('selected', idx === selectedIndex);
-        });
-        
-        if (selectedIndex >= 0 && selectedIndex < items.length) {
-            cityInput.value = items[selectedIndex].dataset.city;
-        }
+        items.forEach((item, idx) => { item.classList.toggle('selected', idx === selectedIndex); });
+        if (selectedIndex >= 0 && selectedIndex < items.length) { cityInput.value = items[selectedIndex].dataset.city; }
     }
 
-    // 行程标签切换
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('itinerary-tab')) {
             const tabs = document.querySelectorAll('.itinerary-tab');
             const panels = document.querySelectorAll('.itinerary-panel');
             const selectedItinerary = e.target.dataset.itinerary;
-            
             tabs.forEach(tab => tab.classList.remove('active'));
             panels.forEach(panel => panel.classList.remove('active'));
-            
             e.target.classList.add('active');
             document.querySelector(`.itinerary-panel[data-panel="${selectedItinerary}"]`)?.classList.add('active');
         }
     });
 
-    // 生成按钮事件
     if (generateBtn) {
         generateBtn.addEventListener('click', function() {
             const cityName = cityInput?.value.trim();
@@ -752,7 +915,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 快速选择按钮事件
     document.querySelectorAll('.quick-city-btn, .quick-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const cityName = this.dataset.city;
@@ -761,10 +923,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 省份城市选择器
     const provinceSelect = document.getElementById('provinceSelect');
     const citySelect = document.getElementById('citySelect');
-    
     if (provinceSelect) {
         for (const province of Object.keys(provinceCityMap)) {
             const option = document.createElement('option');
@@ -772,11 +932,9 @@ document.addEventListener('DOMContentLoaded', function() {
             option.textContent = province;
             provinceSelect.appendChild(option);
         }
-        
         provinceSelect.addEventListener('change', function() {
             const selectedProvince = this.value;
             citySelect.innerHTML = '<option value="">选择城市</option>';
-            
             if (selectedProvince && provinceCityMap[selectedProvince]) {
                 citySelect.disabled = false;
                 for (const city of provinceCityMap[selectedProvince]) {
@@ -785,27 +943,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     option.textContent = city;
                     citySelect.appendChild(option);
                 }
-            } else {
-                citySelect.disabled = true;
-            }
+            } else { citySelect.disabled = true; }
         });
-        
         citySelect.addEventListener('change', function() {
-            if (this.value) {
-                if (cityInput) cityInput.value = this.value;
-                generateCityGuide(this.value);
-            }
+            if (this.value) { if (cityInput) cityInput.value = this.value; generateCityGuide(this.value); }
         });
     }
 
-    // 同步按钮事件
     const syncBtn = document.getElementById('syncBtn');
     if (syncBtn) {
         syncBtn.addEventListener('click', async () => {
             try {
                 syncBtn.disabled = true;
                 syncBtn.textContent = '同步中...';
-                
                 const response = await fetch('http://localhost:3001/api/cities/all');
                 if (response.ok) {
                     cityDatabase = await response.json();
@@ -815,37 +965,10 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('同步失败:', error);
                 showError('同步失败，请检查后端服务');
-            } finally {
-                syncBtn.disabled = false;
-                syncBtn.textContent = '同步数据';
-            }
+            } finally { syncBtn.disabled = false; syncBtn.textContent = '同步数据'; }
         });
     }
 });
 
-function showSuccess(message) {
-    showToast(message, 'success');
-}
-
-function showInfo(message) {
-    showToast(message, 'info');
-}
-
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 100);
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// 启动应用
 initCityDatabase();
+
