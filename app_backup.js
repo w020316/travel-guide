@@ -347,29 +347,31 @@ const EMBEDDED_CITIES = {
   }
 };
 
-// 异步初始化城市数据
-async function initCityDatabase() {
-    try {
-        cityDatabase = EMBEDDED_CITIES;
-        console.log('内嵌城市数据加载成功，共', Object.keys(cityDatabase).length, '个城市');
-        
-        try {
-            const response = await fetch('http://localhost:3001/api/cities/all');
-            if (response.ok) {
-                const data = await response.json();
+// 异步初始化城市数据 - 立即加载内嵌数据，不等待API
+function initCityDatabase() {
+    // 立即加载内嵌数据，同步执行，零等待
+    cityDatabase = EMBEDDED_CITIES;
+    console.log('内嵌城市数据加载成功，共', Object.keys(cityDatabase).length, '个城市');
+    
+    // 仅在本地开发环境才尝试连接后端API（异步后台加载）
+    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocalDev) {
+        // 后台异步加载，不阻塞UI
+        fetch('http://localhost:3001/api/cities/all', { signal: AbortSignal.timeout(3000) })
+            .then(response => {
+                if (response.ok) return response.json();
+                throw new Error('API error');
+            })
+            .then(data => {
                 cityDatabase = data;
                 console.log('后端城市数据加载成功，共', Object.keys(cityDatabase).length, '个城市');
-            }
-        } catch (apiError) {
-            console.log('后端API不可用，使用内嵌数据');
-        }
-        
-        initApp();
-    } catch (error) {
-        console.error('数据加载失败:', error);
-        cityDatabase = EMBEDDED_CITIES;
-        initApp();
+            })
+            .catch(() => {
+                // 静默失败，使用内嵌数据
+            });
     }
+    
+    initApp();
 }
 
 const cityAliases = {
@@ -562,16 +564,14 @@ async function generateCityGuide(cityName) {
     recordSearch(cityName);
     document.getElementById('result').classList.add('hidden');
     document.getElementById('loading').classList.remove('hidden');
-    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
     const matchedCity = findCity(cityName);
     const resultDiv = document.getElementById('result');
     if (matchedCity && cityDatabase[matchedCity]) {
         resultDiv.innerHTML = generatePosterHTML(cityDatabase[matchedCity], matchedCity);
-        document.getElementById('loading').classList.add('hidden');
-        resultDiv.classList.remove('hidden');
-        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
-        document.getElementById('loading').classList.add('hidden');
         resultDiv.innerHTML = `
             <div class="poster">
                 <div class="poster-header">
@@ -583,9 +583,10 @@ async function generateCityGuide(cityName) {
                 </div>
             </div>
         `;
-        resultDiv.classList.remove('hidden');
-        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+    document.getElementById('loading').classList.add('hidden');
+    resultDiv.classList.remove('hidden');
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function showError(message) { showToast(message, 'error'); }
