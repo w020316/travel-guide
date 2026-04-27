@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城市管理面板 - 旅游攻略系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .stat-card h3 { color: #666; font-size: 14px; margin-bottom: 10px; }
+        .stat-card .value { font-size: 32px; font-weight: bold; color: #667eea; }
+        .panel { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .panel h2 { color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 5px; transition: all 0.3s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: #333; font-weight: 600; }
+        tr:hover { background: #f8f9fa; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; margin: 50px auto; padding: 30px; border-radius: 10px; max-width: 800px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-close { font-size: 24px; cursor: pointer; color: #666; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .weather-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .weather-card .temp { font-size: 48px; font-weight: bold; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .loading::after { content: ''; display: inline-block; width: 30px; height: 30px; border: 3px solid #667eea; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-left: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 15px 25px; border-radius: 5px; z-index: 2000; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; background: #f8f9fa; border-radius: 5px; cursor: pointer; transition: all 0.3s; }
+        .tab.active { background: #667eea; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏙️ 城市管理面板</h1>
+            <p>管理城市数据、查看实时天气、同步网络数据</p>
+        </div>
+
+        <div class="stats" id="statsContainer">
+            <div class="stat-card">
+                <h3>城市总数</h3>
+                <div class="value" id="totalCities">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>天气缓存</h3>
+                <div class="value" id="weatherCache">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>热门城市</h3>
+                <div class="value" id="trendingCount">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>存储模式</h3>
+                <div class="value" id="storageMode">-</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="tabs">
+                <div class="tab active" data-tab="cities">城市列表</div>
+                <div class="tab" data-tab="weather">天气监控</div>
+                <div class="tab" data-tab="trending">热门排行</div>
+                <div class="tab" data-tab="add">添加城市</div>
+            </div>
+
+            <div class="tab-content active" id="cities-tab">
+                <h2>城市数据管理</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="loadCities()">刷新列表</button>
+                    <button class="btn btn-success" onclick="syncAllWeather()">同步所有天气</button>
+                    <button class="btn btn-warning" onclick="syncAllCities()">同步所有城市</button>
+                </div>
+                <div id="citiesList" class="loading">加载中...</div>
+            </div>
+
+            <div class="tab-content" id="weather-tab">
+                <h2>实时天气监控</h2>
+                <div class="form-group" style="max-width: 300px;">
+                    <label>选择城市</label>
+                    <select id="weatherCitySelect" onchange="showWeather()">
+                        <option value="">请选择城市</option>
+                    </select>
+                </div>
+                <div id="weatherDisplay"></div>
+            </div>
+
+            <div class="tab-content" id="trending-tab">
+                <h2>热门城市排行榜</h2>
+                <button class="btn btn-primary" onclick="loadTrending()" style="margin-bottom: 20px;">刷新排行</button>
+                <div id="trendingList"></div>
+            </div>
+
+            <div class="tab-content" id="add-tab">
+                <h2>添加新城市</h2>
+                <form id="addCityForm" onsubmit="return addCity(event)">
+                    <div class="form-group">
+                        <label>城市名称 *</label>
+                        <input type="text" id="cityName" required placeholder="例如: 成都">
+                    </div>
+                    <div class="form-group">
+                        <label>标签 (用逗号分隔)</label>
+                        <input type="text" id="cityTags" placeholder="例如: 美食之都,天府之国">
+                    </div>
+                    <div class="form-group">
+                        <label>最佳旅游季节</label>
+                        <input type="text" id="citySeason" placeholder="例如: 春秋两季">
+                    </div>
+                    <div class="form-group">
+                        <label>城市氛围</label>
+                        <textarea id="cityAtmosphere" placeholder="描述城市的特色和氛围"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>推荐游玩天数</label>
+                        <input type="text" id="cityDays" placeholder="例如: 3-4天">
+                    </div>
+                    <div class="form-group">
+                        <label>推荐路线 (每行一条, 用→分隔景点)</label>
+                        <textarea id="cityRoutes" placeholder="路线1 → 景点A → 景点B&#10;路线2 → 景点C → 景点D"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">添加城市</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>编辑城市数据</h2>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="editCityForm" onsubmit="return saveCity(event)">
+                <input type="hidden" id="editCityName">
+                <div class="form-group">
+                    <label>标签 (用逗号分隔)</label>
+                    <input type="text" id="editTags">
+                </div>
+                <div class="form-group">
+                    <label>最佳旅游季节</label>
+                    <input type="text" id="editSeason">
+                </div>
+                <div class="form-group">
+                    <label>城市氛围</label>
+                    <textarea id="editAtmosphere"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>推荐游玩天数</label>
+                    <input type="text" id="editDays">
+                </div>
+                <button type="submit" class="btn btn-success">保存</button>
+                <button type="button" class="btn btn-primary" onclick="closeModal()">取消</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        let citiesData = {};
+
+        // 初始化
+        async function init() {
+            loadStats();
+            loadCities();
+            loadTrending();
+            setupTabs();
+            
+            // 自动刷新
+            setInterval(loadStats, 60000);
+            setInterval(loadTrending, 300000);
+        }
+
+        // 设置Tab切换
+        function setupTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById(this.dataset.tab + '-tab').classList.add('active');
+                });
+            });
+        }
+
+        // 加载统计信息
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const stats = await response.json();
+                
+                document.getElementById('totalCities').textContent = stats.totalCities;
+                document.getElementById('weatherCache').textContent = stats.weatherCacheSize;
+                document.getElementById('storageMode').textContent = stats.memoryStorage ? '内存' : 'MongoDB';
+            } catch (error) {
+                console.error('加载统计失败:', error);
+            }
+        }
+
+        // 加载城市列表
+        async function loadCities() {
+            try {
+                const response = await fetch(`${API_BASE}/cities/all`);
+                citiesData = await response.json();
+                
+                const cityNames = Object.keys(citiesData);
+                document.getElementById('trendingCount').textContent = cityNames.length;
+                
+                // 更新天气城市选择
+                const select = document.getElementById('weatherCitySelect');
+                select.innerHTML = '<option value="">请选择城市</option>' + 
+                    cityNames.map(name => `<option value="${name}">${name}</option>`).join('');
+                
+                // 显示城市列表
+                const html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>城市</th>
+                                <th>标签</th>
+                                <th>季节</th>
+                                <th>天数</th>
+                                <th>更新时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${cityNames.map(name => {
+                                const city = citiesData[name];
+                                const tags = (city.tags || []).slice(0, 3).map(t => `<span class="badge badge-info">${t}</span>`).join(' ');
+                                const updateTime = city.lastUpdated ? new Date(city.lastUpdated).toLocaleString() : '-';
+                                return `
+                                    <tr>
+                                        <td><strong>${name}</strong></td>
+                                        <td>${tags}</td>
+                                        <td>${city.season || '-'}</td>
+                                        <td>${city.days || '-'}</td>
+                                        <td>${updateTime}</td>
+                                        <td>
+                                            <button class="btn btn-primary" onclick="editCity('${name}')" style="padding: 5px 10px; font-size: 12px;">编辑</button>
+                                            <button class="btn btn-success" onclick="syncWeather('${name}')" style="padding: 5px 10px; font-size: 12px;">同步天气</button>
+                                            <button class="btn btn-danger" onclick="deleteCity('${name}')" style="padding: 5px 10px; font-size: 12px;">删除</button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                document.getElementById('citiesList').innerHTML = html;
+                showToast('城市列表加载成功');
+            } catch (error) {
+                console.error('加载城市失败:', error);
+                document.getElementById('citiesList').innerHTML = '<p style="color: #dc3545;">加载失败,请检查后端服务是否运行</p>';
+            }
+        }
+
+        // 加载热门城市
+        async function loadTrending() {
+            try {
+                const response = await fetch(`${API_BASE}/trending`);
+                const trending = await response.json();
+                
+                const html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>城市</th>
+                                <th>分数</th>
+                                <th>趋势</th>
+                                <th>标签</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${trending.map((item, index) => {
+                                const trendIcon = item.trend === 'up' ? '↑' : item.trend === 'down' ? '↓' : '→';
+                                const trendClass = item.trend === 'up' ? 'badge-success' : item.trend === 'down' ? 'badge-danger' : 'badge-info';
+                                const tags = (item.tags || []).map(t => `<span class="badge badge-info">${t}</span>`).join(' ');
+                                return `
+                                    <tr>
+                                        <td><strong>${index + 1}</strong></td>
+                                        <td>${item.name}</td>
+                                        <td>${item.score}</td>
+                                        <td><span class="badge ${trendClass}">${trendIcon}</span></td>
+                                        <td>${tags}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                document.getElementById('trendingList').innerHTML = html;
+            } catch (error) {
+                console.error('加载热门城市失败:', error);
+            }
+        }
+
+        // 显示天气
+        async function showWeather() {
+            const cityName = document.getElementById('weatherCitySelect').value;
+            if (!cityName) {
+                document.getElementById('weatherDisplay').innerHTML = '';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/weather/${encodeURIComponent(cityName)}`);
+                const weather = await response.json();
+                
+                const html = `
+                    <div class="weather-card">
+                        <h3>${weather.city}</h3>
+                        <div class="temp">${weather.current.temp}</div>
+                        <p>${weather.current.condition}</p>
+                        <p>体感温度: ${weather.current.feelsLike}</p>
+                        <p>湿度: ${weather.current.humidity}</p>
+                        <p>风力: ${weather.current.wind}</p>
+                        <p>能见度: ${weather.current.visibility}</p>
+                        <p>气压: ${weather.current.pressure}</p>
+                        <p>更新时间: ${new Date(weather.updateTime).toLocaleString()}</p>
+                    </div>
+                    <h4>3天预报</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>天气</th>
+                                <th>温度</th>
+                                <th>风力</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(weather.forecast || []).map(day => `
+                                <tr>
+                                    <td>${day.date}</td>
+                                    <td>${day.condition}</td>
+                                    <td>${day.temp}</td>
+                                    <td>${day.wind}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                document.getElementById('weatherDisplay').innerHTML = html;
+            } catch (error) {
+                console.error('获取天气失败:', error);
+                showToast('获取天气失败', 'error');
+            }
+        }
+
+        // 编辑城市
+        function editCity(cityName) {
+            const city = citiesData[cityName];
+            if (!city) return;
+            
+            document.getElementById('editCityName').value = cityName;
+            document.getElementById('editTags').value = (city.tags || []).join(',');
+            document.getElementById('editSeason').value = city.season || '';
+            document.getElementById('editAtmosphere').value = city.atmosphere || '';
+            document.getElementById('editDays').value = city.days || '';
+            
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        // 保存城市
+        async function saveCity(event) {
+            event.preventDefault();
+            
+            const cityName = document.getElementById('editCityName').value;
+            const data = {
+                tags: document.getElementById('editTags').value.split(',').filter(t => t.trim()),
+                season: document.getElementById('editSeason').value,
+                atmosphere: document.getElementById('editAtmosphere').value,
+                days: document.getElementById('editDays').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/cities/${encodeURIComponent(cityName)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showToast('保存成功');
+                    closeModal();
+                    loadCities();
+                } else {
+                    showToast(result.error || '保存失败', 'error');
+                }
+            } catch (error) {
+                console.error('保存失败:', error);
+                showToast('保存失败', 'error');
+            }
+            
+            return false;
+        }
+
+        // 删除城市
+        async function deleteCity(cityName) {
+            if (!confirm(`确定要删除城市"${cityName}"吗?`)) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/cities/${encodeURIComponent(cityName)}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showToast('删除成功');
+                    loadCities();
+                } else {
+                    showToast(result.error || '删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                showToast('删除失败', 'error');
+            }
+        }
+
+        // 添加城市
+        async function addCity(event) {
+            event.preventDefault();
+            
+            const data = {
+                name: document.getElementById('cityName').value,
+                tags: document.getElementById('cityTags').value.split(',').filter(t => t.trim()),
+                season: document.getElementById('citySeason').value,
+                atmosphere: document.getElementById('cityAtmosphere').value,
+                days: document.getElementById('cityDays').value,
+                routes: document.getElementById('cityRoutes').value.split('\n').filter(r => r.trim())
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/cities`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showToast('添加成功');
+                    document.getElementById('addCityForm').reset();
+                    loadCities();
+                } else {
+                    showToast(result.error || '添加失败', 'error');
+                }
+            } catch (error) {
+                console.error('添加失败:', error);
+                showToast('添加失败', 'error');
+            }
+            
+            return false;
+        }
+
+        // 同步天气
+        async function syncWeather(cityName) {
+            showToast(`正在同步${cityName}天气...`);
+            
+            try {
+                const response = await fetch(`${API_BASE}/sync-weather/${encodeURIComponent(cityName)}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showToast(`${cityName}天气同步成功`);
+                } else {
+                    showToast(result.error || '同步失败', 'error');
+                }
+            } catch (error) {
+                console.error('同步失败:', error);
+                showToast('同步失败', 'error');
+            }
+        }
+
+        // 同步所有天气
+        async function syncAllWeather() {
+            showToast('正在同步所有城市天气...');
+            
+            const cityNames = Object.keys(citiesData);
+            for (const cityName of cityNames) {
+                await syncWeather(cityName);
+            }
+            
+            showToast('所有城市天气同步完成');
+        }
+
+        // 同步所有城市
+        async function syncAllCities() {
+            showToast('正在同步所有城市数据...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/sync-all`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showToast(`同步完成,共${result.cities}个城市`);
+                    loadCities();
+                } else {
+                    showToast(result.error || '同步失败', 'error');
+                }
+            } catch (error) {
+                console.error('同步失败:', error);
+                showToast('同步失败', 'error');
+            }
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // 显示提示
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            toast.style.background = type === 'error' ? '#dc3545' : '#28a745';
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // 初始化
+        init();
+    </script>
+</body>
+</html>

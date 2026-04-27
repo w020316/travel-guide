@@ -1,4 +1,23 @@
-const cityDatabase = {
+// 从后端API获取城市数据
+let cityDatabase = {};
+
+// 初始化时从后端API加载城市数据
+async function loadCityData() {
+    try {
+        // 尝试从后端获取所有城市数据
+        const response = await fetch('http://localhost:3001/api/cities/all');
+        if (response.ok) {
+            const allCities = await response.json();
+            cityDatabase = allCities;
+            console.log('城市数据加载成功，共加载', Object.keys(cityDatabase).length, '个城市');
+            return;
+        }
+    } catch (error) {
+        console.log('无法从后端加载数据，使用本地数据');
+    }
+    
+    // 如果API加载失败，使用本地数据
+    cityDatabase = {
     '北京': {
         tags: ['历史古都', '文化名城', '现代化大都市'],
         season: '春秋两季',
@@ -10074,7 +10093,7 @@ const cityDatabase = {
             },
             '2天1晚': {
                 routes: [
-                    { time: '09:00-12:。二': 'Day1: 梁子湖 → 沼山' },
+                    { time: '09:00-12:00', morning: 'Day1: 梁子湖 → 沼山' },
                     { time: '12:00-14:00', afternoon: 'Day1: 午餐（鄂州武昌鱼）' },
                     { time: '14:00-17:00', afternoon2: 'Day1: 鄂州博物馆 → 凤凰广场' },
                     { time: '18:00-21:00', evening: 'Day1: 鄂州市区' },
@@ -10738,7 +10757,7 @@ const cityDatabase = {
         season: '春秋两季',
         atmosphere: '蒸菜文化，茶文化',
         days: '2-3天',
-        routes: ['陆羽纪念馆 → 天门博物馆', '天门新城 → 东湖公园', '茶经楼 → '},
+        routes: ['陆羽纪念馆 → 天门博物馆', '天门新城 → 东湖公园', '茶经楼 → 文学泉'],
         foods: [
             { name: '天门蒸菜', desc: '天门特色', price: '30-60元/份', mustTry: true },
             { name: '天门锅盔', desc: '传统小吃', price: '5-10元/个' },
@@ -10810,7 +10829,7 @@ const cityDatabase = {
         season: '夏秋季',
         atmosphere: '原始森林，珍稀动植物',
         days: '3-5天',
-        routes: ['神农顶 → 大九湖', '天生桥 → 神农坛', '官门山 → '},
+        routes: ['神农顶 → 大九湖', '天生桥 → 神农坛', '官门山 → 红坪'],
         foods: [
             { name: '神农架腊肉', desc: '神农架特色', price: '30-60元/份', mustTry: true },
             { name: '神农架野菜', desc: '原始森林特产', price: '20-40元/份' },
@@ -24989,7 +25008,11 @@ const cityDatabase = {
             }
         }
     }
-};
+    };
+}
+
+// 调用加载城市数据函数
+loadCityData();
 
 const cityAliases = {
     '北京': ['beijing', 'bj', '京城', '帝都', '北平'],
@@ -25388,6 +25411,156 @@ document.getElementById('generateBtn').addEventListener('click', function() {
         recordSearch(matchedCity);
     } else {
         alert('未找到该城市，请尝试其他城市');
+    }
+});
+
+// 实时数据同步功能
+let realtimeSyncInterval = null;
+let weatherDataCache = {};
+
+// 从后端获取实时天气数据
+async function fetchRealTimeWeather(cityName) {
+    try {
+        const response = await fetch(`http://localhost:3001/api/weather/${encodeURIComponent(cityName)}`);
+        if (response.ok) {
+            const weatherData = await response.json();
+            weatherDataCache[cityName] = weatherData;
+            return weatherData;
+        }
+    } catch (error) {
+        console.error(`获取${cityName}天气数据失败:`, error);
+    }
+    return null;
+}
+
+// 获取热门城市排行榜
+async function fetchTrendingCities() {
+    try {
+        const response = await fetch('http://localhost:3001/api/trending');
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (error) {
+        console.error('获取热门城市失败:', error);
+    }
+    return [];
+}
+
+// 更新页面显示天气信息
+function displayWeatherInfo(cityName) {
+    const weatherData = weatherDataCache[cityName];
+    if (!weatherData) return;
+    
+    const weatherElement = document.getElementById('weatherInfo');
+    if (weatherElement && weatherData.current) {
+        const { temp, condition, humidity, wind } = weatherData.current;
+        weatherElement.innerHTML = `
+            <div class="weather-card">
+                <div class="weather-city">${cityName}</div>
+                <div class="weather-temp">${temp}</div>
+                <div class="weather-condition">${condition}</div>
+                <div class="weather-details">
+                    <span>湿度: ${humidity}</span>
+                    <span>风力: ${wind}</span>
+                </div>
+                <div class="weather-time">更新于: ${new Date(weatherData.updateTime).toLocaleTimeString()}</div>
+            </div>
+        `;
+        weatherElement.style.display = 'block';
+    }
+}
+
+// 更新热门城市排行
+async function updateTrendingRanking() {
+    const trendingData = await fetchTrendingCities();
+    if (trendingData.length > 0) {
+        const rankingList = document.getElementById('rankingList');
+        if (rankingList) {
+            rankingList.innerHTML = trendingData.map((item, index) => `
+                <div class="ranking-item ${item.trend === 'up' ? 'up' : item.trend === 'down' ? 'down' : ''}"
+                     onclick="selectCity('${item.name}')">
+                    <div class="ranking-number">${index + 1}</div>
+                    <div class="ranking-city">${item.name}</div>
+                    <div class="ranking-info">
+                        <div class="ranking-trend">${item.trend === 'up' ? '↑' : item.trend === 'down' ? '↓' : '→'}</div>
+                        <div class="ranking-count">👁 ${item.score.toLocaleString()}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+}
+
+// 手动触发数据同步
+async function triggerSync(cityName) {
+    const syncBtn = document.getElementById('syncBtn');
+    if (syncBtn) {
+        syncBtn.disabled = true;
+        syncBtn.innerHTML = '<i class="fas fa-sync fa-spin"></i> 同步中...';
+    }
+    
+    try {
+        if (cityName) {
+            await fetchRealTimeWeather(cityName);
+            displayWeatherInfo(cityName);
+        }
+        
+        await updateTrendingRanking();
+        
+        if (syncBtn) {
+            syncBtn.innerHTML = '<i class="fas fa-check"></i> 同步完成';
+            setTimeout(() => {
+                syncBtn.innerHTML = '<i class="fas fa-sync"></i> 同步数据';
+                syncBtn.disabled = false;
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('同步失败:', error);
+        if (syncBtn) {
+            syncBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 同步失败';
+            setTimeout(() => {
+                syncBtn.innerHTML = '<i class="fas fa-sync"></i> 同步数据';
+                syncBtn.disabled = false;
+            }, 2000);
+        }
+    }
+}
+
+// 启动定时同步
+function startRealtimeSync(intervalMs = 300000) {
+    if (realtimeSyncInterval) {
+        clearInterval(realtimeSyncInterval);
+    }
+    
+    realtimeSyncInterval = setInterval(async () => {
+        const currentCity = document.getElementById('cityInput')?.value;
+        if (currentCity) {
+            await fetchRealTimeWeather(currentCity);
+            displayWeatherInfo(currentCity);
+        }
+        await updateTrendingRanking();
+    }, intervalMs);
+    
+    console.log(`实时同步已启动，间隔: ${intervalMs / 1000}秒`);
+}
+
+// 选择城市并显示天气
+async function selectCity(cityName) {
+    const cityInput = document.getElementById('cityInput');
+    if (cityInput) {
+        cityInput.value = cityName;
+        await fetchRealTimeWeather(cityName);
+        displayWeatherInfo(cityName);
+    }
+}
+
+// 初始化实时同步
+document.addEventListener('DOMContentLoaded', function() {
+    startRealtimeSync(300000);
+    
+    const syncBtn = document.getElementById('syncBtn');
+    if (syncBtn) {
+        syncBtn.addEventListener('click', () => triggerSync());
     }
 });
 

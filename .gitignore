@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+test*.html
+check_syntax.js
+validate.js
+app_test.js
+app_simple.js
+
+# Documentation (if not needed in repo)
+系统提示和使用指南.md

@@ -45,8 +45,12 @@
                         <option value="">选择城市</option>
                     </select>
                 </div>
-                <input type="text" id="cityInput" placeholder="输入城市名称，如：北京、上海、成都...">
+                <div class="search-input-wrapper">
+                    <input type="text" id="cityInput" placeholder="输入城市名称，如：北京、上海、成都..." autocomplete="off">
+                    <div id="searchSuggestions" class="search-suggestions hidden"></div>
+                </div>
                 <button id="generateBtn">生成攻略</button>
+                <span class="search-hint">按 Enter 快速搜索</span>
             </div>
 
             <div class="quick-btns">
@@ -144,6 +148,6 @@
         <div id="result" class="result hidden"></div>
     </div>
 
-    <script src="app_fixed.js"></script>
+    <script src="app_backup.js"></script>
 </body>
 </html>

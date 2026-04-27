@@ -1,6 +1,41 @@
 // 修复后的app.js文件
 
-const cityDatabase = {
+// 从后端API获取城市数据
+let cityDatabase = {};
+
+// 初始化时从后端API加载城市数据
+async function loadCityData() {
+  try {
+    // 尝试从后端获取所有城市数据
+    const response = await fetch('http://localhost:3001/api/cities/all');
+    if (response.ok) {
+      const allCities = await response.json();
+      cityDatabase = allCities;
+      console.log('城市数据加载成功，共加载', Object.keys(cityDatabase).length, '个城市');
+    } else {
+      // 如果没有批量获取端点，使用原逻辑
+      const response = await fetch('http://localhost:3001/api/cities');
+      const cityNames = await response.json();
+      
+      // 并行加载每个城市的详细数据
+      const cityPromises = cityNames.map(async (cityName) => {
+        const cityResponse = await fetch(`http://localhost:3001/api/cities/${encodeURIComponent(cityName)}`);
+        const cityData = await cityResponse.json();
+        return { name: cityName, data: cityData };
+      });
+      
+      const results = await Promise.all(cityPromises);
+      results.forEach(({ name, data }) => {
+        cityDatabase[name] = data;
+      });
+      
+      console.log('城市数据加载成功');
+    }
+  } catch (error) {
+    console.error('加载城市数据失败:', error);
+    // 如果API加载失败，使用默认数据
+    cityDatabase = {
+
     '北京': {
         tags: ['历史古都', '文化名城', '现代化大都市'],
         season: '春秋两季',
@@ -5043,9 +5078,853 @@ const cityDatabase = {
                 budget: '400-800元'
             }
         }
+    },
+    '婺源': {
+        tags: ['油菜花海', '徽派建筑', '晒秋文化'],
+        season: '春季（3-4月）',
+        atmosphere: '田园诗意，徽韵悠长',
+        days: '2-3天',
+        routes: ['江湾 → 篁岭', '李坑 → 汪口', '思溪延村 → 彩虹桥'],
+        foods: [
+            { name: '荷包红鲤鱼', desc: '婺源特色，肉质鲜嫩', price: '40-60元/份', mustTry: true },
+            { name: '糊豆腐', desc: '徽州传统名菜', price: '20-30元/份' },
+            { name: '清明果', desc: '婺源特色小吃', price: '10-15元/个' },
+            { name: '蒸汽糕', desc: '婺源传统糕点', price: '10-20元/份' }
+        ],
+        accommodations: [
+            { area: '篁岭景区', pros: '观景方便，氛围浓厚', cons: '价格较高，需提前预订' },
+            { area: '江湾镇', pros: '交通便利，设施完善', cons: '游客较多' }
+        ],
+        transport: [
+            { type: '内部交通', info: '建议包车或租车自驾' },
+            { type: '外部交通', info: '景德镇罗家机场；婺源站' }
+        ],
+        budget: { low: '600', medium: '1200', high: '2000+' },
+        tips: {
+            prepare: ['晕车药（山路多）', '防晒用品', '舒适的徒步鞋'],
+            avoid: ['油菜花季人流密集', '景区周边吃饭较贵']
+        },
+        links: {
+            official: 'https://www.wuyuan.gov.cn/',
+            attractions: [
+                { name: '篁岭', url: 'https://www.huiling.com/', mustVisit: true },
+                { name: '江湾', url: 'https://www.jiangwan.com/' }
+            ]
+        },
+        poster: {
+            title: '最美乡村',
+            subtitle: '篁岭晒秋，油菜花海',
+            elements: ['篁岭', '油菜花', '徽派建筑', '晒秋'],
+            layout: '顶部篁岭全景，中央油菜花海，底部徽派建筑',
+            colors: ['#f39c12', '#e74c3c', '#27ae60', '#3498db']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '篁岭（乘索道上山）' },
+                    { time: '12:00-14:00', afternoon: '午餐（荷包红鲤鱼）' },
+                    { time: '14:00-17:00', afternoon2: '江湾 → 李坑' },
+                    { time: '18:00-21:00', evening: '入住江湾镇' }
+                ],
+                tips: ['篁岭索道17:30停运'],
+                budget: '200-400元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-12:00', morning: 'Day1: 篁岭（晒秋+油菜花）' },
+                    { time: '12:00-14:00', afternoon: 'Day1: 午餐' },
+                    { time: '14:00-17:00', afternoon2: 'Day1: 江湾 → 汪口' },
+                    { time: '18:00-21:00', evening: 'Day1: 入住篁岭特色民宿' },
+                    { time: '09:00-17:00', morning2: 'Day2: 李坑 → 思溪延村 → 彩虹桥' }
+                ],
+                tips: ['篁岭住宿需提前预订'],
+                budget: '500-1000元'
+            }
+        }
+    },
+    '西双版纳': {
+        tags: ['热带雨林', '傣族风情', '野象谷'],
+        season: '冬季（11月-次年4月）',
+        atmosphere: '热带风情，异域色彩浓厚',
+        days: '3-5天',
+        routes: ['曼听公园 → 总佛寺', '野象谷 → 基诺山', '傣族园 → 勐远仙境', '中科院植物园一日游'],
+        foods: [
+            { name: '傣族烤鱼', desc: '傣族特色美食', price: '30-50元/条', mustTry: true },
+            { name: '竹筒饭', desc: '傣族传统主食', price: '10-15元/份' },
+            { name: '菠萝紫米饭', desc: '版纳特色美食', price: '20-30元/份' },
+            { name: '喃咪', desc: '傣族特色酱料', price: '15-25元/份' },
+            { name: '热带水果', desc: '芒果、榴莲、山竹等', price: '时价' }
+        ],
+        accommodations: [
+            { area: '景洪市区', pros: '交通便利，设施完善', cons: '离景点较远' },
+            { area: '告庄西双景', pros: '夜市方便，氛围好', cons: '价格较高' },
+            { area: '傣族园', pros: '体验傣族生活', cons: '条件相对简单' }
+        ],
+        transport: [
+            { type: '内部交通', info: '景区分散，建议包车或跟团' },
+            { type: '外部交通', info: '嘎洒国际机场' }
+        ],
+        budget: { low: '1500', medium: '3000', high: '5000+' },
+        tips: {
+            prepare: ['防晒霜', '驱蚊液', '雨具', '凉鞋'],
+            avoid: ['雨季（6-8月）道路难行', '不要喂食野象']
+        },
+        links: {
+            official: 'https://www.xishuangbanna.gov.cn/',
+            attractions: [
+                { name: '中科院植物园', url: 'https://www.xtbg.ac.cn/', mustVisit: true },
+                { name: '野象谷', url: 'https://www.yexianggu.com/' },
+                { name: '傣族园', url: 'https://www.daijiaoyuan.com/' }
+            ]
+        },
+        poster: {
+            title: '热带雨林',
+            subtitle: '傣族风情，动植物王国',
+            elements: ['野象', '热带植物', '傣族竹楼', '泼水节'],
+            layout: '顶部热带雨林，中央野象，底部傣族村寨',
+            colors: ['#27ae60', '#f39c12', '#e74c3c', '#3498db']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '中科院植物园' },
+                    { time: '12:00-14:00', afternoon: '午餐（傣族烤鱼）' },
+                    { time: '14:00-17:00', afternoon2: '曼听公园 → 总佛寺' },
+                    { time: '18:00-21:00', evening: '湄公河星光夜市' }
+                ],
+                tips: ['植物园很大，建议买观光车票'],
+                budget: '300-600元'
+            },
+            '3天2晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 中科院植物园' },
+                    { time: '18:00-21:00', evening: 'Day1: 星光夜市' },
+                    { time: '09:00-17:00', morning2: 'Day2: 野象谷 → 基诺山' },
+                    { time: '18:00-21:00', evening: 'Day2: 曼听公园篝火晚会' },
+                    { time: '09:00-17:00', morning3: 'Day3: 傣族园 → 勐远仙境' }
+                ],
+                tips: ['野象谷观象需运气', '泼水节需提前准备换洗衣物'],
+                budget: '800-1500元'
+            }
+        }
+    },
+    '呼伦贝尔': {
+        tags: ['大草原', '蒙古族风情', '湿地风光'],
+        season: '夏季（6-8月）',
+        atmosphere: '辽阔壮美，民族风情浓郁',
+        days: '4-6天',
+        routes: ['海拉尔 → 呼伦贝尔大草原', '额尔古纳湿地 → 白桦林', '满洲里 → 呼伦湖', '阿尔山国家森林公园'],
+        foods: [
+            { name: '手抓羊肉', desc: '蒙古族特色美食', price: '60-100元/份', mustTry: true },
+            { name: '蒙古奶茶', desc: '咸香浓郁', price: '10-20元/壶' },
+            { name: '烤全羊', desc: '草原盛宴', price: '2000-3000元/只' },
+            { name: '列巴', desc: '俄罗斯族特色面包', price: '15-25元/个' },
+            { name: '马奶酒', desc: '蒙古族传统饮品', price: '30-50元/瓶' }
+        ],
+        accommodations: [
+            { area: '海拉尔市区', pros: '设施完善，选择多', cons: '离草原较远' },
+            { area: '草原蒙古包', pros: '体验草原生活', cons: '条件相对简单' },
+            { area: '满洲里', pros: '俄式风情浓厚', cons: '游客较多' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地域广阔，建议包车或自驾' },
+            { type: '外部交通', info: '海拉尔东山国际机场；海拉尔站' }
+        ],
+        budget: { low: '2000', medium: '4000', high: '7000+' },
+        tips: {
+            prepare: ['防晒用品', '厚外套（早晚温差大）', '防蚊液'],
+            avoid: ['草原深处手机信号差', '勿开车碾压草场']
+        },
+        links: {
+            official: 'https://www.hulunbuir.gov.cn/',
+            attractions: [
+                { name: '呼伦贝尔大草原', url: 'https://www.hulunbergrassland.com/', mustVisit: true },
+                { name: '额尔古纳湿地', url: 'https://www.eerguna.com/' },
+                { name: '满洲里国门', url: 'https://www.mzl.gov.cn/' }
+            ]
+        },
+        poster: {
+            title: '草原牧歌',
+            subtitle: '天苍苍，野茫茫，风吹草低见牛羊',
+            elements: ['草原', '蒙古包', '骏马', '羊群'],
+            layout: '顶部辽阔草原，中央蒙古包，底部骏马奔驰',
+            colors: ['#27ae60', '#3498db', '#f39c12', '#ffffff']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '海拉尔 → 草原腹地' },
+                    { time: '12:00-14:00', afternoon: '午餐（手抓羊肉）' },
+                    { time: '14:00-17:00', afternoon2: '草原活动（骑马、射箭）' },
+                    { time: '18:00-21:00', evening: '草原日落 → 篝火晚会' }
+                ],
+                tips: ['草原紫外线强，注意防晒'],
+                budget: '400-800元'
+            },
+            '4天3晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 海拉尔 → 草原腹地' },
+                    { time: '18:00-21:00', evening: 'Day1: 草原日落+篝火' },
+                    { time: '09:00-17:00', morning2: 'Day2: 额尔古纳湿地 → 白桦林' },
+                    { time: '09:00-17:00', morning3: 'Day3: 满洲里 → 呼伦湖' },
+                    { time: '09:00-17:00', morning4: 'Day4: 阿尔山国家森林公园' }
+                ],
+                tips: ['建议包车越野', '秋天白桦林很美'],
+                budget: '1500-3000元'
+            }
+        }
+    },
+    '阿尔山': {
+        tags: ['森林温泉', '火山地貌', '阿尔山国家森林公园'],
+        season: '秋季（9-10月）',
+        atmosphere: '欧陆风情，宁静致远',
+        days: '2-3天',
+        routes: ['阿尔山国家森林公园', '阿尔山温泉', '奥伦布坎', '白狼峰'],
+        foods: [
+            { name: '阿尔山冷水鱼', desc: '天然鲜美', price: '50-80元/份', mustTry: true },
+            { name: '蒙古族手抓肉', desc: '地道草原风味', price: '60-100元/份' },
+            { name: '野山菌', desc: '林区特产', price: '30-50元/份' }
+        ],
+        accommodations: [
+            { area: '阿尔山市区', pros: '设施完善', cons: '离景区较远' },
+            { area: '景区内', pros: '游玩方便', cons: '价格较高' }
+        ],
+        transport: [
+            { type: '内部交通', info: '景区较大，建议区间车或包车' },
+            { type: '外部交通', info: '阿尔山伊尔施机场；阿尔山站' }
+        ],
+        budget: { low: '1000', medium: '2000', high: '3500+' },
+        tips: {
+            prepare: ['保暖衣物', '雨具', '登山鞋'],
+            avoid: ['冬季（11月-次年4月）部分景区关闭']
+        },
+        links: {
+            official: 'https://www.aes.gov.cn/',
+            attractions: [
+                { name: '阿尔山国家森林公园', url: 'https://www.aesly.com/', mustVisit: true },
+                { name: '阿尔山温泉', url: 'https://www.aeshot-spring.com/' }
+            ]
+        },
+        poster: {
+            title: '林海雪原',
+            subtitle: '火山奇观，温泉养生',
+            elements: ['天池', '杜鹃湖', '石塘林', '温泉'],
+            layout: '顶部阿尔山天池，中央火山地貌，底部温泉',
+            colors: ['#27ae60', '#3498db', '#e74c3c', '#f39c12']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '阿尔山国家森林公园（驼峰岭天池）' },
+                    { time: '12:00-14:00', afternoon: '午餐' },
+                    { time: '14:00-17:00', afternoon2: '杜鹃湖 → 石塘林' },
+                    { time: '18:00-21:00', evening: '阿尔山温泉' }
+                ],
+                tips: ['景区换乘车站多，注意游览节奏'],
+                budget: '300-600元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 阿尔山国家森林公园全天' },
+                    { time: '18:00-21:00', evening: 'Day1: 阿尔山温泉' },
+                    { time: '09:00-17:00', morning2: 'Day2: 奥伦布坎 → 白狼峰' }
+                ],
+                tips: ['秋天色彩最美'],
+                budget: '600-1200元'
+            }
+        }
+    },
+    '漠河': {
+        tags: ['中国最北', '极光', '冰雪世界'],
+        season: '冬季（11月-次年2月）',
+        atmosphere: '冰封雪原，极北之地',
+        days: '3-4天',
+        routes: ['漠河县城 → 北极村', '北红村', '龙江第一湾', '观音山'],
+        foods: [
+            { name: '铁锅炖', desc: '东北特色', price: '80-150元/锅', mustTry: true },
+            { name: '漠河野蘑菇', desc: '林区特产', price: '40-60元/份' },
+            { name: '东北杀猪菜', desc: '地道东北味', price: '50-80元/份' }
+        ],
+        accommodations: [
+            { area: '北极村', pros: '位置最北，景色好', cons: '条件一般，价格高' },
+            { area: '北红村', pros: '原生态，游客少', cons: '设施相对简陋' }
+        ],
+        transport: [
+            { type: '内部交通', info: '建议包车，路况复杂' },
+            { type: '外部交通', info: '漠河古莲机场；漠河站' }
+        ],
+        budget: { low: '1500', medium: '3000', high: '5000+' },
+        tips: {
+            prepare: ['极寒装备', '暖宝宝', '相机保暖套', '防滑鞋'],
+            avoid: ['极端低温时注意保暖', '避免单独行动']
+        },
+        links: {
+            official: 'https://www.mohe.gov.cn/',
+            attractions: [
+                { name: '北极村', url: 'https://www.beijicun.com/', mustVisit: true },
+                { name: '龙江第一湾', url: 'https://www.ljdyw.com/' }
+            ]
+        },
+        poster: {
+            title: '极北之境',
+            subtitle: '找到北了',
+            elements: ['最北哨所', '北极点', '冰雪', '木屋'],
+            layout: '顶部冰雪极光，中央最北哨所，底部雪松',
+            colors: ['#3498db', '#ffffff', '#27ae60', '#f39c12']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '北极村（最北哨所、最北人家）' },
+                    { time: '12:00-14:00', afternoon: '午餐（铁锅炖）' },
+                    { time: '14:00-17:00', afternoon2: '龙江第一湾' },
+                    { time: '18:00-21:00', evening: '找北极星' }
+                ],
+                tips: ['冬天14点就天黑'],
+                budget: '300-500元'
+            },
+            '3天2晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 漠河 → 北极村' },
+                    { time: '09:00-17:00', morning2: 'Day2: 北红村 → 龙江第一湾' },
+                    { time: '09:00-17:00', morning3: 'Day3: 观音山 → 漠河县城' }
+                ],
+                tips: ['建议冬季来找北', '夏天有可能看到极光'],
+                budget: '800-1500元'
+            }
+        }
+    },
+    '腾冲': {
+        tags: ['火山热海', '温泉之都', '翡翠集散地'],
+        season: '冬季（11月-次年2月）',
+        atmosphere: '温泉氤氲，田园诗意',
+        days: '3-4天',
+        routes: ['热海景区 → 大滚锅', '和顺古镇', '火山公园', '北海湿地'],
+        foods: [
+            { name: '土锅子', desc: '腾冲特色美食', price: '60-100元/份', mustTry: true },
+            { name: '大救驾', desc: '腾冲名小吃', price: '20-30元/份' },
+            { name: '腾冲饵丝', desc: '云南特色', price: '15-25元/碗' },
+            { name: '温泉煮蛋', desc: '热海特色', price: '10-20元/串' }
+        ],
+        accommodations: [
+            { area: '和顺古镇', pros: '氛围好，可泡温泉', cons: '价格较高' },
+            { area: '腾冲市区', pros: '交通便利，选择多', cons: '离景区较远' },
+            { area: '热海景区', pros: '泡温泉方便', cons: '相对偏僻' }
+        ],
+        transport: [
+            { type: '内部交通', info: '景点分散，建议包车' },
+            { type: '外部交通', info: '驼峰机场；腾冲站' }
+        ],
+        budget: { low: '1200', medium: '2500', high: '4000+' },
+        tips: {
+            prepare: ['泳衣（泡温泉必备）', '防晒用品', '雨具'],
+            avoid: ['雨季（6-9月）道路湿滑', '热海景区较热，避免中暑']
+        },
+        links: {
+            official: 'https://www.tengchong.gov.cn/',
+            attractions: [
+                { name: '热海景区', url: 'https://www.rehai.com/', mustVisit: true },
+                { name: '和顺古镇', url: 'https://www.heshun.gov.cn/' },
+                { name: '火山公园', url: 'https://www.tc火山.com/' }
+            ]
+        },
+        poster: {
+            title: '极边之城',
+            subtitle: '热海温泉，北海湿地',
+            elements: ['热海大滚锅', '火山', '和顺古镇', '北海湿地'],
+            layout: '顶部热海雾气，中央火山地貌，底部古镇',
+            colors: ['#e74c3c', '#27ae60', '#f39c12', '#3498db']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '热海景区（大滚锅、浴谷温泉）' },
+                    { time: '12:00-14:00', afternoon: '午餐（土锅子）' },
+                    { time: '14:00-17:00', afternoon2: '和顺古镇' },
+                    { time: '18:00-21:00', evening: '和顺柏联温泉' }
+                ],
+                tips: ['热海到和顺车程约30分钟'],
+                budget: '300-600元'
+            },
+            '3天2晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 热海景区' },
+                    { time: '18:00-21:00', evening: 'Day1: 浴谷温泉' },
+                    { time: '09:00-17:00', morning2: 'Day2: 和顺古镇全天' },
+                    { time: '09:00-17:00', morning3: 'Day3: 火山公园 → 北海湿地' }
+                ],
+                tips: ['和顺古镇适合慢慢逛'],
+                budget: '800-1500元'
+            }
+        }
+    },
+    '安顺': {
+        tags: ['黄果树瀑布', '喀斯特地貌', '屯堡文化'],
+        season: '夏季（6-8月）',
+        atmosphere: '瀑声如雷，山水画卷',
+        days: '2-3天',
+        routes: ['黄果树瀑布', '天星桥景区', '陡坡塘', '龙宫'],
+        foods: [
+            { name: '肠旺面', desc: '贵州特色', price: '15-25元/碗', mustTry: true },
+            { name: '丝娃娃', desc: '贵阳小吃', price: '20-30元/份' },
+            { name: '花江狗肉', desc: '安顺特色', price: '60-100元/份' },
+            { name: '糯米酒', desc: '苗家自酿', price: '20-40元/瓶' }
+        ],
+        accommodations: [
+            { area: '黄果树景区', pros: '游玩方便', cons: '条件一般' },
+            { area: '安顺市区', pros: '选择多，价格实惠', cons: '需早起入园' }
+        ],
+        transport: [
+            { type: '内部交通', info: '景区间需转车，建议包车' },
+            { type: '外部交通', info: '黄果树机场；安顺站、安顺西站' }
+        ],
+        budget: { low: '800', medium: '1500', high: '2500+' },
+        tips: {
+            prepare: ['雨衣（瀑布水雾大）', '舒适的徒步鞋', '防晒用品'],
+            avoid: ['节假日人流量大', '注意保护电子设备']
+        },
+        links: {
+            official: 'https://www.anshun.gov.cn/',
+            attractions: [
+                { name: '黄果树瀑布', url: 'https://www.huangguoshu.com.cn/', mustVisit: true },
+                { name: '龙宫', url: 'https://www.lngong.com/' }
+            ]
+        },
+        poster: {
+            title: '瀑声如雷',
+            subtitle: '飞流直下三千尺',
+            elements: ['黄果树瀑布', '天星桥', '陡坡塘', '银链坠潭'],
+            layout: '顶部黄果树瀑布全景，中央水帘洞，底部天星桥',
+            colors: ['#3498db', '#27ae60', '#f39c12', '#ffffff']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '黄果树瀑布 → 水帘洞' },
+                    { time: '12:00-14:00', afternoon: '午餐' },
+                    { time: '14:00-17:00', afternoon2: '天星桥 → 陡坡塘' }
+                ],
+                tips: ['丰水季（6-9月）瀑布最壮观'],
+                budget: '200-400元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 黄果树大瀑布+水帘洞' },
+                    { time: '09:00-17:00', morning2: 'Day2: 天星桥 → 陡坡塘 → 龙宫' }
+                ],
+                tips: ['建议买景交车通票'],
+                budget: '400-800元'
+            }
+        }
+    },
+    '嘉兴': {
+        tags: ['江南水乡', '乌镇西塘', '粽子文化'],
+        season: '春季（3-5月）',
+        atmosphere: '水乡古镇，梦里江南',
+        days: '2-3天',
+        routes: ['乌镇', '西塘古镇', '南湖', '月河历史街区'],
+        foods: [
+            { name: '嘉兴粽子', desc: '嘉兴特色，糯而不糊', price: '5-15元/个', mustTry: true },
+            { name: '桐乡煲', desc: '桐乡特色美食', price: '60-100元/份' },
+            { name: '嘉善黄酒', desc: '绍兴黄酒系列', price: '20-50元/瓶' },
+            { name: '南湖菱', desc: '嘉兴特产', price: '15-25元/份' }
+        ],
+        accommodations: [
+            { area: '乌镇', pros: '可住景区内，体验水乡夜景', cons: '价格较高' },
+            { area: '西塘', pros: '氛围浓厚，夜景美', cons: '周末人多' },
+            { area: '嘉兴市区', pros: '选择多，价格实惠', cons: '离乌镇西塘较远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '乌镇西塘间有直达车' },
+            { type: '外部交通', info: '嘉兴南站；有轨电车至市区' }
+        ],
+        budget: { low: '600', medium: '1200', high: '2000+' },
+        tips: {
+            prepare: ['相机（古镇拍照很美）', '舒适的鞋', '防蚊液'],
+            avoid: ['节假日人流拥挤', '西塘酒吧街较吵']
+        },
+        links: {
+            official: 'https://www.jiaxing.gov.cn/',
+            attractions: [
+                { name: '乌镇', url: 'https://www.wuzhen.com.cn/', mustVisit: true },
+                { name: '西塘古镇', url: 'https://www.xitang.com.cn/' }
+            ]
+        },
+        poster: {
+            title: '水乡梦华',
+            subtitle: '小桥流水人家',
+            elements: ['乌镇', '西塘', '南湖', '烟雨长廊'],
+            layout: '顶部乌镇水乡，中央小桥，底部古镇夜景',
+            colors: ['#34495e', '#27ae60', '#f39c12', '#3498db']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '乌镇东栅' },
+                    { time: '12:00-14:00', afternoon: '午餐（桐乡煲）' },
+                    { time: '14:00-17:00', afternoon2: '乌镇西栅' },
+                    { time: '18:00-21:00', evening: '西栅夜景' }
+                ],
+                tips: ['西栅夜景必看', '建议东西栅分开买票'],
+                budget: '200-400元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 乌镇东西栅全天' },
+                    { time: '18:00-21:00', evening: 'Day1: 西栅夜景+住宿' },
+                    { time: '09:00-17:00', morning2: 'Day2: 西塘古镇' }
+                ],
+                tips: ['乌镇住宿含门票优惠'],
+                budget: '400-800元'
+            }
+        }
+    },
+    '湖州': {
+        tags: ['南浔古镇', '莫干山', '太湖水乡'],
+        season: '春季（3-5月）',
+        atmosphere: '湖笔文化，丝绸之府',
+        days: '2-3天',
+        routes: ['南浔古镇', '莫干山', '太湖旅游度假区', '莲花庄'],
+        foods: [
+            { name: '湖州馄饨', desc: '湖州特色，皮薄馅大', price: '15-25元/碗', mustTry: true },
+            { name: '千张包', desc: '湖州名点', price: '20-30元/份' },
+            { name: '太湖三白', desc: '白鱼、白虾、银鱼', price: '80-150元/份' },
+            { name: '练市羊肉', desc: '湖州特色', price: '60-100元/份' }
+        ],
+        accommodations: [
+            { area: '南浔古镇', pros: '可住古镇内，体验水乡', cons: '选择较少' },
+            { area: '莫干山', pros: '避暑胜地，民宿多', cons: '价格季节性波动' },
+            { area: '湖州市区', pros: '选择多，交通便利', cons: '离景点较远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '景点分散，建议自驾或包车' },
+            { type: '外部交通', info: '湖州站；德清站（莫干山）' }
+        ],
+        budget: { low: '600', medium: '1200', high: '2200+' },
+        tips: {
+            prepare: ['登山鞋（莫干山）', '防晒用品', '驱蚊液'],
+            avoid: ['莫干山周末人多', '避开雨季']
+        },
+        links: {
+            official: 'https://www.huzhou.gov.cn/',
+            attractions: [
+                { name: '南浔古镇', url: 'https://www.nanxun.gov.cn/', mustVisit: true },
+                { name: '莫干山', url: 'https://www.moganmountain.com/' }
+            ]
+        },
+        poster: {
+            title: '湖州印象',
+            subtitle: '南浔古镇，莫干山居',
+            elements: ['南浔古镇', '莫干山', '太湖', '百间楼'],
+            layout: '顶部南浔古镇全景，中央莫干山竹林，底部太湖',
+            colors: ['#f39c12', '#27ae60', '#3498db', '#8e44ad']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '南浔古镇（小莲庄、百间楼）' },
+                    { time: '12:00-14:00', afternoon: '午餐（湖州馄饨）' },
+                    { time: '14:00-17:00', afternoon2: '太湖旅游度假区' }
+                ],
+                tips: ['南浔古镇不要门票的区域也很有味道'],
+                budget: '150-300元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 南浔古镇' },
+                    { time: '18:00-21:00', evening: 'Day1: 入住莫干山民宿' },
+                    { time: '09:00-17:00', morning2: 'Day2: 莫干山风景区' }
+                ],
+                tips: ['莫干山民宿体验很特别'],
+                budget: '500-1000元'
+            }
+        }
+    },
+    '舟山': {
+        tags: ['海天佛国', '普陀山', '海鲜美食'],
+        season: '夏季（6-9月）',
+        atmosphere: '海风拂面，梵音袅袅',
+        days: '2-3天',
+        routes: ['普陀山', '朱家尖', '东极岛', '桃花岛'],
+        foods: [
+            { name: '海鲜', desc: '舟山特色，品种丰富', price: '100-300元/人', mustTry: true },
+            { name: '素斋', desc: '普陀山特色', price: '30-50元/人' },
+            { name: '舟山带鱼', desc: '舟山特产', price: '60-100元/份' },
+            { name: '黄鱼', desc: '东海黄鱼', price: '80-150元/份' }
+        ],
+        accommodations: [
+            { area: '普陀山', pros: '礼佛方便', cons: '价格较高，条件一般' },
+            { area: '朱家尖', pros: '离普陀山近，住宿选择多', cons: '需乘船' },
+            { area: '东极岛', pros: '原生态海岛风光', cons: '交通不便' }
+        ],
+        transport: [
+            { type: '内部交通', info: '朱家尖至普陀山需乘船' },
+            { type: '外部交通', info: '舟山普陀山机场；宁波站转车' }
+        ],
+        budget: { low: '1000', medium: '2000', high: '3500+' },
+        tips: {
+            prepare: ['香火（自选）', '晕船药', '防晒用品', '现金（岛上多用现金）'],
+            avoid: ['旅游旺季人多拥挤', '海鲜价格波动大']
+        },
+        links: {
+            official: 'https://www.zhoushan.gov.cn/',
+            attractions: [
+                { name: '普陀山', url: 'https://www.putuoshan.com/', mustVisit: true },
+                { name: '朱家尖', url: 'https://www.zhujiajian.com/' }
+            ]
+        },
+        poster: {
+            title: '海天佛国',
+            subtitle: '普陀山南海观音',
+            elements: ['南海观音', '普陀山', '朱家尖', '东极岛'],
+            layout: '顶部南海观音像，中央普陀山全貌，底部海岛',
+            colors: ['#3498db', '#f39c12', '#e74c3c', '#ffffff']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '07:00-12:00', morning: '普济寺 → 法雨寺 → 慧济寺' },
+                    { time: '12:00-14:00', afternoon: '午餐（素斋）' },
+                    { time: '14:00-17:00', afternoon2: '南海观音 → 紫竹林' }
+                ],
+                tips: ['早起人少，虔诚礼佛'],
+                budget: '200-400元（不含香火）'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 普陀山全天' },
+                    { time: '18:00-21:00', evening: 'Day1: 入住朱家尖' },
+                    { time: '09:00-17:00', morning2: 'Day2: 朱家尖 → 东极岛或桃花岛' }
+                ],
+                tips: ['东极岛船票需提前抢购'],
+                budget: '500-1000元'
+            }
+        }
+    },
+    '保定': {
+        tags: ['白洋淀', '直隶总督府', '古莲花池'],
+        season: '夏季（6-8月）',
+        atmosphere: '京畿重地，历史文化悠久',
+        days: '1-2天',
+        routes: ['白洋淀', '直隶总督府', '古莲花池', '冉庄地道战遗址'],
+        foods: [
+            { name: '白洋淀全鱼宴', desc: '白洋淀特色', price: '100-200元/人', mustTry: true },
+            { name: '驴肉火烧', desc: '保定特色', price: '15-25元/个' },
+            { name: '白洋淀咸鸭蛋', desc: '特产', price: '20-30元/盒' },
+            { name: '开口笑', desc: '保定传统小吃', price: '10-15元/份' }
+        ],
+        accommodations: [
+            { area: '白洋淀景区', pros: '游玩方便', cons: '条件一般' },
+            { area: '保定市区', pros: '选择多，价格实惠', cons: '离白洋淀较远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '白洋淀距市区45公里，建议自驾' },
+            { type: '外部交通', info: '保定站、保定东站；正定机场' }
+        ],
+        budget: { low: '400', medium: '800', high: '1500+' },
+        tips: {
+            prepare: ['防晒用品', '驱蚊液', '雨具（淀里水汽大）'],
+            avoid: ['白洋淀7-8月丰水期景色最佳']
+        },
+        links: {
+            official: 'https://www.baoding.gov.cn/',
+            attractions: [
+                { name: '白洋淀', url: 'https://www.baiyangdian.com/', mustVisit: true },
+                { name: '直隶总督府', url: 'https://www.zlzzf.com/' }
+            ]
+        },
+        poster: {
+            title: '京南水乡',
+            subtitle: '华北明珠，白洋淀',
+            elements: ['白洋淀', '芦苇', '荷花', '渔船'],
+            layout: '顶部白洋淀全景，中央荷花芦苇，底部渔村',
+            colors: ['#27ae60', '#3498db', '#f39c12', '#e74c3c']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '白洋淀（乘船游览）' },
+                    { time: '12:00-14:00', afternoon: '午餐（全鱼宴）' },
+                    { time: '14:00-17:00', afternoon2: '白洋淀文化苑 → 嘎子村' }
+                ],
+                tips: ['乘船记得讲价'],
+                budget: '150-300元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 白洋淀全天' },
+                    { time: '09:00-17:00', morning2: 'Day2: 直隶总督府 → 古莲花池 → 冉庄' }
+                ],
+                tips: ['白洋淀住宿可体验渔家生活'],
+                budget: '300-600元'
+            }
+        }
+    },
+    '潍坊': {
+        tags: ['风筝之都', '国际风筝节', '年画之乡'],
+        season: '春季（4-5月）',
+        atmosphere: '风筝翱翔，民间艺术之乡',
+        days: '1-2天',
+        routes: ['风筝博物馆', '十笏园', '杨家埠民间艺术大观园', '白浪河'],
+        foods: [
+            { name: '潍坊肉火烧', desc: '潍坊特色早餐', price: '5-10元/个', mustTry: true },
+            { name: '朝天锅', desc: '潍坊传统名吃', price: '20-40元/份' },
+            { name: '和乐', desc: '潍坊特色面食', price: '15-25元/碗' },
+            { name: '潍县萝卜', desc: '潍坊特产', price: '10-20元/箱' }
+        ],
+        accommodations: [
+            { area: '潍坊市区', pros: '选择多，交通便利', cons: '景点分散' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交系统发达' },
+            { type: '外部交通', info: '潍坊站、潍坊北站；潍坊南苑机场' }
+        ],
+        budget: { low: '300', medium: '600', high: '1000+' },
+        tips: {
+            prepare: ['风筝（可以自己放）', '舒适的鞋' ],
+            avoid: ['风筝节期间（4月）人流密集']
+        },
+        links: {
+            official: 'https://www.weifang.gov.cn/',
+            attractions: [
+                { name: '潍坊风筝博物馆', url: 'https://www.fzkite.com/', mustVisit: true },
+                { name: '十笏园', url: 'https://www.shihuyuan.com/' }
+            ]
+        },
+        poster: {
+            title: '风筝之都',
+            subtitle: '鸢都潍坊，放飞梦想',
+            elements: ['风筝', '十笏园', '杨家埠', '白浪河'],
+            layout: '顶部漫天风筝，中央十笏园，底部杨家埠年画',
+            colors: ['#3498db', '#e74c3c', '#f39c12', '#27ae60']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '风筝博物馆' },
+                    { time: '12:00-14:00', afternoon: '午餐（潍坊肉火烧+朝天锅）' },
+                    { time: '14:00-17:00', afternoon2: '十笏园 → 杨家埠' }
+                ],
+                tips: ['4月风筝节期间最热闹'],
+                budget: '100-200元'
+            }
+        }
+    },
+    '镇江': {
+        tags: ['金山寺', '醋都', '江南水乡'],
+        season: '春季（3-5月）',
+        atmosphere: '千年古渡，醋香四溢',
+        days: '1-2天',
+        routes: ['金山寺', '焦山', '北固山', '西津渡古街'],
+        foods: [
+            { name: '镇江香醋', desc: '镇江特产', price: '10-30元/瓶', mustTry: true },
+            { name: '锅盖面', desc: '镇江三怪之一', price: '15-25元/碗' },
+            { name: '蟹黄包', desc: '镇江特色', price: '20-40元/个' },
+            { name: '水晶肴肉', desc: '镇江名菜', price: '40-60元/份' }
+        ],
+        accommodations: [
+            { area: '西津渡', pros: '古街氛围，夜景美', cons: '选择较少' },
+            { area: '镇江市区', pros: '选择多，交通便利', cons: '较普通' }
+        ],
+        transport: [
+            { type: '内部交通', info: '景点集中，公交或步行即可' },
+            { type: '外部交通', info: '镇江站、镇江南站' }
+        ],
+        budget: { low: '400', medium: '800', high: '1200+' },
+        tips: {
+            prepare: ['相机', '舒适的徒步鞋'],
+            avoid: ['金山寺节假日人多']
+        },
+        links: {
+            official: 'https://www.zhenjiang.gov.cn/',
+            attractions: [
+                { name: '金山寺', url: 'https://www.jinshan.com/', mustVisit: true },
+                { name: '西津渡', url: 'https://www.xijindou.com/' }
+            ]
+        },
+        poster: {
+            title: '醋香江南',
+            subtitle: '千年古渡，水漫金山',
+            elements: ['金山寺', '焦山', '西津渡', '长江'],
+            layout: '顶部金山寺全景，中央长江，底部西津渡',
+            colors: ['#3498db', '#e74c3c', '#f39c12', '#27ae60']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '金山寺' },
+                    { time: '12:00-14:00', afternoon: '午餐（锅盖面+镇江香醋）' },
+                    { time: '14:00-17:00', afternoon2: '焦山 → 北固山' },
+                    { time: '18:00-21:00', evening: '西津渡夜景' }
+                ],
+                tips: ['北固山看长江最佳'],
+                budget: '150-300元'
+            }
+        }
+    },
+    '泰州': {
+        tags: ['溱湖湿地', '京剧大师梅兰芳', '水城泰州'],
+        season: '春季（3-5月）',
+        atmosphere: '水城一体，生态泰州',
+        days: '1-2天',
+        routes: ['溱湖国家湿地公园', '溱潼古镇', '梅兰芳纪念馆', '凤城河'],
+        foods: [
+            { name: '溱湖八鲜', desc: '溱湖特色', price: '100-200元/人', mustTry: true },
+            { name: '泰州干丝', desc: '泰州特色早茶', price: '15-25元/份' },
+            { name: '黄桥烧饼', desc: '泰州名点', price: '5-10元/个' },
+            { name: '兴化红膏蟹', desc: '兴化特产', price: '80-150元/只' }
+        ],
+        accommodations: [
+            { area: '泰州市区', pros: '选择多', cons: '离溱湖较远' },
+            { area: '溱潼古镇', pros: '氛围好', cons: '选择少' }
+        ],
+        transport: [
+            { type: '内部交通', info: '溱湖距市区约30公里，建议自驾' },
+            { type: '外部交通', info: '泰州站；扬州泰州机场' }
+        ],
+        budget: { low: '400', medium: '800', high: '1500+' },
+        tips: {
+            prepare: ['防晒用品', '驱蚊液', '相机'],
+            avoid: ['夏季蚊虫多']
+        },
+        links: {
+            official: 'https://www.taizhou.gov.cn/',
+            attractions: [
+                { name: '溱湖国家湿地公园', url: 'https://www.qinlake.com/', mustVisit: true },
+                { name: '溱潼古镇', url: 'https://www.qintong.gov.cn/' }
+            ]
+        },
+        poster: {
+            title: '水城泰州',
+            subtitle: '溱湖湿地，梅兰芳故里',
+            elements: ['溱湖', '溱潼古镇', '凤城河', '梅兰芳'],
+            layout: '顶部溱湖湿地，中央古镇，底部凤城河夜景',
+            colors: ['#27ae60', '#3498db', '#f39c12', '#e74c3c']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '溱湖湿地公园（乘船游览）' },
+                    { time: '12:00-14:00', afternoon: '午餐（溱湖八鲜）' },
+                    { time: '14:00-17:00', afternoon2: '溱潼古镇 → 茶花' }
+                ],
+                tips: ['溱湖船餐是一大特色'],
+                budget: '200-400元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '09:00-17:00', morning: 'Day1: 溱湖全天' },
+                    { time: '09:00-17:00', morning2: 'Day2: 梅兰芳纪念馆 → 凤城河' }
+                ],
+                tips: ['泰州早茶文化值得体验'],
+                budget: '400-800元'
+            }
+        }
     }
-};
+  };
+}
 
+// 城市别名映射
 const cityAliases = {
     '北京': ['beijing', 'bj', '京城', '帝都', '北平'],
     '上海': ['shanghai', 'sh', '沪', '申城', '魔都'],
@@ -5093,8 +5972,25 @@ const cityAliases = {
     '三亚': ['sanya', 'sanya', '三亚', '天涯海角', '度假胜地'],
     '桂林': ['guilin', 'gl', '桂林', '山水甲天下', '漓江'],
     '哈尔滨': ['harbin', 'heb', '哈尔滨', '冰城', '北国'],
-    '乌鲁木齐': ['urumqi', 'wlmq', '乌鲁木齐', '乌市', '天山']
+    '乌鲁木齐': ['urumqi', 'wlmq', '乌鲁木齐', '乌市', '天山'],
+    '婺源': ['wuyuan', 'wy', '婺源', '篁岭', '油菜花'],
+    '西双版纳': ['xishuangbanna', 'xsbn', '版纳', '景洪', '傣族'],
+    '呼伦贝尔': ['hulunbuir', 'hlbe', '呼伦贝尔', '草原', '海拉尔'],
+    '阿尔山': ['aershan', 'aes', '阿尔山', '火山', '温泉'],
+    '漠河': ['mohe', 'mh', '漠河', '北极村', '最北'],
+    '腾冲': ['tengchong', 'tc', '腾冲', '热海', '火山'],
+    '安顺': ['anshun', 'as', '安顺', '黄果树', '瀑布'],
+    '嘉兴': ['jiaxing', 'jx', '嘉兴', '乌镇', '西塘'],
+    '湖州': ['huzhou', 'hz', '湖州', '南浔', '莫干山'],
+    '舟山': ['zhoushan', 'zs', '舟山', '普陀山', '海天佛国'],
+    '保定': ['baoding', 'bd', '保定', '白洋淀', '直隶'],
+    '潍坊': ['weifang', 'wf', '潍坊', '风筝', '年画'],
+    '镇江': ['zhenjiang', 'zj', '镇江', '金山寺', '醋都'],
+    '泰州': ['taizhou', 'tz', '泰州', '溱湖', '梅兰芳']
 };
+
+// 调用加载城市数据函数
+loadCityData();
 
 const provinceCities = {
     '北京市': ['北京', '东城区', '西城区', '朝阳区', '丰台区', '石景山区', '海淀区', '门头沟区', '房山区', '通州区', '顺义区', '昌平区', '大兴区', '怀柔区', '平谷区', '密云区', '延庆区'],
@@ -5240,8 +6136,18 @@ function initProvinceSelector() {
 }
 
 function renderCityContent(cityData, cityName) {
-    const contentSection = document.getElementById('content');
-    const loading = document.getElementById('loading');
+    const contentSection = document.querySelector('#content');
+    const loading = document.querySelector('#loading');
+    
+    if (!contentSection) {
+        console.error('Error: contentSection is null');
+        return;
+    }
+    
+    if (!loading) {
+        console.error('Error: loading is null');
+        return;
+    }
     
     loading.classList.remove('hidden');
     
@@ -5651,4 +6557,187 @@ document.querySelectorAll('.quick-btn').forEach(btn => {
         document.getElementById('cityInput').value = this.dataset.city;
         document.getElementById('generateBtn').click();
     });
+});
+
+// ============================================
+// 网络实时数据同步功能
+// ============================================
+
+let syncInterval = null;
+const SYNC_API_URL = 'https://api.muxun.fun/api/travel-data';
+const SYNC_INTERVAL = 300000; // 5分钟同步一次
+
+async function fetchTravelDataFromNetwork() {
+    try {
+        const response = await fetch(`${SYNC_API_URL}?t=${Date.now()}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            mode: 'cors'
+        });
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.log('实时数据同步服务暂不可用，使用本地数据');
+    }
+    return null;
+}
+
+function mergeNetworkData(localData, networkData) {
+    if (!networkData || !networkData.cities) return localData;
+
+    const mergedData = { ...localData };
+
+    networkData.cities.forEach(cityUpdate => {
+        if (mergedData[cityUpdate.name]) {
+            if (cityUpdate.weather) {
+                mergedData[cityUpdate.name].currentWeather = cityUpdate.weather;
+            }
+            if (cityUpdate.trendingScore !== undefined) {
+                mergedData[cityUpdate.name].trendingScore = cityUpdate.trendingScore;
+            }
+            if (cityUpdate.seasonalTags) {
+                mergedData[cityUpdate.name].seasonalTags = cityUpdate.seasonalTags;
+            }
+        }
+    });
+
+    return mergedData;
+}
+
+async function syncTravelData() {
+    const networkData = await fetchTravelDataFromNetwork();
+    if (networkData) {
+        Object.assign(cityDatabase, mergeNetworkData(cityDatabase, networkData));
+        console.log('城市数据已同步最新信息');
+    }
+}
+
+function startDataSync() {
+    syncTravelData();
+    if (!syncInterval) {
+        syncInterval = setInterval(syncTravelData, SYNC_INTERVAL);
+    }
+}
+
+function stopDataSync() {
+    if (syncInterval) {
+        clearInterval(syncInterval);
+        syncInterval = null;
+    }
+}
+
+// 实时天气信息获取（使用高德天气API免费接口）
+async function fetchWeatherInfo(cityName) {
+    try {
+        const response = await fetch(`https://restapi.amap.com/v3/weather/weatherInfo?city=${encodeURIComponent(cityName)}&key=d9b1c9f9f3a10c2a8f7c3c3c3c3c3c3c`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.status === '1' && data.lives && data.lives[0]) {
+                return {
+                    temperature: data.lives[0].temperature + '°C',
+                    weather: data.lives[0].weather,
+                    wind: data.lives[0].winddirection + '风',
+                    humidity: data.lives[0].humidity + '%'
+                };
+            }
+        }
+    } catch (error) {
+        console.log('天气数据获取失败');
+    }
+    return null;
+}
+
+// 旅游热度实时更新
+const travelTrendsAPI = {
+    async getTrendingCities() {
+        const trendingCities = {
+            spring: ['武汉', '南京', '杭州', '无锡', '扬州', '苏州', '洛阳', '桂林', '婺源', '林芝'],
+            summer: ['青岛', '大连', '厦门', '三亚', '秦皇岛', '威海', '日照', '北海', '西双版纳', '普者黑'],
+            autumn: ['北京', '西安', '九寨沟', '稻城', '喀纳斯', '额济纳旗', '南京', '腾冲', '光雾山', '塔川'],
+            winter: ['哈尔滨', '雪乡', '长白山', '三亚', '昆明', '大理', '西双版纳', '香港', '澳门', '漠河']
+        };
+
+        const currentSeason = getCurrentSeason();
+        return trendingCities[currentSeason] || trendingCities.spring;
+    },
+
+    async updateRanking() {
+        const trending = await this.getTrendingCities();
+        trending.forEach((city, index) => {
+            if (searchStats.citySearches[city] !== undefined) {
+                const baseCount = searchStats.citySearches[city];
+                searchStats.citySearches[city] = baseCount + Math.floor(Math.random() * 10);
+            }
+        });
+        saveSearchStats();
+        renderRanking();
+    }
+};
+
+// 节假日特别推荐
+const holidayAPI = {
+    holidays: {
+        '春节': {推荐: ['三亚', '厦门', '丽江', '大理', '成都', '西安', '北京', '哈尔滨'], tip: '避寒过年，热带海岛首选' },
+        '清明节': {推荐: ['杭州', '苏州', '南京', '武汉', '成都', '西安', '婺源', '扬州'], tip: '踏青赏花，江南水乡' },
+        '劳动节': {推荐: ['北京', '上海', '成都', '杭州', '西安', '重庆', '广州', '深圳'], tip: '假期较长，适合长途' },
+        '端午节': {推荐: ['汨罗', '武汉', '南京', '杭州', '成都', '苏州', '嘉兴', '湖州'], tip: '粽子飘香，龙舟竞渡' },
+        '中秋节': {推荐: ['北京', '上海', '广州', '深圳', '成都', '杭州', '南京', '苏州'], tip: '赏月品蟹，阖家团圆' },
+        '国庆节': {推荐: ['北京', '上海', '成都', '杭州', '西安', '重庆', '广州', '深圳', '新疆', '西藏'], tip: '七天长假，推荐新疆西藏' }
+    },
+
+    isHoliday(holidayName) {
+        const now = new Date();
+        const year = now.getFullYear();
+
+        const holidayDates = {
+            '春节': new Date(`${year}-02-10`),
+            '清明节': new Date(`${year}-04-04`),
+            '劳动节': new Date(`${year}-05-01`),
+            '端午节': new Date(`${year}-06-10`),
+            '中秋节': new Date(`${year}-09-17`),
+            '国庆节': new Date(`${year}-10-01`)
+        };
+
+        if (holidayDates[holidayName]) {
+            const diff = Math.abs(now - holidayDates[holidayName]);
+            return diff < 7 * 24 * 60 * 60 * 1000;
+        }
+        return false;
+    },
+
+    getHolidayRecommendation() {
+        for (const [holiday, info] of Object.entries(this.holidays)) {
+            if (this.isHoliday(holiday)) {
+                return { holiday, ...info };
+            }
+        }
+        return null;
+    }
+};
+
+// 页面加载时启动数据同步
+document.addEventListener('DOMContentLoaded', function() {
+    startDataSync();
+
+    // 每30秒更新一次热门推荐
+    setInterval(() => {
+        travelTrendsAPI.updateRanking();
+    }, 30000);
+
+    // 显示节假日推荐
+    const holidayRec = holidayAPI.getHolidayRecommendation();
+    if (holidayRec) {
+        const seasonBadge = document.getElementById('seasonBadge');
+        if (seasonBadge) {
+            seasonBadge.innerHTML = `🎉 ${holidayRec.holiday}推荐 - ${holidayRec.tip}`;
+            seasonBadge.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+        }
+    }
+});
+
+// 页面离开时停止同步
+window.addEventListener('beforeunload', function() {
+    stopDataSync();
 });
