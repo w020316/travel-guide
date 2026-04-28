@@ -72,7 +72,46 @@ const cityAliases = {
     '张家界': ['zhangjiajie', 'zjj'],
     '哈尔滨': ['harbin', 'heb', '冰城'],
     '大理': ['dali', 'dl'],
-    '敦煌': ['dunhuang', 'dh']
+    '敦煌': ['dunhuang', 'dh'],
+    '天津': ['tianjin', 'tj', '津门', '津'],
+    '武汉': ['wuhan', 'wh', '江城'],
+    '长沙': ['changsha', 'cs', '星城', '潭'],
+    '郑州': ['zhengzhou', 'zz', '商都'],
+    '洛阳': ['luoyang', 'ly', '神都'],
+    '福州': ['fuzhou', 'fz', '榕城'],
+    '宁波': ['ningbo', 'nb', '甬'],
+    '无锡': ['wuxi', 'wx', '梁溪'],
+    '合肥': ['hefei', 'hf', '庐州'],
+    '黄山': ['huangshan', 'hs', '徽州'],
+    '沈阳': ['shenyang', 'sy', '盛京', '奉天'],
+    '长春': ['changchun', 'cc', '北春城'],
+    '昆明': ['kunming', 'km', '春城'],
+    '贵阳': ['guiyang', 'gy', '筑城'],
+    '拉萨': ['lasa', 'ls', '日光城'],
+    '乌鲁木齐': ['urumqi', 'wlmq', '乌市'],
+    '兰州': ['lanzhou', 'lz', '金城'],
+    '西宁': ['xining', 'xn', '夏都'],
+    '银川': ['yinchuan', 'yc', '凤城'],
+    '呼和浩特': ['huhehaote', 'hhht', '呼市', '青城'],
+    '太原': ['taiyuan', 'ty', '龙城'],
+    '石家庄': ['shijiazhuang', 'sjz'],
+    '南昌': ['nanchang', 'nc', '洪城'],
+    '济南': ['jinan', 'jn', '泉城'],
+    '珠海': ['zhuhai', 'zh', '百岛之市'],
+    '海口': ['haikou', 'hk', '椰城'],
+    '南宁': ['nanning', 'nn', '绿城'],
+    '香港': ['hongkong', 'hk', '香江'],
+    '澳门': ['macau', 'mac', '濠江'],
+    '台北': ['taipei', 'tp'],
+    '九寨沟': ['jiuzhaigou', 'jzg'],
+    '稻城亚丁': ['daochengyading', 'dcyd'],
+    '黄山风景区': ['huangshanfq', 'hsfq'],
+    '泰山': ['taishan', 'ts'],
+    '华山': ['huashan', 'hs'],
+    '峨眉山': ['emeishan', 'ems'],
+    '武当山': ['wudangshan', 'wds'],
+    '普陀山': ['putuoshan', 'pts'],
+    '五台山': ['wutaishan', 'wts']
 };
 
 // ==========================================
@@ -85,7 +124,13 @@ const pinyinMap = {
     '大': 'D', '桂': 'G', '深': 'S', '珠': 'Z', '昆': 'K', '拉': 'L',
     '乌': 'W', '兰': 'L', '沈': 'S', '郑': 'Z', '贵': 'G', '济': 'J',
     '太': 'T', '宁': 'N', '银': 'Y', '海': 'H', '福': 'F', '连': 'L',
-    '波': 'B', '黄': 'H', '敦': 'D'
+    '波': 'B', '黄': 'H', '敦': 'D', '津': 'J', '汉': 'H', '沙': 'S',
+    '洛': 'L', '州': 'Z', '肥': 'F', '无': 'W', '春': 'C', '呼': 'H',
+    '和': 'H', '浩': 'H', '特': 'T', '原': 'Y', '家': 'J', '庄': 'Z',
+    '昌': 'C', '湾': 'W', '口': 'K', '港': 'G', '门': 'M', '北': 'B',
+    '九': 'J', '寨': 'Z', '沟': 'G', '稻': 'D', '城': 'C', '亚': 'Y',
+    '丁': 'D', '泰': 'T', '华': 'H', '峨': 'E', '眉': 'M', '当': 'D',
+    '普': 'P', '陀': 'T', '五': 'W', '台': 'T'
 };
 
 function getPinyinInitials(city) {
@@ -1592,6 +1637,1070 @@ const EMBEDDED_CITIES = {
                 budget: '1000-1800元'
             }
         }
+    },
+    '天津': {
+        tags: ['津门故里', '欧式建筑', '狗不理包子'],
+        season: '春秋两季（4-5月，9-10月）',
+        atmosphere: '中西合璧，近代历史，美食之都',
+        days: '2-3天',
+        routes: ['古文化街 → 意式风情区 → 五大道', '天津之眼 → 海河游船 → 津湾广场', '瓷房子 → 西开教堂 → 南开大学'],
+        foods: [
+            { name: '狗不理包子', desc: '天津三绝之首', price: '15-25元/笼', mustTry: true },
+            { name: '煎饼果子', desc: '天津早餐标配', price: '6-12元/份' },
+            { name: '十八街麻花', desc: '天津特产', price: '10-20元/袋' },
+            { name: '耳朵眼炸糕', desc: '天津传统小吃', price: '5-8元/个' },
+            { name: '锅巴菜', desc: '天津特色早餐', price: '8-12元/碗' }
+        ],
+        accommodations: [
+            { area: '和平路/滨江道', pros: '市中心，购物方便', cons: '价格较高' },
+            { area: '五大道附近', pros: '环境优雅，小洋楼多', cons: '距离地铁稍远' },
+            { area: '意式风情区', pros: '夜景好，氛围浓', cons: '住宿选择少' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车；海河沿线适合步行' },
+            { type: '外部交通', info: '滨海国际机场；天津站、天津西站等火车站' }
+        ],
+        budget: { low: '800', medium: '1600', high: '2800+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在古文化街买高价工艺品', '不要乘坐黑车']
+        },
+        links: {
+            official: 'https://www.tj.gov.cn/',
+            attractions: [
+                { name: '五大道', url: 'http://www.wudadao.com/', mustVisit: true },
+                { name: '意式风情区', url: 'http://www.italianstyletown.com/', mustVisit: true },
+                { name: '瓷房子', url: 'http://www.chinaporcelainhouse.com/' }
+            ],
+            booking: [{ name: '天津之眼门票', url: 'http://www.tianjineye.com/' }],
+            food: [{ name: '天津美食', url: 'https://www.dianping.com/tianjin/food' }]
+        },
+        poster: {
+            title: '津门印象',
+            subtitle: '中西合璧，百年天津',
+            elements: ['五大道', '天津之眼', '古文化街', '海河'],
+            layout: '顶部天津之眼，中央五大道洋房，底部海河夜景',
+            colors: ['#3498db', '#e74c3c', '#f39c12', '#27ae60', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '09:00-12:00', morning: '古文化街 → 狗不理包子' },
+                    { time: '13:00-17:00', afternoon: '五大道漫步 → 瓷房子 → 意式风情区' },
+                    { time: '18:00-21:00', evening: '天津之眼 → 海河夜景 → 煎饼果子夜宵' }
+                ],
+                tips: ['五大道适合骑行或步行', '海河夜景很美'],
+                budget: '250-500元'
+            }
+        }
+    },
+    '武汉': {
+        tags: ['江城', '热干面', '黄鹤楼'],
+        season: '春秋两季（3-4月，9-11月）',
+        atmosphere: '九省通衢，江湖之城，热情火辣',
+        days: '2-3天',
+        routes: ['黄鹤楼 → 户部巷 → 武汉长江大桥', '东湖绿道 → 湖北省博物馆 → 楚河汉街', '武汉大学（樱花季）→ 昙华林 → 归元寺'],
+        foods: [
+            { name: '热干面', desc: '武汉过早必备', price: '6-10元/碗', mustTry: true },
+            { name: '鸭脖', desc: '武汉特色小吃', price: '30-50元/斤' },
+            { name: '豆皮', desc: '武汉传统早点', price: '8-12元/份' },
+            { name: '武昌鱼', desc: '湖北名菜', price: '60-100元/条' },
+            { name: '糊汤粉', desc: '武汉特色粉类', price: '10-15元/碗' }
+        ],
+        accommodations: [
+            { area: '江汉路/汉口江滩', pros: '老城区，美食多，交通便利', cons: '住宿较老旧' },
+            { area: '光谷/武昌', pros: '新区，设施好', cons: '距离主要景点远' },
+            { area: '东湖附近', pros: '环境优美', cons: '餐饮选择少' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁网络发达，公交便利；过江需预留时间' },
+            { type: '外部交通', info: '天河国际机场；武汉站、汉口站、武昌站等火车站' }
+        ],
+        budget: { low: '900', medium: '1800', high: '3200+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+            avoid: ['不要在户部巷买高价小吃', '3-4月樱花季人非常多']
+        },
+        links: {
+            official: 'https://www.wuhan.gov.cn/',
+            attractions: [
+                { name: '黄鹤楼', url: 'http://www.huanghelou.com/', mustVisit: true },
+                { name: '东湖', url: 'http://www.eastlake-wh.cn/', mustVisit: true },
+                { name: '湖北省博物馆', url: 'http://www.hbmuseum.com/' }
+            ],
+            booking: [{ name: '黄鹤楼门票', url: 'http://www.huanghelou.com/' }],
+            food: [{ name: '武汉美食', url: 'https://www.dianping.com/wuhan/food' }]
+        },
+        poster: {
+            title: '江城风韵',
+            subtitle: '九省通衢，英雄城市',
+            elements: ['黄鹤楼', '东湖', '长江大桥', '武汉大学'],
+            layout: '顶部黄鹤楼，中央长江大桥，底部东湖樱花',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#8e44ad']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '07:00-09:00', morning: '过早（热干面+豆皮）' },
+                    { time: '09:30-13:00', afternoon: '黄鹤楼 → 户部巷 → 武汉长江大桥' },
+                    { time: '14:00-18:00', afternoon2: '湖北省博物馆 → 东湖绿道' },
+                    { time: '19:00-21:00', evening: '楚河汉街 → 鸭脖宵夜' }
+                ],
+                tips: ['黄鹤楼建议早上去', '户部巷小吃可以试吃'],
+                budget: '300-550元'
+            }
+        }
+    },
+    '长沙': {
+        tags: ['星城', '臭豆腐', '岳麓书院'],
+        season: '春秋两季（3-5月，9-11月）',
+        atmosphere: '娱乐之都，美食天堂，青春活力',
+        days: '2-3天',
+        routes: ['岳麓山 → 岳麓书院 → 橘子洲头', '湖南省博物馆（马王堆）→ 太平老街 → 坡子街', '世界之窗（可选）→ 花明楼'],
+        foods: [
+            { name: '臭豆腐', desc: '长沙招牌小吃', price: '10-15元/份', mustTry: true },
+            { name: '口味虾', desc: '长沙夜宵之王', price: '80-150元/份' },
+            { name: '糖油粑粑', desc: '长沙传统甜品', price: '5-8元/串' },
+            { name: '剁椒鱼头', desc: '湘菜代表', price: '68-108元/份' },
+            { name: '茶颜悦色', desc: '长沙网红奶茶', price: '16-22元/杯' }
+        ],
+        accommodations: [
+            { area: '五一广场/坡子街', pros: '市中心，美食集中，夜生活丰富', cons: '吵闹，价格高' },
+            { area: '岳麓山/河西', pros: '靠近景区，安静', cons: '距离市中心稍远' },
+            { area: '芙蓉广场', pros: '交通便利', cons: '一般' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁发达，出租车便宜；橘子洲可乘小火车' },
+            { type: '外部交通', info: '黄花国际机场；长沙南站、长沙站等火车站' }
+        ],
+        budget: { low: '900', medium: '1800', high: '3200+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '肠胃药（辣）'],
+            avoid: ['不要在太平街买高价特产', '茶颜悦色到处都有不用排队买']
+        },
+        links: {
+            official: 'https://www.changsha.gov.cn/',
+            attractions: [
+                { name: '岳麓山', url: 'http://www.yuelushan.com/', mustVisit: true },
+                { name: '橘子洲', url: 'http://www.juzizhou.com/', mustVisit: true },
+                { name: '湖南省博物馆', url: 'http://www.hnmuseum.com/' }
+            ],
+            booking: [{ name: '湖南省博物馆预约', url: 'http://www.hnmuseum.com/' }],
+            food: [{ name: '长沙美食', url: 'https://www.dianping.com/changsha/food' }]
+        },
+        poster: {
+            title: '星城味道',
+            subtitle: '娱乐之都，不夜之城',
+            elements: ['岳麓山', '橘子洲', '太平街', 'IFS国金中心'],
+            layout: '顶部岳麓山，中央湘江两岸，底部繁华商圈',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '08:00-12:00', morning: '岳麓山 → 岳麓书院 → 爱晚亭' },
+                    { time: '12:30-14:00', afternoon: '午餐（臭豆腐+口味虾）' },
+                    { time: '14:30-18:00', afternoon2: '湖南省博物馆 → 橘子洲头' },
+                    { time: '19:00-23:00', evening: '太平老街 → 坡子街 → IFS打卡' }
+                ],
+                tips: ['岳麓山免费但索道收费', '博物馆需提前预约'],
+                budget: '280-500元'
+            }
+        }
+    },
+    '郑州': {
+        tags: ['商都', '少林寺', '烩面'],
+        season: '春秋两季（4-5月，9-10月）',
+        atmosphere: '中原腹地，历史文化深厚，交通枢纽',
+        days: '2-3天',
+        routes: ['少林寺一日游（嵩山）', '河南博物院 → 二七纪念塔 → 德化街', '黄河风景名胜区 → 黄帝故里（新郑）'],
+        foods: [
+            { name: '羊肉烩面', desc: '郑州特色面食', price: '15-25元/碗', mustTry: true },
+            { name: '胡辣汤', desc: '河南特色早餐', price: '6-10元/碗' },
+            { name: '水煎包', desc: '郑州传统小吃', price: '8-12元/份' },
+            { name: '油馍头', desc: '郑州特色面食', price: '3-5元/根' },
+            { name: '葛记焖饼', desc: '郑州名吃', price: '20-35元/份' }
+        ],
+        accommodations: [
+            { area: '二七广场/德化街', pros: '市中心，交通便利', cons: '住宿一般' },
+            { area: '郑东新区', pros: '现代化，CBD区域', cons: '距离老城区稍远' },
+            { area: '高铁站附近', pros: '出行方便', cons: '周边配套少' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车；去少林寺需包车或跟团' },
+            { type: '外部交通', info: '新郑国际机场；郑州东站、郑州站等火车站' }
+        ],
+        budget: { low: '800', medium: '1600', high: '2800+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在景区买高价药材', '少林寺周边有很多假武校']
+        },
+        links: {
+            official: 'https://www.zhengzhou.gov.cn/',
+            attractions: [
+                { name: '少林寺', url: 'http://www.shaolin.org.cn/', mustVisit: true },
+                { name: '河南博物院', url: 'http://www.chnmuseum.cn/', mustVisit: true },
+                { name: '黄河风景区', url: 'http://www.yellowriver-hh.com/' }
+            ],
+            booking: [{ name: '少林寺门票', url: 'http://www.shaolin.org.cn/' }],
+            food: [{ name: '郑州美食', url: 'https://www.dianping.com/zhengzhou/food' }]
+        },
+        poster: {
+            title: '商都中原',
+            subtitle: '天地之中，功夫之源',
+            elements: ['少林寺', '二七塔', '黄河', '河南博物院'],
+            layout: '顶部少林寺塔林，中央二七塔，底部黄河',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#8e44ad']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '06:30-16:00', morning: '少林寺一日游（需早起，距市区1.5小时车程）' },
+                    { time: '17:30-21:00', evening: '返回市区 → 二七广场 → 羊肉烩面' }
+                ],
+                tips: ['少林寺建议报一日游或包车', '武术表演值得一看'],
+                budget: '350-650元'
+            }
+        }
+    },
+    '洛阳': {
+        tags: ['神都', '牡丹花城', '龙门石窟'],
+        season: '春季（4月牡丹花期最佳），秋季（9-11月）',
+        atmosphere: '十三朝古都，佛教圣地，牡丹之乡',
+        days: '2-3天',
+        routes: ['龙门石窟 → 白马寺 → 关林', '洛阳博物馆 → 天堂明堂 → 应天门', '老君山（一日游，可选）'],
+        foods: [
+            { name: '水席', desc: '洛阳传统宴席', price: '60-120元/人', mustTry: true },
+            { name: '牛肉汤', desc: '洛阳早餐首选', price: '15-25元/碗' },
+            { name: '不翻汤', desc: '洛阳特色汤品', price: '10-15元/碗' },
+            { name: '浆面条', desc: '洛阳传统面食', price: '8-12元/碗' },
+            { name: '牡丹饼', desc: '洛阳特色点心', price: '5-8元/个' }
+        ],
+        accommodations: [
+            { area: '西工区/涧西区', pros: '市中心，交通便利', cons: '一般' },
+            { area: '洛龙区（新区）', pros: '靠近龙门石窟，环境好', cons: '距离老城区稍远' },
+            { area: '老城区', pros: '体验老洛阳生活', cons: '住宿条件一般' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；景点分散建议打车' },
+            { type: '外部交通', info: '北郊机场；洛阳站、洛阳龙门站等火车站' }
+        ],
+        budget: { low: '800', medium: '1600', high: '2800+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '学生证'],
+            avoid: ['不要在景区买高价牡丹制品', '4月牡丹节人多价高']
+        },
+        links: {
+            official: 'https://www.ly.gov.cn/',
+            attractions: [
+                { name: '龙门石窟', url: 'http://www.lmsk.org.cn/', mustVisit: true },
+                { name: '白马寺', url: 'http://www.baimasi.com/', mustVisit: true },
+                { name: '洛阳博物馆', url: 'http://www.lymuseum.com/' }
+            ],
+            booking: [{ name: '龙门石窟门票', url: 'http://www.lmsk.org.cn/' }],
+            food: [{ name: '洛阳美食', url: 'https://www.dianping.com/luoyang/food' }]
+        },
+        poster: {
+            title: '神都洛阳',
+            subtitle: '千年帝都，牡丹花城',
+            elements: ['龙门石窟', '白马寺', '天堂明堂', '牡丹'],
+            layout: '顶部龙门石窟卢舍那大佛，中央白马寺，底部牡丹花',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#9b59b6', '#3498db']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '08:00-12:30', morning: '龙门石窟（西山→东山→香山寺）' },
+                    { time: '13:30-16:00', afternoon: '白马寺 → 齐云塔' },
+                    { time: '17:00-21:00', evening: '天堂明堂夜景 → 水席晚餐' }
+                ],
+                tips: ['龙门石窟需要3-4小时', '白马寺是中国第一古刹'],
+                budget: '300-550元'
+            }
+        }
+    },
+    '福州': {
+        tags: ['榕城', '三坊七巷', '闽菜之都'],
+        season: '春秋两季（3-5月，9-11月）',
+        atmosphere: '闽都文化，温泉之都，慢节奏生活',
+        days: '2-3天',
+        routes: ['三坊七巷 → 林则徐纪念馆 → 西湖公园', '鼓山 → 涌泉寺', '平潭岛（蓝眼泪观赏地，可选）'],
+        foods: [
+            { name: '佛跳墙', desc: '闽菜之首', price: '188-388元/份', mustTry: true },
+            { name: '肉燕', desc: '福州特色小吃', price: '15-25元/碗' },
+            { name: '鱼丸', desc: '福州传统美食', price: '10-18元/碗' },
+            { name: '锅边糊', desc: '福州特色早餐', price: '8-12元/碗' },
+            { name: '蛎饼', desc: '福州街头小吃', price: '5-8元/个' }
+        ],
+        accommodations: [
+            { area: '三坊七巷/东街口', pros: '市中心，游览方便', cons: '价格较高' },
+            { area: '五四路/温泉公园', pros: '商务区，设施好', cons: '距离景点稍远' },
+            { area: '台江区', pros: '性价比高', cons: '较老旧' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车；老城区适合步行' },
+            { type: '外部交通', info: '长乐国际机场；福州站、福州南站等火车站' }
+        ],
+        budget: { low: '900', medium: '1800', high: '3200+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+            avoid: ['不要在三坊七巷买高价茶叶', '平潭岛蓝眼泪需看运气和季节']
+        },
+        links: {
+            official: 'https://www.fuzhou.gov.cn/',
+            attractions: [
+                { name: '三坊七巷', url: 'http://www.sanfangqixiang.com/', mustVisit: true },
+                { name: '鼓山', url: 'http://www.gushan.com/', mustVisit: true },
+                { name: '平潭岛', url: 'http://www.pingtan.gov.cn/' }
+            ],
+            booking: [{ name: '三坊七巷部分场馆', url: 'http://www.sanfangqixiang.com/' }],
+            food: [{ name: '福州美食', url: 'https://www.dianping.com/fuzhou/food' }]
+        },
+        poster: {
+            title: '榕城古韵',
+            subtitle: '有福之州，闽都文化',
+            elements: ['三坊七巷', '鼓山', '西湖公园', '温泉'],
+            layout: '顶部三坊七巷，中央鼓山涌泉寺，底部温泉泡汤',
+            colors: ['#27ae60', '#3498db', '#e74c3c', '#f39c12', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '08:30-12:30', morning: '三坊七巷深度游（严复故居→林觉民故居→水榭戏台）' },
+                    { time: '13:30-17:00', afternoon: '西湖公园 → 博物馆 → 西禅寺' },
+                    { time: '18:00-21:00', evening: '达明美食街 → 佛跳墙或肉燕晚餐' }
+                ],
+                tips: ['三坊七巷免费进入', '肉燕一定要尝'],
+                budget: '250-480元'
+            }
+        }
+    },
+    '宁波': {
+        tags: ['书藏古今，港通天下', '海鲜之城', '天一阁'],
+        season: '春秋两季（4-5月，9-11月）',
+        atmosphere: '港口城市，书香之地，江南水乡',
+        days: '2-3天',
+        routes: ['天一阁 → 月湖公园 → 老外滩', '溪口雪窦山（蒋氏故里）', '象山影视城 → 松兰山海滩（可选）'],
+        foods: [
+            { name: '宁波汤圆', desc: '宁波传统甜品', price: '10-15元/碗', mustTry: true },
+            { name: '红膏炝蟹', desc: '宁波海鲜代表', price: '80-150元/只' },
+            { name: '年糕', desc: '宁波特色主食', price: '15-25元/份' },
+            { name: '海鲜面结', desc: '宁波特色面食', price: '12-20元/碗' },
+            { name: '油赞子', desc: '宁波传统小吃', price: '10-15元/袋' }
+        ],
+        accommodations: [
+            { area: '海曙区/天一阁附近', pros: '老城区，游览方便', cons: '住宿条件一般' },
+            { area: '鄞州区/东部新城', pros: '现代化，设施好', cons: '距离老城区稍远' },
+            { area: '江北老外滩', pros: '酒吧餐厅多，夜景好', cons: '吵闹' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车；去溪口需坐大巴' },
+            { type: '外部交通', info: '栎社国际机场；宁波站、宁波东站等火车站' }
+        ],
+        budget: { low: '900', medium: '1800', high: '3200+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+            avoid: ['不要在天一阁买高价书籍', '溪口景区联票划算']
+        },
+        links: {
+            official: 'https://www.ningbo.gov.cn/',
+            attractions: [
+                { name: '天一阁', url: 'http://www.tianyige.com.cn/', mustVisit: true },
+                { name: '溪口', url: 'http://www.xikou.gov.cn/', mustVisit: true },
+                { name: '老外滩', url: 'http://www.oldbund-nb.com/' }
+            ],
+            booking: [{ name: '天一阁门票', url: 'http://www.tianyige.com.cn/' }],
+            food: [{ name: '宁波美食', url: 'https://www.dianping.com/ningbo/food' }]
+        },
+        poster: {
+            title: '甬城书香',
+            subtitle: '书藏古今，港通天下',
+            elements: ['天一阁', '老外滩', '溪口', '东钱湖'],
+            layout: '顶部天一阁藏书楼，中央老外滩，底部东钱湖',
+            colors: ['#2980b9', '#27ae60', '#e74c3c', '#f39c12', '#8e44ad']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '08:30-12:00', morning: '天一阁 → 月湖公园' },
+                    { time: '13:00-17:00', afternoon: '鼓楼步行街 → 老外滩 → 三江口' },
+                    { time: '18:00-21:00', evening: '南塘老街 → 宁波汤圆' }
+                ],
+                tips: ['天一阁是中国最古老的图书馆', '南塘老街晚上热闹'],
+                budget: '250-450元'
+            }
+        }
+    },
+    '无锡': {
+        tags: ['太湖明珠', '鼋头渚', '酱排骨'],
+        season: '春秋两季（3-5月，9-11月）',
+        atmosphere: '太湖风光，吴文化发源地，鱼米之乡',
+        days: '2-3天',
+        routes: ['鼋头渚 → 太湖仙岛 → 灵山大佛', '蠡园 → 惠山古镇 → 锡惠公园', '拈花湾（禅意小镇，可选）'],
+        foods: [
+            { name: '无锡酱排骨', desc: '无锡特产', price: '40-80元/斤', mustTry: true },
+            { name: '小笼包', desc: '无锡口味偏甜', price: '15-25元/笼' },
+            { name: '太湖三白', desc: '白鱼、白虾、银鱼', price: '80-150元/份' },
+            { name: '玉兰饼', desc: '无锡传统小吃', price: '5-8元/个' },
+            { name: '豆腐花', desc: '无锡特色早餐', price: '5-8元/碗' }
+        ],
+        accommodations: [
+            { area: '南禅寺/南长街', pros: '老城区，美食多，夜景好', cons: '住宿一般' },
+            { area: '太湖新城/蠡湖', pros: '环境优美，靠太湖', cons: '距离市区稍远' },
+            { area: '鼋头渚附近', pros: '游览方便', cons: '选择少，价格高' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车；太湖沿线适合自驾' },
+            { type: '外部交通', info: '苏南硕放机场（共用）；无锡站、无锡东站等火车站' }
+        ],
+        budget: { low: '900', medium: '1800', high: '3200+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+            avoid: ['不要在鼋头渚买高价紫砂壶', '灵山大佛门票较贵但值得']
+        },
+        links: {
+            official: 'https://www.wuxi.gov.cn/',
+            attractions: [
+                { name: '鼋头渚', url: 'http://www.yuantouzhu.com/', mustVisit: true },
+                { name: '灵山大佛', url: 'http://www.lingshan.com/', mustVisit: true },
+                { name: '惠山古镇', url: 'http://www.huishanguzhen.com/' }
+            ],
+            booking: [{ name: '鼋头渚门票', url: 'http://www.yuantouzhu.com/' }],
+            food: [{ name: '无锡美食', url: 'https://www.dianping.com/wuxi/food' }]
+        },
+        poster: {
+            title: '太湖明珠',
+            subtitle: '吴越文化，鱼米之乡',
+            elements: ['鼋头渚', '灵山大佛', '惠山古镇', '太湖'],
+            layout: '顶部鼋头渚樱花，中央灵山大佛，底部太湖帆影',
+            colors: ['#27ae60', '#3498db', '#e74c3c', '#f39c12', '#9b59b6']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '07:30-12:30', morning: '鼋头渚（赏樱/观太湖）→ 太湖仙岛' },
+                    { time: '13:30-17:00', afternoon: '灵山大佛 → 祥符禅寺' },
+                    { time: '18:00-21:00', evening: '南长街 → 南禅寺 → 无锡酱排骨' }
+                ],
+                tips: ['鼋头渚3-4月樱花最美', '灵山大佛壮观震撼'],
+                budget: '350-600元'
+            }
+        }
+    },
+    '合肥': {
+        tags: ['庐州', '三国故地', '科教名城'],
+        season: '春秋两季（4-5月，9-10月）',
+        atmosphere: '绿色城市，科技创新，历史与现代交融',
+        days: '2天',
+        routes: ['逍遥津公园 → 包公园 → 明教寺', '安徽省博物馆 → 三河古镇（一日游）', '李鸿章故居 → 巢湖（可选）'],
+        foods: [
+            { name: '合肥小龙虾', desc: '夏季热门美食', price: '80-150元/份', mustTry: true },
+            { name: '三河米饺', desc: '肥西特色', price: '10-15元/份' },
+            { name: '庐州烤鸭', desc: '合肥传统美食', price: '40-70元/只' },
+            { name: '吴山贡鹅', desc: '合肥名菜', price: '60-100元/份' },
+            { name: '曹操鸡', desc: '合肥特色', price: '50-80元/只' }
+        ],
+        accommodations: [
+            { area: '庐阳区/淮河路', pros: '市中心，交通便利', cons: '一般' },
+            { area: '政务区/天鹅湖', pros: '新区，环境好', cons: '距离老城区稍远' },
+            { area: '三河镇', pros: '古镇体验', cons: '距离市区远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车' },
+            { type: '外部交通', info: '新桥国际机场；合肥南站、合肥站等火车站' }
+        ],
+        budget: { low: '700', medium: '1400', high: '2500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在景区买高价土特产', '夏季注意防暑']
+        },
+        links: {
+            official: 'https://www.hefei.gov.cn/',
+            attractions: [
+                { name: '包公园', url: 'http://www.baogong.com/', mustVisit: true },
+                { name: '三河古镇', url: 'http://www.sanheguzhen.com/', mustVisit: true },
+                { name: '安徽省博物馆', url: 'http://www.ahm.cn/' }
+            ],
+            booking: [{ name: '三河古镇门票', url: 'http://www.sanheguzhen.com/' }],
+            food: [{ name: '合肥美食', url: 'https://www.dianping.com/hefei/food' }]
+        },
+        poster: {
+            title: '庐州新韵',
+            subtitle: '三国故地，科教名城',
+            elements: ['包公园', '逍遥津', '三河古镇', '天鹅湖'],
+            layout: '顶部包公祠，中央三河古镇，底部现代都市',
+            colors: ['#27ae60', '#3498db', '#e74c3c', '#f39c12', '#8e44ad']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '08:30-12:00', morning: '包公园 → 李鸿章故居 → 明教寺' },
+                    { time: '13:30-17:00', afternoon: '逍遥津公园 → 安徽省博物馆' },
+                    { time: '18:00-21:00', evening: '淮河路步行街 → 小龙虾' }
+                ],
+                tips: ['包公园是包拯的纪念园', '小龙虾夏天最肥美'],
+                budget: '250-450元'
+            }
+        }
+    },
+    '黄山': {
+        tags: ['徽州文化', '迎客松', '徽派建筑'],
+        season: '四季皆宜（最佳：3-5月春花，9-11月秋色）',
+        atmosphere: '奇松怪石，云海温泉，水墨徽州',
+        days: '2-3天',
+        routes: ['黄山风景区（光明顶→迎客松→西海大峡谷）', '宏村 → 西递（徽派古村落）', '屯溪老街 → 歙县古城（可选）'],
+        foods: [
+            { name: '臭鳜鱼', desc: '徽菜代表', price: '68-128元/条', mustTry: true },
+            { name: '毛豆腐', desc: '黄山特色小吃', price: '10-15元/份' },
+            { name: '黄山烧饼', desc: '黄山特产', price: '15-25元/袋' },
+            { name: '徽州毛豆腐', desc: '发酵豆制品', price: '8-12元/份' },
+            { name: '石耳炖鸡', desc: '黄山山珍', price: '80-130元/份' }
+        ],
+        accommodations: [
+            { area: '山顶酒店', pros: '看日出日落方便', cons: '贵且条件简陋' },
+            { area: '汤口镇（山下）', pros: '性价比高，选择多', cons: '上山需早起' },
+            { area: '宏村/西递', pros: '住在古村落，体验徽派建筑', cons: '距离黄山景区远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '景区环保车、索道；山上徒步为主' },
+            { type: '外部交通', info: '屯溪机场；黄山北站、黄山站等火车站' }
+        ],
+        budget: { low: '1200', medium: '2400', high: '4200+' },
+        tips: {
+            prepare: ['身份证必带', '登山鞋（重要！）', '登山杖', '雨衣（山上多变）', '保暖衣物（山顶冷）', '少量现金'],
+            avoid: ['不要在景区买高价茶叶', '不要租无证导游', '雨天路滑小心行走']
+        },
+        links: {
+            official: 'https://www.huangshan.gov.cn/',
+            attractions: [
+                { name: '黄山风景区', url: 'http://www.huangshan.gov.cn/', mustVisit: true },
+                { name: '宏村', url: 'http://www.hongcun.com/', mustVisit: true },
+                { name: '西递', url: 'http://www.xidi.com.cn/' }
+            ],
+            booking: [{ name: '黄山门票+索道', url: 'http://www.huangshan.gov.cn/' }],
+            food: [{ name: '徽菜美食', url: 'https://www.dianping.com/huangshan/food' }]
+        },
+        poster: {
+            title: '水墨徽州',
+            subtitle: '天下第一奇山',
+            elements: ['迎客松', '云海', '宏村', '屯溪老街'],
+            layout: '顶部黄山云海，中央迎客松，底部徽派村落',
+            colors: ['#27ae60', '#3498db', '#7f8c8d', '#e74c3c', '#f39c12']
+        },
+        itineraries: {
+            '1天': {
+                routes: [
+                    { time: '06:00-17:00', morning: '黄山一日精华游（玉屏楼→迎客松→光明顶→始信峰）' }
+                ],
+                tips: ['一日游很累，选精华路线', '建议从云谷寺上，玉屏楼下'],
+                budget: '400-700元'
+            },
+            '2天1晚': {
+                routes: [
+                    { time: '07:00-17:00', morning: 'Day1: 黄山风景区（住山顶看日出）' },
+                    { time: '08:30-16:00', morning2: 'Day2: 宏村 → 西递 → 屯溪老街' }
+                ],
+                tips: ['住山顶贵但值得', '宏村比西递大更出名'],
+                budget: '1000-1800元'
+            }
+        }
+    },
+    '沈阳': {
+        tags: ['盛京', '故宫', '二人转'],
+        season: '春秋两季（4-5月，9-10月）',
+        atmosphere: '清朝发祥地，工业重镇，东北文化中心',
+        days: '2-3天',
+        routes: ['沈阳故宫 → 张氏帅府 → 中街步行街', '北陵公园（昭陵）→ 东陵公园（福陵）', '九一八历史博物馆 → 辽宁省博物馆'],
+        foods: [
+            { name: '老边饺子', desc: '沈阳百年老字号', price: '30-50元/份', mustTry: true },
+            { name: '李连贵熏肉大饼', desc: '东北特色', price: '25-40元/份' },
+            { name: '马家烧麦', desc: '沈阳传统小吃', price: '15-25元/笼' },
+            { name: '鸡架', desc: '沈阳夜宵之王', price: '10-20元/个' },
+            { name: '抻面', desc: '沈阳特色面食', price: '10-15元/碗' }
+        ],
+        accommodations: [
+            { area: '中街/沈阳故宫附近', pros: '市中心，游览方便', cons: '住宿较老旧' },
+            { area: '太原街/铁西区', pros: '商业区，交通便利', cons: '一般' },
+            { area: '浑南新区', pros: '现代化，设施好', cons: '距离老城区远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车；景点集中适合步行' },
+            { type: '外部交通', info: '桃仙国际机场；沈阳站、沈阳北站等火车站' }
+        ],
+        budget: { low: '800', medium: '1600', high: '2800+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在景区买高价人参', '冬季注意保暖']
+        },
+        links: {
+            official: 'https://www.shenyang.gov.cn/',
+            attractions: [
+                { name: '沈阳故宫', url: 'http://www.sypm.org.cn/', mustVisit: true },
+                { name: '张氏帅府', url: 'http://www.syzhf.com/', mustVisit: true },
+                { name: '北陵公园', url: 'http://www.sybeiling.com/' }
+            ],
+            booking: [{ name: '沈阳故宫门票', url: 'http://www.sypm.org.cn/' }],
+            food: [{ name: '沈阳美食', url: 'https://www.dianping.com/shenyang/food' }]
+        },
+        poster: {
+            title: '盛京风华',
+            subtitle: '一朝发祥地，两代帝王都',
+            elements: ['沈阳故宫', '张氏帅府', '北陵', '中街'],
+            layout: '顶部沈阳故宫，中央帅府，底部中街',
+            colors: ['#c0392b', '#e74c3c', '#f39c12', '#27ae60', '#3498db']
+        }
+    },
+    '长春': {
+        tags: ['北春城', '电影城', '汽车城'],
+        season: '夏季（6-8月），冬季（12-2月滑雪）',
+        atmosphere: '电影文化，森林城，东北亚中心城市',
+        days: '2天',
+        routes: ['伪满皇宫博物院 → 长影世纪城 → 南湖公园', '净月潭国家森林公园 → 长春世界雕塑园', '这有山（网红打卡地）→ 桂林路'],
+        foods: [
+            { name: '朝鲜冷面', desc: '长春特色', price: '15-25元/碗', mustTry: true },
+            { name: '锅包肉', desc: '东北名菜', price: '38-58元/份' },
+            { name: '小鸡炖蘑菇', desc: '东北家常菜', price: '60-90元/份' },
+            { name: '雪衣豆沙', desc: '长春传统甜品', price: '18-28元/份' },
+            { name: '烤肉', desc: '东北烧烤', price: '80-120元/人' }
+        ],
+        accommodations: [
+            { area: '人民广场/重庆路', pros: '市中心，交通便利', cons: '一般' },
+            { area: '净月区', pros: '靠近净月潭，环境好', cons: '距离市区远' },
+            { area: '红旗街', pros: '商圈繁华', cons: '吵闹' }
+        ],
+        transport: [
+            { type: '内部交通', info: '轻轨、公交、出租车' },
+            { type: '外部交通', info: '龙嘉国际机场；长春站、长春西站等火车站' }
+        ],
+        budget: { low: '700', medium: '1400', high: '2500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在景区买高价特产', '冬季注意防寒']
+        },
+        links: {
+            official: 'https://www.changchun.gov.cn/',
+            attractions: [
+                { name: '伪满皇宫', url: 'http://www.wmhg.com.cn/', mustVisit: true },
+                { name: '长影世纪城', url: 'http://www.changying.com/', mustVisit: true },
+                { name: '净月潭', url: 'http://www.jingyuetan.net/' }
+            ],
+            booking: [{ name: '伪满皇宫门票', url: 'http://www.wmhg.com.cn/' }],
+            food: [{ name: '长春美食', url: 'https://www.dianping.com/changchun/food' }]
+        },
+        poster: {
+            title: '北国春城',
+            subtitle: '电影之都，森林之城',
+            elements: ['伪满皇宫', '长影世纪城', '净月潭', '南湖'],
+            layout: '顶部伪满皇宫，中央长影，底部净月潭',
+            colors: ['#27ae60', '#3498db', '#e74c3c', '#f39c12', '#9b59b6']
+        }
+    },
+    '昆明': {
+        tags: ['春城', '花卉之都', '过桥米线'],
+        season: '全年皆宜（最佳：3-5月，9-11月）',
+        atmosphere: '四季如春，民族风情浓郁，鲜花之城',
+        days: '2-3天',
+        routes: ['翠湖公园 → 云南大学 → 云南陆军讲武堂', '石林风景区（一日游）', '滇池 → 西山龙门 → 民族村', '大理/丽江（可搭配多日游）'],
+        foods: [
+            { name: '过桥米线', desc: '云南招牌美食', price: '20-40元/份', mustTry: true },
+            { name: '汽锅鸡', desc: '云南传统名菜', price: '68-128元/份' },
+            { name: '鲜花饼', desc: '云南特色点心', price: '5-8元/个' },
+            { name: '野生菌火锅', desc: '云南山珍', price: '100-200元/人' },
+            { name: '饵块', desc: '云南特色主食', price: '8-12元/份' }
+        ],
+        accommodations: [
+            { area: '翠湖/云南大学附近', pros: '市中心，环境好', cons: '价格较高' },
+            { area: '金马碧鸡坊/南屏街', pros: '老城区，美食多', cons: '住宿一般' },
+            { area: '滇池/西山', pros: '风景优美', cons: '距离市区稍远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车；去石林需坐高铁或大巴' },
+            { type: '外部交通', info: '长水国际机场；昆明站、昆明南站等火车站' }
+        ],
+        budget: { low: '900', medium: '1800', high: '3200+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '防晒霜（高原紫外线强）'],
+            avoid: ['不要在石林买高价玉石', '不要相信低价旅游团']
+        },
+        links: {
+            official: 'https://www.km.gov.cn/',
+            attractions: [
+                { name: '石林', url: 'http://www.shilin-city.com/', mustVisit: true },
+                { name: '滇池', url: 'http://www.dianchi.gov.cn/', mustVisit: true },
+                { name: '翠湖公园', url: 'http://www.cuihu.gov.cn/' }
+            ],
+            booking: [{ name: '石林门票', url: 'http://www.shilin-city.com/' }],
+            food: [{ name: '昆明美食', url: 'https://www.dianping.com/kunming/food' }]
+        },
+        poster: {
+            title: '春城花都',
+            subtitle: '四季如春，彩云之南',
+            elements: ['石林', '滇池', '翠湖', '民族村'],
+            layout: '顶部石林喀斯特地貌，中央滇池海鸥，底部鲜花市场',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#9b59b6']
+        }
+    },
+    '贵阳': {
+        tags: ['筑城', '避暑之都', '酸汤鱼'],
+        season: '夏季（6-8月避暑最佳），春秋两季',
+        atmosphere: '山中有城，城中有山，凉爽宜人',
+        days: '2-3天',
+        routes: ['甲秀楼 → 黔灵山公园 → 花果园白宫', '青岩古镇（一日游）', '黄果树瀑布（一日游，可选）', '荔波小七孔（可选）'],
+        foods: [
+            { name: '酸汤鱼', desc: '贵州招牌菜', price: '80-150元/份', mustTry: true },
+            { name: '丝娃娃', desc: '贵阳特色小吃', price: '15-25元/份' },
+            { name: '肠旺面', desc: '贵阳早餐标配', price: '10-15元/碗' },
+            { name: '恋爱豆腐果', desc: '贵阳街头小吃', price: '5-8元/份' },
+            { name: '折耳根', desc: '贵州特色食材（鱼腥草）', price: '按菜品算' }
+        ],
+        accommodations: [
+            { area: '喷水池/甲秀楼附近', pros: '市中心，交通便利', cons: '价格较高' },
+            { area: '花果园', pros: '新区，现代化', cons: '距离老城区稍远' },
+            { area: '青岩古镇', pros: '古镇体验', cons: '距离市区远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；贵阳地形复杂，走路累' },
+            { type: '外部交通', info: '龙洞堡国际机场；贵阳北站、贵阳站等火车站' }
+        ],
+        budget: { low: '800', medium: '1600', high: '2800+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子（重要！贵阳坡多路陡）', '充电宝', '雨具'],
+            avoid: ['不要在景区买高价银饰', '黄果树瀑布旺季人多需排队']
+        },
+        links: {
+            official: 'https://www.guiyang.gov.cn/',
+            attractions: [
+                { name: '甲秀楼', url: 'http://www.jiaxiulou.com/', mustVisit: true },
+                { name: '黔灵山公园', url: 'http://www.qianlingshan.com/', mustVisit: true },
+                { name: '青岩古镇', url: 'http://www.qingyangzhen.com/' }
+            ],
+            booking: [{ name: '黄果树瀑布门票', url: 'http://www.hgspw.com/' }],
+            food: [{ name: '贵阳美食', url: 'https://www.dianping.com/guiyang/food' }]
+        },
+        poster: {
+            title: '筑城清凉',
+            subtitle: '中国避暑之都',
+            elements: ['甲秀楼', '黔灵山', '青岩古镇', '花果园'],
+            layout: '顶部甲秀楼夜景，中央黔灵山猴子，底部青岩古镇',
+            colors: ['#27ae60', '#3498db', '#e74c3c', '#f39c12', '#8e44ad']
+        }
+    },
+    '拉萨': {
+        tags: ['日光城', '布达拉宫', '藏传佛教圣地'],
+        season: '5-10月（最佳：6-9月）',
+        atmosphere: '高原圣城，宗教氛围浓厚，心灵净土',
+        days: '3-4天',
+        routes: ['布达拉宫 → 大昭寺 → 八廓街 → 小昭寺', '哲蚌寺 → 色拉寺（辩经）', '纳木错（一日游，可选）', '羊卓雍措（一日游，可选）'],
+        foods: [
+            { name: '酥油茶', desc: '藏族传统饮品', price: '10-15元/壶', mustTry: true },
+            { name: '糌粑', desc: '藏族主食', price: '8-12元/份' },
+            { name: '藏面', desc: '拉萨特色面食', price: '10-15元/碗' },
+            { name: '牦牛肉干', desc: '西藏特产', price: '50-100元/袋' },
+            { name: '甜茶馆奶茶', desc: '拉萨日常饮品', price: '5-8元/杯' }
+        ],
+        accommodations: [
+            { area: '布达拉宫/大昭寺附近', pros: '游览方便，感受藏族生活', cons: '价格高，条件一般' },
+            { area: '北京东路', pros: '交通便利，选择多', cons: '吵闹' },
+            { area: '仙足岛/拉萨河畔', pros: '安静，看日出日落', cons: '距离景点稍远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '出租车、公交车；注意高原反应，慢走' },
+            { type: '外部交通', info: '贡嘎机场（距市区65km）；拉萨站火车站' }
+        ],
+        budget: { low: '2000', medium: '4000', high: '7000+' },
+        tips: {
+            prepare: ['身份证必带（入藏必备）', '防晒霜（SPF50+）', '墨镜', '保暖衣物（早晚温差极大）', '红景天/氧气瓶（预防高反）', '舒适的鞋子'],
+            avoid: ['不要在八廓街买假天珠蜜蜡', '尊重当地宗教习俗（顺时针转经）', '初到拉萨前两天不要洗澡洗头']
+        },
+        links: {
+            official: 'http://www.lasa.gov.cn/',
+            attractions: [
+                { name: '布达拉宫', url: 'http://www.potalapalace.cn/', mustVisit: true },
+                { name: '大昭寺', url: 'http://www.dazhaosi.net/', mustVisit: true },
+                { name: '纳木错', url: 'http://www.namucuo.com/' }
+            ],
+            booking: [{ name: '布达拉宫预约', url: 'http://www.potalapalace.cn/' }],
+            food: [{ name: '拉萨美食', url: 'https://www.dianping.com/lasa/food' }]
+        },
+        poster: {
+            title: '圣地拉萨',
+            subtitle: '日光之城，心灵净土',
+            elements: ['布达拉宫', '大昭寺', '八廓街', '纳木错'],
+            layout: '顶部布达拉宫全景，中央大昭寺朝拜者，底部纳木错圣湖',
+            colors: ['#e74c3c', '#f39c12', '#ffffff', '#3498db', '#9b59b6']
+        }
+    },
+    '香港': {
+        tags: ['东方之珠', '购物天堂', '维多利亚港'],
+        season: '秋季（10-12月）和春季（3-5月）',
+        atmosphere: '中西文化交融，国际都市，美食天堂',
+        days: '3-4天',
+        routes: ['维多利亚港 → 太平山顶 → 兰桂坊', '迪士尼乐园 / 海洋公园（二选一）', '尖沙咀 → 星光大道 → 天星小轮', '铜锣湾 → 旺角 → 深水埗（购物美食）'],
+        foods: [
+            { name: '港式茶餐厅', desc: '菠萝油+丝袜奶茶', price: '40-70元/人', mustTry: true },
+            { name: '烧腊', desc: '叉烧/烧鹅/烧肉', price: '50-80元/份' },
+            { name: '鸡蛋仔', desc: '香港街头小吃', price: '15-20元/份' },
+            { name: '云吞面', desc: '港式经典面食', price: '30-50元/碗' },
+            { name: '咖喱鱼蛋', desc: '便利店小吃', price: '10-15元/串' }
+        ],
+        accommodations: [
+            { area: '尖沙咀/佐敦', pros: '交通便利，购物方便', cons: '房间小，价格高' },
+            { area: '铜锣湾/湾仔', pros: '商业区，选择多', cons: '吵闹' },
+            { area: '旺角/深水埗', pros: '性价比高，地道体验', cons: '老旧拥挤' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁（MTR）、巴士、天星小轮、叮叮车；八达通卡必备' },
+            { type: '外部交通', info: '香港国际机场；高铁西九龙站；罗湖/福田口岸（深圳过关）' }
+        ],
+        budget: { low: '3000', medium: '6000', high: '12000+' },
+        tips: {
+            prepare: ['港澳通行证+签注必办', '八达通卡（交通购物通用）', '转换插头（英式三孔）', ' comfortable shoes', '充电宝'],
+            avoid: ['不要在药店买不知名药品', '不要相信廉价名牌', '尖沙咀手表店谨慎购买']
+        },
+        links: {
+            official: 'https://www.discoverhongkong.com/',
+            attractions: [
+                { name: '太平山顶', url: 'https://www.thepeak.com.hk/', mustVisit: true },
+                { name: '维多利亚港', url: 'https://www.discoverhongkong.com/', mustVisit: true },
+                { name: '迪士尼乐园', url: 'https://www.hkdisneyland.com/' }
+            ],
+            booking: [{ name: '迪士尼门票', url: 'https://www.hkdisneyland.com/' }],
+            food: [{ name: '香港美食', url: 'https://www.openrice.com/hongkong' }]
+        },
+        poster: {
+            title: '东方之珠',
+            subtitle: '动感之都，魅力无限',
+            elements: ['维港夜景', '太平山顶', '迪士尼', '兰桂坊'],
+            layout: '顶部维港璀璨夜景，中央太平山顶俯瞰，底部霓虹街道',
+            colors: ['#e74c3c', '#f39c12', '#3498db', '#9b59b6', '#1abc9c']
+        }
+    },
+    '珠海': {
+        tags: ['百岛之市', '浪漫之城', '渔女像'],
+        season: '全年皆宜（最佳：10月-次年3月）',
+        atmosphere: '海滨花园城市，休闲浪漫，毗邻澳门',
+        days: '2-3天',
+        routes: ['情侣路 → 渔女像 → 珠海大剧院', '圆明新园 → 情侣南路', '长隆海洋王国（一日游，可选）', '澳门一日游（可搭配）'],
+        foods: [
+            { name: '横琴蚝', desc: '珠海海鲜代表', price: '60-120元/份', mustTry: true },
+            { name: '斗门重壳蟹', desc: '珠海特产', price: '100-180元/只' },
+            { name: '珠海膏蟹', desc: '秋季肥美', price: '80-150元/只' },
+            { name: '广式早茶', desc: '粤式点心', price: '50-80元/人' },
+            { name: '唐家湾茶果', desc: '珠海传统小吃', price: '10-15元/份' }
+        ],
+        accommodations: [
+            { area: '情侣路/吉大', pros: '海滨区域，环境好', cons: '价格较高' },
+            { area: '拱北口岸附近', pros: '去澳门方便', cons: '吵闹' },
+            { area: '横琴新区', pros: '靠近长隆，新开发', cons: '配套尚不完善' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；情侣路适合骑行或步行' },
+            { type: '外部交通', info: '金湾机场；珠海站、珠海北站等火车站；拱北口岸（去澳门）' }
+        ],
+        budget: { low: '1000', medium: '2200', high: '4000+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '防晒霜', '泳衣'],
+            avoid: ['不要在景区买高价珍珠', '去澳门记得带港澳通行证']
+        },
+        links: {
+            official: 'https://www.zhuhai.gov.cn/',
+            attractions: [
+                { name: '长隆海洋王国', url: 'http://www.chimelong.com/', mustVisit: true },
+                { name: '圆明新园', url: 'http://www.yuanmingxinyuan.com/', mustVisit: true },
+                { name: '外伶仃岛', url: 'http://www.wailingdingdao.com/' }
+            ],
+            booking: [{ name: '长隆门票', url: 'http://www.chimelong.com/' }],
+            food: [{ name: '珠海美食', url: 'https://www.dianping.com/zhuhai/food' }]
+        },
+        poster: {
+            title: '浪漫珠海',
+            subtitle: '百岛之城，幸福之地',
+            elements: ['渔女像', '情侣路', '长隆', '澳门景观'],
+            layout: '顶部渔女雕像，中央情侣路海岸线，底部澳门塔远景',
+            colors: ['#3498db', '#27ae60', '#e74c3c', '#f39c12', '#9b59b6']
+        }
+    },
+    '海口': {
+        tags: ['椰城', '热带滨海', '骑楼老街'],
+        season: '11月-次年4月（避开台风季）',
+        atmosphere: '悠闲慢生活，椰风海韵，海南门户',
+        days: '2-3天',
+        routes: ['骑楼老街 → 冯小刚电影公社 → 假日海滩', '火山口地质公园 → 海口钟楼', '万绿园 → 白沙门公园', '三亚方向（可搭配）'],
+        foods: [
+            { name: '海南粉', desc: '海口早餐首选', price: '10-15元/碗', mustTry: true },
+            { name: '清补凉', desc: '海南甜品', price: '8-12元/份' },
+            { name: '椰子饭', desc: '海南特色', price: '15-25元/份' },
+            { name: '老爸茶', desc: '海口下午茶文化', price: '30-50元/人' },
+            { name: '加积鸭', desc: '海南四大名菜之一', price: '60-100元/只' }
+        ],
+        accommodations: [
+            { area: '龙华区/骑楼老街附近', pros: '老城区，体验本地生活', cons: '住宿一般' },
+            { area: '秀英区/假日海滩', pros: '海边，度假感强', cons: '距离市区稍远' },
+            { area: '美兰机场附近', pros: '出行方便', cons: '周边配套少' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车、网约车；电动车很普遍' },
+            { type: '外部交通', info: '美兰国际机场；海口东站、海口站等火车站' }
+        ],
+        budget: { low: '800', medium: '1600', high: '3000+' },
+        tips: {
+            prepare: ['身份证必带', '防晒霜', '舒适的鞋子', '夏装为主'],
+            avoid: ['不要在景区买高价椰子制品', '5-10月是台风季'
+            ]
+        },
+        links: {
+            official: 'https://www.haikou.gov.cn/',
+            attractions: [
+                { name: '骑楼老街', url: 'http://www.hkqiloujie.com/', mustVisit: true },
+                { name: '火山口公园', url: 'http://www.hksyk.com/', mustVisit: true },
+                { name: '冯小刚电影公社', url: 'http://www.fengxiaogong.com/' }
+            ],
+            booking: [],
+            food: [{ name: '海口美食', url: 'https://www.dianping.com/haikou/food' }]
+        },
+        poster: {
+            title: '椰城海口',
+            subtitle: '热带门户，悠闲之都',
+            elements: ['骑楼老街', '假日海滩', '万绿园', '钟楼'],
+            layout: '顶部骑楼建筑群，中央椰林大道，底部海滩夕阳',
+            colors: ['#27ae60', '#f39c12', '#3498db', '#e74c3c', '#1abc9c']
+        }
+    },
+    '济南': {
+        tags: ['泉城', '趵突泉', '大明湖'],
+        season: '春秋两季（4-5月，9-10月）',
+        atmosphere: '泉城文化，泉水叮咚，历史文化名城',
+        days: '2天',
+        routes: ['趵突泉 → 五龙潭 → 大明湖 → 曲水亭街', '千佛山 → 泉城广场 → 黑虎泉', '章丘朱家裕（古村落，可选）'],
+        foods: [
+            { name: '糖醋鲤鱼', desc: '鲁菜代表', price: '68-128元/条', mustTry: true },
+            { name: '九转大肠', desc: '济南传统名菜', price: '58-98元/份' },
+            { name: '油旋', desc: '济南特色小吃', price: '5-8元/个' },
+            { name: '把子肉', desc: '济南传统美食', price: '15-25元/份' },
+            { name: '甜沫', desc: '济南特色早餐', price: '5-8元/碗' }
+        ],
+        accommodations: [
+            { area: '泉城广场/趵突泉附近', pros: '市中心，游览方便', cons: '价格较高' },
+            { area: '大明湖附近', pros: '环境好，靠湖', cons: '距离商圈稍远' },
+            { area: '历下区其他区域', pros: '性价比高', cons: '一般' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；老城区适合步行或骑车' },
+            { type: '外部交通', info: '遥墙国际机场；济南西站、济南站等火车站' }
+        ],
+        budget: { low: '700', medium: '1400', high: '2500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在景区买高价阿胶', '趵突泉水位夏季较高'
+            ]
+        },
+        links: {
+            official: 'https://www.jinan.gov.cn/',
+            attractions: [
+                { name: '趵突泉', url: 'http://www.baotuspring.com/', mustVisit: true },
+                { name: '大明湖', url: 'http://www.daminglake.com/', mustVisit: true },
+                { name: '千佛山', url: 'http://www.qianfoshan.com/' }
+            ],
+            booking: [{ name: '趵突泉门票', url: 'http://www.baotuspring.com/' }],
+            food: [{ name: '济南美食', url: 'https://www.dianping.com/jinan/food' }]
+        },
+        poster: {
+            title: '泉城济南',
+            subtitle: '家家泉水，户户垂杨',
+            elements: ['趵突泉', '大明湖', '千佛山', '曲水亭街'],
+            layout: '顶部趵突泉涌泉，中央大明湖荷塘，底部曲水亭街',
+            colors: ['#3498db', '#27ae60', '#e74c3c', '#f39c12', '#8e44ad']
+        }
+    },
+    '南昌': {
+        tags: ['洪城', '英雄城', '滕王阁'],
+        season: '春秋两季（4-5月，9-11月）',
+        atmosphere: '红色故里，物华天宝，人杰地灵',
+        days: '2天',
+        routes: ['滕王阁 → 八一广场 → 秋水广场（音乐喷泉）', '江西省博物馆 → 绳金塔 → 万寿宫', '梅岭风景区（一日游，可选）'],
+        foods: [
+            { name: '南昌拌粉', desc: '南昌早餐标配', price: '10-15元/碗', mustTry: true },
+            { name: '瓦罐汤', desc: '南昌特色汤品', price: '15-25元/罐' },
+            { name: '藜蒿炒腊肉', desc: '江西名菜', price: '38-58元/份' },
+            { name: '白糖糕', desc: '南昌传统小吃', price: '3-5元/个' },
+            { name: '南昌炒粉', desc: '南昌夜宵', price: '12-18元/份' }
+        ],
+        accommodations: [
+            { area: '八一广场/滕王阁附近', pros: '市中心，交通便利', cons: '价格较高' },
+            { area: '红谷滩新区', pros: '现代化，赣江江景', cons: '距离老城区稍远' },
+            { area: '绳金塔/万寿宫', pros: '老城区，美食多', cons: '住宿一般' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车' },
+            { type: '外部交通', info: '昌北国际机场；南昌西站、南昌站等火车站' }
+        ],
+        budget: { low: '700', medium: '1400', high: '2500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在景区买高价瓷器', '秋水广场音乐喷泉晚上才有']
+        },
+        links: {
+            official: 'https://www.nanchang.gov.cn/',
+            attractions: [
+                { name: '滕王阁', url: 'http://www.tengwangge.cn/', mustVisit: true },
+                { name: '八一广场', url: 'http://www.bayi-square.com/', mustVisit: true },
+                { name: '江西省博物馆', url: 'http://www.jxmuseum.cn/' }
+            ],
+            booking: [{ name: '滕王阁门票', url: 'http://www.tengwangge.cn/' }],
+            food: [{ name: '南昌美食', url: 'https://www.dianping.com/nanchang/food' }]
+        },
+        poster: {
+            title: '英雄城南昌',
+            subtitle: '物华天宝，人杰地灵',
+            elements: ['滕王阁', '八一广场', '秋水广场', '绳金塔'],
+            layout: '顶部滕王阁临江，中央八一广场，底部赣江夜景',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#9b59b6']
+        }
+    },
+    '太原': {
+        tags: ['龙城', '晋祠', '山西老陈醋'],
+        season: '春秋两季（5-6月，9-10月）',
+        atmosphere: '三晋文化发源地，煤炭之都，面食之乡',
+        days: '2天',
+        routes: ['晋祠 → 山西博物院 → 迎泽公园', '双塔寺 → 纯阳宫 → 柳巷', '平遥古城（一日游，距太原1小时）', '乔家大院（可搭配）'],
+        foods: [
+            { name: '刀削面', desc: '山西面食之首', price: '15-25元/碗', mustTry: true },
+            { name: '过油肉', desc: '晋菜代表', price: '38-58元/份' },
+            { name: '老陈醋', desc: '山西特产', price: '10-20元/瓶' },
+            { name: '莜面栲栳栳', desc: '山西特色面食', price: '18-28元/份' },
+            { name: '太原头脑', desc: '太原传统早餐', price: '15-20元/碗' }
+        ],
+        accommodations: [
+            { area: '迎泽大街/柳巷', pros: '市中心，商业繁华', cons: '住宿较老旧' },
+            { area: '长风商务区', pros: '新区，设施好', cons: '距离老城区稍远' },
+            { area: '晋祠附近', pros: '靠景区', cons: '选择少' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；去平遥需坐动车或大巴' },
+            { type: '外部交通', info: '武宿国际机场；太原站、太原南站等火车站' }
+        ],
+        budget: { low: '700', medium: '1400', high: '2500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在景区买高价陈醋', '平遥古城联票划算']
+        },
+        links: {
+            official: 'https://www.taiyuan.gov.cn/',
+            attractions: [
+                { name: '晋祠', url: 'http://www.jinci.com/', mustVisit: true },
+                { name: '山西博物院', url: 'http://www.shanximuseum.com/', mustVisit: true },
+                { name: '双塔寺', url: 'http://www.shuangtasi.com/' }
+            ],
+            booking: [{ name: '晋祠门票', url: 'http://www.jinci.com/' }],
+            food: [{ name: '太原美食', url: 'https://www.dianping.com/taiyuan/food' }]
+        },
+        poster: {
+            title: '龙城太原',
+            subtitle: '三晋首善，面食之乡',
+            elements: ['晋祠', '双塔', '山西博物院', '柳巷'],
+            layout: '顶部晋祠圣母殿，中央双塔凌霄，底部柳巷老街',
+            colors: ['#c0392b', '#e67e22', '#27ae60', '#3498db', '#8e44ad']
+        }
     }
 };
 
@@ -1755,6 +2864,119 @@ function updateTotalSearches() {
 }
 
 // ==========================================
+// 实时数据更新系统
+// ==========================================
+const DATA_VERSION = '2026.04.28-v2';
+let lastSyncTime = null;
+let autoSyncInterval = null;
+
+function initRealtimeSync() {
+    lastSyncTime = searchStats.lastUpdated;
+    updateLastSyncDisplay();
+    startAutoSync();
+    
+    window.addEventListener('storage', function(e) {
+        if (e.key === STORAGE_KEY) {
+            console.log('检测到其他标签页数据变化，自动同步...');
+            syncDataFromStorage();
+        }
+    });
+    
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            syncDataFromStorage();
+        }
+    });
+}
+
+function startAutoSync() {
+    if (autoSyncInterval) clearInterval(autoSyncInterval);
+    autoSyncInterval = setInterval(function() {
+        syncDataFromStorage();
+    }, 30000);
+}
+
+function syncDataFromStorage() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            const newData = JSON.parse(stored);
+            if (newData.lastUpdated !== searchStats.lastUpdated ||
+                newData.totalSearches !== searchStats.totalSearches) {
+                
+                const oldCount = searchStats.totalSearches;
+                searchStats = {
+                    totalSearches: newData.totalSearches || 0,
+                    citySearches: newData.citySearches || {},
+                    topCities: [],
+                    lastUpdated: newData.lastUpdated || new Date().toISOString()
+                };
+                searchStats.topCities = Object.entries(searchStats.citySearches)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10)
+                    .map(([city, count]) => ({ city, count }));
+                
+                updateRankingDisplay();
+                updateTotalSearches();
+                updateLastSyncDisplay();
+                
+                if (newData.totalSearches > oldCount) {
+                    showInfo(`🔄 数据已同步（新增 ${newData.totalSearches - oldCount} 次搜索）`);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('数据同步失败:', e);
+    }
+}
+
+function manualRefresh() {
+    showInfo('⏳ 正在刷新数据...');
+    syncDataFromStorage();
+    
+    setTimeout(function() {
+        showSuccess('✅ 数据刷新完成！');
+        const refreshBtn = document.getElementById('syncBtn');
+        if (refreshBtn) {
+            refreshBtn.classList.add('refreshing');
+            setTimeout(() => refreshBtn.classList.remove('refreshing'), 500);
+        }
+    }, 500);
+}
+
+function updateLastSyncDisplay() {
+    const syncTimeEl = document.getElementById('lastSyncTime');
+    if (syncTimeEl && searchStats.lastUpdated) {
+        const date = new Date(searchStats.lastUpdated);
+        const timeStr = date.toLocaleString('zh-CN', {
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        syncTimeEl.innerHTML = `🕐 ${timeStr}`;
+        syncTimeEl.title = `最后更新: ${date.toLocaleString('zh-CN')}`;
+    }
+    
+    const versionEl = document.getElementById('dataVersion');
+    if (versionEl) {
+        versionEl.textContent = `v${DATA_VERSION} | ${Object.keys(cityDatabase).length}个城市`;
+    }
+}
+
+function getDataStats() {
+    return {
+        version: DATA_VERSION,
+        cityCount: Object.keys(cityDatabase).length,
+        totalSearches: searchStats.totalSearches,
+        uniqueCities: Object.keys(searchStats.citySearches).length,
+        lastUpdated: searchStats.lastUpdated,
+        topCity: searchStats.topCities[0]?.city || '暂无'
+    };
+}
+
+// ==========================================
 // Toast通知
 // ==========================================
 function showToast(message, type = 'info') {
@@ -1776,8 +2998,13 @@ function showInfo(message) { showToast(message, 'info'); }
 function initApp() {
     cityDatabase = EMBEDDED_CITIES;
     console.log('城市数据已加载，共', Object.keys(cityDatabase).length, '个城市');
+    console.log('📊 数据版本:', DATA_VERSION);
     updateTotalSearches();
     updateRankingDisplay();
+    initRealtimeSync();
+    
+    const stats = getDataStats();
+    console.log('🎯 数据统计:', stats);
 }
 
 // ==========================================
@@ -2165,8 +3392,193 @@ document.addEventListener('DOMContentLoaded', function() {
     const syncBtn = document.getElementById('syncBtn');
     if (syncBtn) {
         syncBtn.addEventListener('click', function() {
-            location.reload();
+            manualRefresh();
         });
+        syncBtn.title = '点击手动刷新数据（每30秒自动同步）';
+    }
+    
+    if (!document.getElementById('enhancedUI')) {
+        const style = document.createElement('style');
+        style.id = 'enhancedUI';
+        style.textContent = `
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+            @keyframes gradientBG {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+            .refreshing {
+                animation: pulse 0.5s ease-in-out;
+            }
+            #syncBtn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+            }
+            #lastSyncTime {
+                font-size: 11px;
+                color: #999;
+                padding: 5px 10px;
+                background: rgba(255,255,255,0.8);
+                border-radius: 12px;
+                display: inline-block;
+                margin-top: 5px;
+            }
+            #dataVersion {
+                font-size: 10px;
+                color: #bbb;
+                font-weight: 600;
+            }
+            body {
+                background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+                background-size: 400% 400%;
+                animation: gradientBG 15s ease infinite;
+            }
+            .poster {
+                backdrop-filter: blur(10px);
+                background: rgba(255, 255, 255, 0.95);
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                transition: all 0.3s ease;
+            }
+            .poster:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 25px 70px rgba(0,0,0,0.35);
+            }
+            .section-title {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                font-weight: 800;
+                position: relative;
+            }
+            .section-title::after {
+                content: '';
+                position: absolute;
+                bottom: -8px;
+                left: 0;
+                width: 60px;
+                height: 3px;
+                background: linear-gradient(90deg, #667eea, #764ba2);
+                border-radius: 2px;
+            }
+            .food-card, .hotel-card, .transport-card, .budget-card {
+                border-radius: 15px;
+                transition: all 0.3s ease;
+                border: 1px solid rgba(0,0,0,0.05);
+            }
+            .food-card:hover, .hotel-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                border-color: rgba(102, 126, 234, 0.3);
+            }
+            .badge-must {
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                color: white;
+                padding: 2px 8px;
+                border-radius: 10px;
+                font-size: 11px;
+                font-weight: bold;
+                animation: pulse 2s infinite;
+            }
+            .route-item {
+                background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+                border-left: 4px solid #667eea;
+                border-radius: 10px;
+                padding: 15px;
+                margin: 10px 0;
+                transition: all 0.3s ease;
+            }
+            .route-item:hover {
+                background: linear-gradient(135deg, rgba(102,126,234,0.2) 0%, rgba(118,75,162,0.2) 100%);
+                transform: translateX(5px);
+            }
+            .weather-card {
+                background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+                color: white;
+                border-radius: 20px;
+                padding: 25px;
+                margin: 20px 0;
+                box-shadow: 0 10px 30px rgba(9, 132, 227, 0.3);
+            }
+            .poster-header {
+                background: linear-gradient(135deg, var(--header-color-1, #667eea) 0%, var(--header-color-2, #764ba2) 100%);
+                color: white;
+                padding: 40px 30px;
+                border-radius: 20px 20px 0 0;
+                position: relative;
+                overflow: hidden;
+            }
+            .poster-header::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                animation: pulse 4s ease-in-out infinite;
+            }
+            .action-btn {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border: none;
+                color: white;
+                padding: 12px 28px;
+                border-radius: 25px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            }
+            .action-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            }
+            .rank-item {
+                background: rgba(255,255,255,0.9);
+                border-radius: 12px;
+                padding: 12px 16px;
+                margin: 8px 0;
+                transition: all 0.3s ease;
+                border: 1px solid rgba(0,0,0,0.05);
+            }
+            .rank-item:hover {
+                background: white;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+                transform: translateX(5px);
+            }
+            .rank-bar {
+                background: linear-gradient(90deg, #667eea, #764ba2);
+                height: 6px;
+                border-radius: 3px;
+                transition: width 0.5s ease;
+            }
+            .suggestion-item {
+                padding: 12px 16px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                border-radius: 10px;
+                margin: 4px 0;
+            }
+            .suggestion-item:hover {
+                background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+                transform: translateX(5px);
+            }
+            .itinerary-tab.active {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+            .tip-card {
+                background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%);
+                border-radius: 15px;
+                padding: 20px;
+                border: 1px solid rgba(102,126,234,0.2);
+            }
+        `;
+        document.head.appendChild(style);
     }
 });
 
