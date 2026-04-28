@@ -94,7 +94,7 @@ const cityAliases = {
     '银川': ['yinchuan', 'yc', '凤城'],
     '呼和浩特': ['huhehaote', 'hhht', '呼市', '青城'],
     '太原': ['taiyuan', 'ty', '龙城'],
-    '石家庄': ['shijiazhuang', 'sjz'],
+    '石家庄': ['shijiazhuang', 'sjz', '国际庄'],
     '南昌': ['nanchang', 'nc', '洪城'],
     '济南': ['jinan', 'jn', '泉城'],
     '珠海': ['zhuhai', 'zh', '百岛之市'],
@@ -103,15 +103,23 @@ const cityAliases = {
     '香港': ['hongkong', 'hk', '香江'],
     '澳门': ['macau', 'mac', '濠江'],
     '台北': ['taipei', 'tp'],
-    '九寨沟': ['jiuzhaigou', 'jzg'],
-    '稻城亚丁': ['daochengyading', 'dcyd'],
-    '黄山风景区': ['huangshanfq', 'hsfq'],
-    '泰山': ['taishan', 'ts'],
-    '华山': ['huashan', 'hs'],
-    '峨眉山': ['emeishan', 'ems'],
-    '武当山': ['wudangshan', 'wds'],
-    '普陀山': ['putuoshan', 'pts'],
-    '五台山': ['wutaishan', 'wts']
+    '石家庄': ['shijiazhuang', 'sjz', '庄里'],
+    '承德': ['chengde', 'cd', '热河'],
+    '秦皇岛': ['qinhuangdao', 'qhd', '秦皇岛'],
+    '大同': ['datong', 'dt', '云中'],
+    '平遥': ['pingyao', 'py', '古陶'],
+    '呼和浩特': ['huhehaote', 'hhht', '呼市', '青城'],
+    '温州': ['wenzhou', 'wz', '瓯越'],
+    '嘉兴': ['jiaxing', 'jx', '禾城'],
+    '九江': ['jiujiang', 'jj', '浔阳'],
+    '景德镇': ['jingdezhen', 'jdz', '瓷都'],
+    '烟台': ['yantai', 'yt', '芝罘'],
+    '南宁': ['nanning', 'nn', '邕城'],
+    '兰州': ['lanzhou', 'lz', '金城'],
+    '西宁': ['xining', 'xn', '夏都', '西海'],
+    '银川': ['yinchuan', 'yc', '塞上江南'],
+    '乌鲁木齐': ['urumqi', 'wlmq', '乌市', '迪化'],
+    '澳门': ['macau', 'mac', '濠江', '镜海']
 };
 
 // ==========================================
@@ -146,7 +154,7 @@ function getPinyinInitials(city) {
 // ==========================================
 const provinceCityMap = {
     '北京': ['北京'], '上海': ['上海'], '天津': ['天津'], '重庆': ['重庆'],
-    '河北': ['石家庄', '保定', '张家口', '承德', '秦皇岛', '唐山', '廊坊'],
+    '河北': ['石家庄', '承德', '秦皇岛', '保定', '张家口', '唐山', '廊坊'],
     '山西': ['太原', '大同', '平遥'], '辽宁': ['沈阳', '大连'],
     '吉林': ['长春', '吉林', '长白山'], '黑龙江': ['哈尔滨'],
     '江苏': ['南京', '苏州', '无锡'], '浙江': ['杭州', '宁波', '温州', '嘉兴'],
@@ -157,7 +165,8 @@ const provinceCityMap = {
     '海南': ['三亚', '海口'], '四川': ['成都'], '贵州': ['贵阳'],
     '云南': ['昆明', '丽江', '大理'], '西藏': ['拉萨'], '陕西': ['西安'],
     '甘肃': ['兰州', '敦煌'], '青海': ['西宁'], '宁夏': ['银川'],
-    '新疆': ['乌鲁木齐'], '内蒙古': ['呼和浩特']
+    '新疆': ['乌鲁木齐'], '内蒙古': ['呼和浩特'],
+    '香港': ['香港'], '澳门': ['澳门']
 };
 
 // ==========================================
@@ -2701,6 +2710,772 @@ const EMBEDDED_CITIES = {
             layout: '顶部晋祠圣母殿，中央双塔凌霄，底部柳巷老街',
             colors: ['#c0392b', '#e67e22', '#27ae60', '#3498db', '#8e44ad']
         }
+    },
+    '石家庄': {
+        tags: ['国际庄', '正定古城', '赵州桥'],
+        season: '春秋两季（4-5月，9-10月）',
+        atmosphere: '河北省会，历史底蕴深厚，交通便利',
+        days: '2天',
+        routes: ['正定古城（隆兴寺→荣国府→赵云庙）', '河北省博物馆 → 嶂石岩', '赵州桥（一日游）', '西柏坡（红色旅游，可选）'],
+        foods: [
+            { name: '驴肉火烧', desc: '河北特色，酥脆可口', price: '8-15元/个', mustTry: true },
+            { name: '缸炉烧饼', desc: '石家庄传统小吃', price: '3-5元/个' },
+            { name: '安徽板面', desc: '石家庄特色面食', price: '12-20元/碗' },
+            { name: '牛肉罩饼', desc: '石家庄传统名吃', price: '25-40元/份' },
+            { name: '羊杂汤', desc: '石家庄早餐标配', price: '10-15元/碗' }
+        ],
+        accommodations: [
+            { area: '市中心/裕华区', pros: '交通便利，商业发达', cons: '一般' },
+            { area: '正定古城附近', pros: '靠近景区，体验古镇', cons: '距离市区远' },
+            { area: '火车站附近', pros: '出行方便', cons: '较吵闹' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车；去正定可坐公交或打车' },
+            { type: '外部交通', info: '正定国际机场；石家庄站、石家庄北站等火车站' }
+        ],
+        budget: { low: '600', medium: '1200', high: '2200+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在景区买高价纪念品', '正定古城联票划算']
+        },
+        links: {
+            official: 'https://www.sjz.gov.cn/',
+            attractions: [
+                { name: '隆兴寺', url: 'http://www.longxingsi.com/', mustVisit: true },
+                { name: '河北省博物馆', url: 'http://www.hebmuseum.com/', mustVisit: true },
+                { name: '赵州桥', url: 'http://www.zhaozhouqiao.com/' }
+            ],
+            booking: [{ name: '隆兴寺门票', url: 'http://www.longxingsi.com/' }],
+            food: [{ name: '石家庄美食', url: 'https://www.dianping.com/shijiazhuang/food' }]
+        },
+        poster: {
+            title: '国际庄',
+            subtitle: '燕赵大地，千年古韵',
+            elements: ['正定古城', '隆兴寺', '赵州桥', '嶂石岩'],
+            layout: '顶部正定古城墙，中央隆兴寺大佛，底部赵州桥',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#8e44ad']
+        }
+    },
+    '承德': {
+        tags: ['避暑山庄', '皇家园林', '满清文化'],
+        season: '夏季（6-8月最佳），秋季（9-10月）',
+        atmosphere: '皇家避暑胜地，满蒙风情浓郁',
+        days: '2天',
+        routes: ['避暑山庄（一日游）', '外八庙（普宁寺→普陀宗乘之庙→磬锤峰）', '金山岭长城（可选）', '坝上草原（可选，2-3小时车程）'],
+        foods: [
+            { name: '荞麦饸饹', desc: '承德特色面食', price: '15-25元/碗', mustTry: true },
+            { name: '改刀肉', desc: '承德传统名菜', price: '38-58元/份' },
+            { name: '鲜花玫瑰饼', desc: '承德特产点心', price: '5-8元/个' },
+            { name: '凉粉', desc: '承德夏季小吃', price: '8-12元/份' },
+            { name: '莜面窝子', desc: '承德特色主食', price: '10-15元/份' }
+        ],
+        accommodations: [
+            { area: '避暑山庄附近', pros: '游览方便，步行可达', cons: '价格较高' },
+            { area: '市区中心', pros: '餐饮购物方便', cons: '距离景区稍远' },
+            { area: '坝上草原', pros: '草原风光，住宿蒙古包', cons: '距离承德市远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；景区间距离较远建议打车' },
+            { type: '外部交通', info: '普宁机场；承德站火车站（距市区较近）' }
+        ],
+        budget: { low: '800', medium: '1600', high: '2800+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '防晒霜', '雨具'],
+            avoid: ['不要在景区买高价蘑菇', '避暑山庄很大预留一天']
+        },
+        links: {
+            official: 'https://www.chengde.gov.cn/',
+            attractions: [
+                { name: '避暑山庄', url: 'http://www.bishushanzhuang.com.cn/', mustVisit: true },
+                { name: '普宁寺', url: 'http://www.puningsi.com/', mustVisit: true },
+                { name: '磬锤峰', url: 'http://www.qingchuifeng.com/' }
+            ],
+            booking: [{ name: '避暑山庄门票', url: 'http://www.bishushanzhuang.com.cn/' }],
+            food: [{ name: '承德美食', url: 'https://www.dianping.com/chengde/food' }]
+        },
+        poster: {
+            title: '避暑胜地',
+            subtitle: '皇家园林，塞外明珠',
+            elements: ['避暑山庄', '外八庙', '磬锤峰', '坝上草原'],
+            layout: '顶部避暑山庄全景，中央普陀宗乘之庙，底部草原风光',
+            colors: ['#27ae60', '#3498db', '#e74c3c', '#f39c12', '#8e44ad']
+        }
+    },
+    '秦皇岛': {
+        tags: ['海滨度假', '北戴河', '山海关'],
+        season: '夏季（6-8月最佳），秋季（9-10月）',
+        atmosphere: '海滨旅游胜地，长城起点，休闲度假',
+        days: '2-3天',
+        routes: ['北戴河 → 老虎石海上公园 → 鸽子窝公园（看日出）', '山海关 → 天下第一关 → 老龙头', '南戴河 → 黄金海岸 → 碧螺塔酒吧公园', '祖山风景区（可选）'],
+        foods: [
+            { name: '海鲜', desc: '渤海湾新鲜海产', price: '80-150元/人', mustTry: true },
+            { name: '昌黎红酒', desc: '昌黎葡萄酒产区', price: '50-200元/瓶' },
+            { name: '杨肠子', desc: '秦皇岛特色小吃', price: '15-25元/份' },
+            { name: '回记绿豆糕', desc: '秦皇岛传统点心', price: '5-10元/份' },
+            { name: '四道桥冷饮', desc: '秦皇岛夏日必备', price: '8-15元/杯' }
+        ],
+        accommodations: [
+            { area: '北戴河', pros: '环境优美，设施完善', cons: '旺季价格贵' },
+            { area: '南戴河/黄金海岸', pros: '海滩优质，适合度假', cons: '距离市区远' },
+            { area: '山海关', pros: '历史文化氛围浓', cons: '海滩一般' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车、旅游专线；沿海公路风景美' },
+            { type: '外部交通', info: '北戴河机场；秦皇岛站、北戴河站等火车站' }
+        ],
+        budget: { low: '1000', medium: '2000', high: '3500+' },
+        tips: {
+            prepare: ['身份证必带', '防晒霜', '泳衣', '舒适的鞋子', '外套（海边早晚凉）'],
+            avoid: ['不要在景区买高价珍珠项链', '7-8月是旺季人多价高']
+        },
+        links: {
+            official: 'https://www.qhd.gov.cn/',
+            attractions: [
+                { name: '鸽子窝公园', url: 'http://www.gezifeng.com/', mustVisit: true },
+                { name: '天下第一关', url: 'http://www.shanhaiguan.com/', mustVisit: true },
+                { name: '老龙头', url: 'http://www.laohutou.com/' }
+            ],
+            booking: [{ name: '鸽子窝门票', url: 'http://www.gezifeng.com/' }],
+            food: [{ name: '秦皇岛美食', url: 'https://www.dianping.com/qinhuangdao/food' }]
+        },
+        poster: {
+            title: '渤海明珠',
+            subtitle: '长城入海，海滨天堂',
+            elements: ['北戴河', '山海关', '鸽子窝', '黄金海岸'],
+            layout: '顶部海滨日出，中央天下第一关，底部金色沙滩',
+            colors: ['#3498db', '#27ae60', '#e74c3c', '#f39c12', '#1abc9c']
+        }
+    },
+    '大同': {
+        tags: ['煤都', '云冈石窟', '九龙壁'],
+        season: '夏秋两季（6-10月）',
+        atmosphere: '北方锁钥，佛教艺术宝库，古建筑博物馆',
+        days: '2天',
+        routes: ['云冈石窟（半天）→ 恒山悬空寺', '大同古城墙 → 九龙壁 → 华严寺', '应县木塔（一日游，可选）', '火山群国家地质公园（可选）'],
+        foods: [
+            { name: '刀削面', desc: '大同刀削面最正宗', price: '12-20元/碗', mustTry: true },
+            { name: '浑源凉粉', desc: '大同特色小吃', price: '8-12元/份' },
+            { name: '烧麦', desc: '大同传统早点', price: '10-15元/笼' },
+            { name: '黄糕', desc: '大同特色主食', price: '5-8元/份' },
+            { name: '羊杂汤', desc: '大同冬季暖身首选', price: '15-25元/碗' }
+        ],
+        accommodations: [
+            { area: '古城内', pros: '感受古城氛围，步行游览方便', cons: '住宿条件一般' },
+            { area: '御河东岸', pros: '新区，设施好', cons: '距离古城稍远' },
+            { area: '云冈石窟附近', pros: '游览方便', cons: '选择少' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；去恒山悬空寺需包车约1.5小时' },
+            { type: '外部交通', info: '云冈机场；大同南站、大同站等火车站' }
+        ],
+        budget: { low: '800', medium: '1500', high: '2800+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '保暖衣物（早晚温差大）'],
+            avoid: ['不要在景区买高价玉石', '云冈石窟门票需提前预约']
+        },
+        links: {
+            official: 'https://www.datong.gov.cn/',
+            attractions: [
+                { name: '云冈石窟', url: 'http://www.yungang.org/', mustVisit: true },
+                { name: '悬空寺', url: 'http://www.xuankongsi.com/', mustVisit: true },
+                { name: '华严寺', url: 'http://www.huayansi-dt.com/' }
+            ],
+            booking: [{ name: '云冈石窟门票', url: 'http://www.yungang.org/' }],
+            food: [{ name: '大同美食', url: 'https://www.dianping.com/datong/food' }]
+        },
+        poster: {
+            title: '大同古韵',
+            subtitle: '北方锁钥，佛国圣地',
+            elements: ['云冈石窟', '悬空寺', '九龙壁', '古城墙'],
+            layout: '顶部云冈大佛，中央悬空寺凌空，底部古城夜景',
+            colors: ['#c0392b', '#e67e22', '#f39c12', '#27ae60', '#3498db']
+        }
+    },
+    '平遥': {
+        tags: ['世界遗产', '晋商文化', '古城墙'],
+        season: '四季皆宜（春秋最佳）',
+        atmosphere: '保存最完好的明清县城，晋商发源地',
+        days: '1-2天',
+        routes: ['平遥古城墙 → 日升昌票号 → 县衙 → 文庙', '协同庆钱庄 → 古城明清街 → 城隍庙', '王家大院（一日游，可选）', '乔家大院（可搭配）'],
+        foods: [
+            { name: '平遥牛肉', desc: '平遥特产，五香入味', price: '50-80元/斤', mustTry: true },
+            { name: '平遥碗托', desc: '平遥特色小吃', price: '5-8元/份' },
+            { name: '莜面栲栳栳', desc: '山西特色面食', price: '15-20元/份' },
+            { name: '手工月饼', desc: '平遥传统点心', price: '3-5元/个' },
+            { name: '沙棘汁', desc: '山西特色饮品', price: '5-8元/杯' }
+        ],
+        accommodations: [
+            { area: '古城内客栈', pros: '住在古建筑里，体验晋商生活', cons: '隔音差，行李搬运不便' },
+            { area: '古城外酒店', pros: '设施好，价格合理', cons: '缺少古城氛围' },
+            { area: '明清街附近', pros: '热闹，餐饮多', cons: '吵闹' }
+        ],
+        transport: [
+            { type: '内部交通', info: '古城内步行为主；去王家大院需包车或跟团' },
+            { type: '外部交通', info: '太原武宿机场（转车）；平遥古城站、平遥站火车站' }
+        ],
+        budget: { low: '500', medium: '1000', high: '1800+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在古城买高价银器', '古城通票包含大部分景点']
+        },
+        links: {
+            official: 'http://www.pingyao.gov.cn/',
+            attractions: [
+                { name: '日升昌票号', url: 'http://www.rishengchang.com/', mustVisit: true },
+                { name: '平遥古城墙', url: 'http://www.pingyaogucheng.com/', mustVisit: true },
+                { name: '县衙', url: 'http://www.pingyaoxianya.com/' }
+            ],
+            booking: [{ name: '平遥古城通票', url: 'http://www.pingyaogucheng.com/' }],
+            food: [{ name: '平遥美食', url: 'https://www.dianping.com/pingyao/food' }]
+        },
+        poster: {
+            title: '平遥古城',
+            subtitle: '明清遗梦，晋商传奇',
+            elements: ['古城墙', '日升昌', '县衙', '明清街'],
+            layout: '顶部古城墙俯瞰，中央票号金库，底部灯笼街景',
+            colors: ['#8e44ad', '#c0392b', '#f39c12', '#27ae60', '#3498db']
+        }
+    },
+    '呼和浩特': {
+        tags: ['青城', '昭君墓', '草原之都'],
+        season: '夏季（7-9月最佳），秋季（9-10月）',
+        atmosphere: '内蒙古自治区首府，草原文化交融之地',
+        days: '2-3天',
+        routes: ['大召寺 → 塞上老街 → 昭君墓', '内蒙古博物院 → 将军衙署 → 清真大寺', '希拉穆仁草原（一日游，可选）', '响沙湾沙漠（可选）'],
+        foods: [
+            { name: '手把肉', desc: '蒙古族传统美食', price: '80-120元/斤', mustTry: true },
+            { name: '烤全羊', desc: '蒙古族宴席佳肴', price: '1200-2000元/只' },
+            { name: '奶茶', desc: '咸味奶茶，蒙古族日常饮品', price: '10-15元/壶' },
+            { name: '莜面', desc: '内蒙古特色主食', price: '15-25元/份' },
+            { name: '奶皮子', desc: '蒙古族奶制品', price: '20-30元/份' }
+        ],
+        accommodations: [
+            { area: '市中心/中山路', pros: '交通便利，餐饮多', cons: '一般' },
+            { area: '大召寺附近', pros: '靠近景区，有特色民宿', cons: '价格较高' },
+            { area: '草原蒙古包', pros: '体验草原生活，看星空', cons: '条件简陋，距离市区远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；去草原需包车或报团' },
+            { type: '外部交通', info: '白塔国际机场；呼和浩特东站、呼和浩特站等火车站' }
+        ],
+        budget: { low: '900', medium: '1800', high: '3200+' },
+        tips: {
+            prepare: ['身份证必带', '防晒霜', '舒适的鞋子', '保暖衣物（草原昼夜温差大）', '防蚊虫用品'],
+            avoid: ['不要在景区买高价皮草', '尊重蒙古族风俗习惯']
+        },
+        links: {
+            official: 'https://www.huhhot.gov.cn/',
+            attractions: [
+                { name: '大召寺', url: 'http://www.dazhaosi.com/', mustVisit: true },
+                { name: '昭君墓', url: 'http://www.zhaojunm.com/', mustVisit: true },
+                { name: '内蒙古博物院', url: 'http://www.nmgmuseum.com/' }
+            ],
+            booking: [{ name: '大召寺门票', url: 'http://www.dazhaosi.com/' }],
+            food: [{ name: '呼和浩特美食', url: 'https://www.dianping.com/huhehaote/food' }]
+        },
+        poster: {
+            title: '青城风采',
+            subtitle: '草原明珠，塞外名城',
+            elements: ['大召寺', '昭君墓', '草原', '蒙古包'],
+            layout: '顶部大召寺金顶，中央草原风光，底部蒙古包夕阳',
+            colors: ['#27ae60', '#f39c12', '#e67e22', '#3498db', '#9b59b6']
+        }
+    },
+    '温州': {
+        tags: ['瓯越之乡', '雁荡山', '皮革之城'],
+        season: '春秋两季（4-5月，9-11月）',
+        atmosphere: '民营经济活跃，山水奇秀，瓯越文化',
+        days: '2-3天',
+        routes: ['雁荡山（灵峰→灵岩→大龙湫）', '楠溪江（古村落群）', '江心屿 → 五马街 → 南塘街', '洞头岛（海岛游，可选）'],
+        foods: [
+            { name: '鱼丸', desc: '温州鱼丸Q弹爽滑', price: '15-25元/碗', mustTry: true },
+            { name: '灯盏糕', desc: '温州传统小吃', price: '5-8元/个' },
+            { name: '糯米饭', desc: '温州早餐标配', price: '8-12元/份' },
+            { name: '鸭舌', desc: '温州特色卤味', price: '30-50元/斤' },
+            { name: '永嘉麦饼', desc: '温州特色点心', price: '5-8元/个' }
+        ],
+        accommodations: [
+            { area: '鹿城区/五马街', pros: '市中心，购物方便', cons: '一般' },
+            { area: '雁荡山附近', pros: '靠近景区', cons: '选择少' },
+            { area: '楠溪江畔', pros: '山水之间，环境优美', cons: '距离市区远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；去雁荡山需坐动车或大巴' },
+            { type: '外部交通', info: '龙湾国际机场；温州南站、温州站等火车站' }
+        ],
+        budget: { low: '900', medium: '1800', high: '3200+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具（江南多雨）'],
+            avoid: ['不要在景区买高价茶叶', '雁荡山景区较大预留一天']
+        },
+        links: {
+            official: 'https://www.wenzhou.gov.cn/',
+            attractions: [
+                { name: '雁荡山', url: 'http://www.yandangshan.com/', mustVisit: true },
+                { name: '楠溪江', url: 'http://www.nanxijiang.com/', mustVisit: true },
+                { name: '江心屿', url: 'http://www.jiangxinyu.com/' }
+            ],
+            booking: [{ name: '雁荡山门票', url: 'http://www.yandangshan.com/' }],
+            food: [{ name: '温州美食', url: 'https://www.dianping.com/wenzhou/food' }]
+        },
+        poster: {
+            title: '瓯越温州',
+            subtitle: '山水奇秀，商贾云集',
+            elements: ['雁荡山', '楠溪江', '五马街', '江心屿'],
+            layout: '顶部雁荡山峰林，中央楠溪江竹筏，底部古城老街',
+            colors: ['#27ae60', '#3498db', '#e74c3c', '#f39c12', '#9b59b6']
+        }
+    },
+    '嘉兴': {
+        tags: ['水乡之都', '乌镇', '南湖红船'],
+        season: '四季皆宜（春季最佳）',
+        atmosphere: '江南水乡核心区，红色革命圣地',
+        days: '2天',
+        routes: ['乌镇（东栅→西栅）', '南湖 → 烟雨楼 → 红船', '西塘古镇（可选）', '海宁盐官观潮（季节性）'],
+        foods: [
+            { name: '粽子', desc: '嘉兴粽子最有名', price: '8-15元/个', mustTry: true },
+            { name: '南湖菱', desc: '嘉兴特产水生植物', price: '10-15元/斤' },
+            { name: '酱鸭', desc: '嘉兴传统美食', price: '40-70元/只' },
+            { name: '文虎酱鸡', desc: '嘉兴特色', price: '50-80元/只' },
+            { name: '海棠糕', desc: '嘉兴传统点心', price: '3-5元/个' }
+        ],
+        accommodations: [
+            { area: '乌镇内民宿', pros: '住在水乡里，体验古镇生活', cons: '价格高，隔音差' },
+            { area: '嘉兴市区', pros: '交通便利，性价比高', cons: '缺少水乡氛围' },
+            { area: '西塘古镇', pros: '原生态水乡', cons: '距离嘉兴市区远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；乌镇和西塘有直达班车' },
+            { type: '外部交通', info: '萧山机场（杭州）；嘉兴南站、嘉兴站等火车站' }
+        ],
+        budget: { low: '800', medium: '1600', high: '3000+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '雨具'],
+            avoid: ['不要在乌镇买高价丝绸制品', '西栅夜景很美建议住一晚']
+        },
+        links: {
+            official: 'https://www.jiaxing.gov.cn/',
+            attractions: [
+                { name: '乌镇', url: 'http://www.wuzhen.com/', mustVisit: true },
+                { name: '南湖', url: 'http://www.jxnanhuhu.com/', mustVisit: true },
+                { name: '西塘', url: 'http://www.xitang.com.cn/' }
+            ],
+            booking: [{ name: '乌镇门票', url: 'http://www.wuzhen.com/' }],
+            food: [{ name: '嘉兴美食', url: 'https://www.dianping.com/jiaxing/food' }]
+        },
+        poster: {
+            title: '水乡嘉兴',
+            subtitle: '江南画卷，红船启航',
+            elements: ['乌镇', '南湖', '西塘', '烟雨楼'],
+            layout: '顶部乌镇水乡全景，中央南湖红船，底部古镇夜色',
+            colors: ['#27ae60', '#3498db', '#e74c3c', '#f39c12', '#9b59b6']
+        }
+    },
+    '九江': {
+        tags: ['浔阳城', '庐山', '鄱阳湖'],
+        season: '春夏两季（4-9月最佳）',
+        atmosphere: '江西北大门，山水名城，诗词胜地',
+        days: '2-3天',
+        routes: ['庐山（花径→如琴湖→仙人洞→含鄱口）', '白鹿洞书院 → 秀峰瀑布', '鄱阳湖候鸟保护区（冬季）', '东林寺（可选）'],
+        foods: [
+            { name: '庐山三石', desc: '石耳、石鱼、石鸡', price: '60-100元/份', mustTry: true },
+            { name: '九江茶饼', desc: '九江传统点心', price: '10-15元/袋' },
+            { name: '萝卜饼', desc: '九江特色小吃', price: '3-5元/个' },
+            { name: '米粉', desc: '江西特色主食', price: '10-15元/碗' },
+            { name: '酒糟鱼', desc: '九江特色菜品', price: '38-58元/条' }
+        ],
+        accommodations: [
+            { area: '牯岭镇（山上）', pros: '看日出日落方便，气候凉爽', cons: '价格较高' },
+            { area: '九江市區', pros: '性价比高，交通便利', cons: '上山需乘车' },
+            { area: '鄱阳湖畔', pros: '观鸟胜地', cons: '距离市区远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '山上观光车、索道；山下公交出租车' },
+            { type: '外部交通', info: '庐山机场；九江站等火车站' }
+        ],
+        budget: { low: '900', medium: '1800', high: '3200+' },
+        tips: {
+            prepare: ['身份证必带', '登山鞋（重要！）', '登山杖', '雨具（山区多变）', '保暖衣物（山顶温差大）'],
+            avoid: ['不要在景区买高价茶叶', '庐山景点分散预留两天']
+        },
+        links: {
+            official: 'https://www.jiujiang.gov.cn/',
+            attractions: [
+                { name: '庐山', url: 'http://www.lushan.com/', mustVisit: true },
+                { name: '白鹿洞书院', url: 'http://www.bailudong.com/', mustVisit: true },
+                { name: '鄱阳湖', url: 'http://www.poyanghu.com/' }
+            ],
+            booking: [{ name: '庐山门票', url: 'http://www.lushan.com/' }],
+            food: [{ name: '九江美食', url: 'https://www.dianping.com/jiujiang/food' }]
+        },
+        poster: {
+            title: '浔阳九江',
+            subtitle: '匡庐奇秀，江湖名城',
+            elements: ['庐山', '鄱阳湖', '白鹿洞', '牯岭镇'],
+            layout: '顶部庐山云海，中央鄱阳湖候鸟，底部古镇街景',
+            colors: ['#27ae60', '#3498db', '#e74c3c', '#f39c12', '#8e44ad']
+        }
+    },
+    '景德镇': {
+        tags: ['瓷都', '陶瓷文化', '青花瓷'],
+        season: '四季皆宜（春秋最佳）',
+        atmosphere: '千年瓷都，陶瓷艺术殿堂',
+        days: '2天',
+        routes: ['景德镇中国陶瓷博物馆 → 古窑民俗博览区', '陶溪川文创街区 → 雕塑瓷厂', '瑶里古镇（一日游，可选）', '浮梁古县衙（可选）'],
+        foods: [
+            { name: '冷粉', desc: '景德镇特色小吃', price: '8-12元/碗', mustTry: true },
+            { name: '碱水粑', desc: '景德镇传统食品', price: '10-15元/份' },
+            { name: '牛骨粉', desc: '景德镇网红美食', price: '18-28元/碗' },
+            { name: '油条包麻糍', desc: '景德镇特色早餐', price: '5-8元/份' },
+            { name: '桂花糖藕', desc: '景德镇甜品', price: '8-12元/份' }
+        ],
+        accommodations: [
+            { area: '人民广场/珠山路', pros: '市中心，交通便利', cons: '一般' },
+            { area: '陶溪川附近', pros: '文艺氛围浓，夜生活丰富', cons: '价格较高' },
+            { area: '瑶里古镇', pros: '住在古镇，体验慢生活', cons: '距离市区远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；去瑶里需坐大巴或包车' },
+            { type: '外部交通', info: '罗家机场；景德镇北站、景德镇站等火车站' }
+        ],
+        budget: { low: '700', medium: '1400', high: '2500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在景区买高价瓷器（不懂行容易被坑）', '周末陶溪川集市很热闹']
+        },
+        links: {
+            official: 'https://www.jingdezhen.gov.cn/',
+            attractions: [
+                { name: '古窑民俗博览区', url: 'http://www.guyao.com.cn/', mustVisit: true },
+                { name: '中国陶瓷博物馆', url: 'http://www.jdzceramicsmuseum.com/', mustVisit: true },
+                { name: '陶溪川', url: 'http://www.taoxichuan.com/' }
+            ],
+            booking: [{ name: '古窑门票', url: 'http://www.guyao.com.cn/' }],
+            food: [{ name: '景德镇美食', url: 'https://www.dianping.com/jingdezhen/food' }]
+        },
+        poster: {
+            title: '千年瓷都',
+            subtitle: '天青色等烟雨，而我在等你',
+            elements: ['古窑', '陶溪川', '瑶里', '青花瓷'],
+            layout: '顶部古窑龙窑，中央陶溪川文创园，底部瓷器精品',
+            colors: ['#3498db', '#95a5a6', '#2980b9', '#ecf0f1', '#7f8c8d']
+        }
+    },
+    '烟台': {
+        tags: ['仙境海岸', '蓬莱阁', '苹果之乡'],
+        season: '夏季（6-9月最佳），秋季（9-10月苹果成熟）',
+        atmosphere: '山海相拥，仙山琼阁，水果之乡',
+        days: '2-3天',
+        routes: ['蓬莱阁 → 八仙过海景区 → 三仙山', '烟台山 → 月亮湾 → 东炮台', '养马岛（一日游）', '长岛（海岛游，可选）'],
+        foods: [
+            { name: '海鲜', desc: '渤海黄海交汇处，海鲜丰富', price: '80-150元/人', mustTry: true },
+            { name: '烟台苹果', desc: '烟台特产水果', price: '5-10元/斤（季节性）' },
+            { name: '鲅鱼水饺', desc: '山东特色饺子', price: '30-50元/份' },
+            { name: '焖子', desc: '胶东特色小吃', price: '8-12元/份' },
+            { name: '福山大面', desc: '烟台传统面食', price: '15-25元/碗' }
+        ],
+        accommodations: [
+            { area: '芝罘区/烟台山附近', pros: '市中心，交通便利', cons: '一般' },
+            { area: '蓬莱区', pros: '靠近蓬莱阁，海边度假', cons: '距离烟台市区远' },
+            { area: '养马岛', pros: '海岛风光，安静惬意', cons: '配套较少' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；沿海公路风景美' },
+            { type: '外部交通', info: '蓬莱国际机场；烟台站、烟台南站等火车站' }
+        ],
+        budget: { low: '1000', medium: '2000', high: '3500+' },
+        tips: {
+            prepare: ['身份证必带', '防晒霜', '舒适的鞋子', '外套（海边早晚凉）'],
+            avoid: ['不要在景区买高价海产品', '蓬莱阁建议请导游讲解']
+        },
+        links: {
+            official: 'https://www.yantai.gov.cn/',
+            attractions: [
+                { name: '蓬莱阁', url: 'http://www.penglai.gov.cn/', mustVisit: true },
+                { name: '养马岛', url: 'http://www.yangmaodao.com/', mustVisit: true },
+                { name: '长岛', url: 'http://www.changdao.gov.cn/' }
+            ],
+            booking: [{ name: '蓬莱阁门票', url: 'http://www.penglai.gov.cn/' }],
+            food: [{ name: '烟台美食', url: 'https://www.dianping.com/yantai/food' }]
+        },
+        poster: {
+            title: '仙境烟台',
+            subtitle: '人间蓬莱，山海仙境',
+            elements: ['蓬莱阁', '养马岛', '烟台山', '长岛'],
+            layout: '顶部蓬莱阁海市蜃楼，中央养马岛碧海，底部苹果丰收',
+            colors: ['#3498db', '#27ae60', '#e74c3c', '#f39c12', '#1abc9c']
+        }
+    },
+    '南宁': {
+        tags: ['绿城', '东盟之都', '酸野'],
+        season: '秋冬两季（10月-次年3月避开酷暑）',
+        atmosphere: '亚热带绿城，东南亚风情，美食天堂',
+        days: '2-3天',
+        routes: ['青秀山 → 南宁民歌湖 → 三街两巷', '广西民族博物馆 → 中山路美食街', '德天瀑布（一日游，可选）', '明仕田园（可选）'],
+        foods: [
+            { name: '老友粉', desc: '南宁招牌美食', price: '10-18元/碗', mustTry: true },
+            { name: '酸野', desc: '南宁特色腌制水果', price: '5-10元/份' },
+            { name: '柠檬鸭', desc: '南宁特色菜', price: '50-80元/只' },
+            { name: '卷筒粉', desc: '南宁传统小吃', price: '5-8元/条' },
+            { name: '螺蛳粉', desc: '广西特色（柳州更出名）', price: '10-15元/碗' }
+        ],
+        accommodations: [
+            { area: '朝阳广场/民族大道', pros: '市中心，交通便利', cons: '一般' },
+            { area: '青秀区/东盟商务区', pros: '现代化，环境好', cons: '价格较高' },
+            { area: '中山路附近', pros: '美食集中，夜生活丰富', cons: '吵闹' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车；电动车很普遍' },
+            { type: '外部交通', info: '吴圩国际机场；南宁东站、南宁站等火车站' }
+        ],
+        budget: { low: '800', medium: '1600', high: '2800+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '肠胃药（辣+酸）'],
+            avoid: ['不要在景区买高价特产', '夏季注意防暑降温']
+        },
+        links: {
+            official: 'https://www.nanning.gov.cn/',
+            attractions: [
+                { name: '青秀山', url: 'http://www.qingxiushan.com/', mustVisit: true },
+                { name: '广西民族博物馆', url: 'http://www.gxmzmuseum.com/', mustVisit: true },
+                { name: '德天瀑布', url: 'http://www.detianwaterfall.com/' }
+            ],
+            booking: [{ name: '德天瀑布门票', url: 'http://www.detianwaterfall.com/' }],
+            food: [{ name: '南宁美食', url: 'https://www.dianping.com/nanning/food' }]
+        },
+        poster: {
+            title: '绿城南宁',
+            subtitle: '东盟门户，酸辣之都',
+            elements: ['青秀山', '中山路', '民歌湖', '三街两巷'],
+            layout: '顶部青秀山龙象塔，中央民歌湖夜景，底部酸野摊位',
+            colors: ['#27ae60', '#f39c12', '#e74c3c', '#3498db', '#9b59b6']
+        }
+    },
+    '兰州': {
+        tags: ['金城', '黄河之都', '拉面之乡'],
+        season: '夏秋两季（6-10月）',
+        atmosphere: '丝绸之路重镇，黄河穿城而过，西北门户',
+        days: '2天',
+        routes: ['中山桥 → 白塔山 → 黄河母亲雕像', '甘肃省博物馆（马踏飞燕）→ 五泉山', '兴隆山（一日游，可选）', '青海湖方向（可搭配）'],
+        foods: [
+            { name: '牛肉拉面', desc: '兰州一清二白三红四绿五黄', price: '8-15元/碗', mustTry: true },
+            { name: '手抓羊肉', desc: '西北特色美食', price: '80-120元/斤' },
+            { name: '灰豆子', desc: '兰州传统甜品', price: '5-8元/碗' },
+            { name: '甜胚子', desc: '兰州特色饮品', price: '5-8元/杯' },
+            { name: '酿皮', desc: '西北特色小吃', price: '8-12元/份' }
+        ],
+        accommodations: [
+            { area: '城关区/中山桥附近', pros: '市中心，靠近黄河', cons: '住宿较老旧' },
+            { area: '七里河区/西站', pros: '交通便利', cons: '一般' },
+            { area: '安宁区', pros: '高校区，环境好', cons: '距离主要景点远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '地铁、公交、出租车；黄河沿线适合骑行' },
+            { type: '外部交通', info: '中川国际机场；兰州站、兰州西站等火车站' }
+        ],
+        budget: { low: '700', medium: '1400', high: '2500+' },
+        tips: {
+            prepare: ['身份证必带', '舒适的鞋子', '充电宝', '防晒霜（紫外线强）', '润唇膏（干燥）'],
+            avoid: ['不要在景区买高价药材', '拉面早餐吃最正宗']
+        },
+        links: {
+            official: 'https://www.lanzhou.gov.cn/',
+            attractions: [
+                { name: '甘肃省博物馆', url: 'http://www.gansumuseum.com/', mustVisit: true },
+                { name: '中山桥', url: 'http://www.zhongshanqiao.com/', mustVisit: true },
+                { name: '白塔山', url: 'http://www.baitashan.com/' }
+            ],
+            booking: [{ name: '甘肃省博物馆预约', url: 'http://www.gansumuseum.com/' }],
+            food: [{ name: '兰州美食', url: 'https://www.dianping.com/lanzhou/food' }]
+        },
+        poster: {
+            title: '金城兰州',
+            subtitle: '黄河之都，丝路明珠',
+            elements: ['中山桥', '黄河母亲像', '白塔山', '牛肉拉面'],
+            layout: '顶部中山桥铁桥，中央黄河奔腾，底部拉面热气腾腾',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#8e44ad']
+        }
+    },
+    '西宁': {
+        tags: ['夏都', '塔尔寺', '青藏门户'],
+        season: '夏季（6-8月最佳避暑），秋季（9-10月）',
+        atmosphere: '青藏高原门户，藏传佛教圣地，凉爽宜人',
+        days: '2-3天',
+        routes: ['塔尔寺（半日游）', '青海省博物馆 → 东关清真大寺 → 莫家街', '青海湖（一日游，可选）', '茶卡盐湖（可搭配青海湖）'],
+        foods: [
+            { name: '手抓羊肉', desc: '青海特色美食', price: '80-120元/斤', mustTry: true },
+            { name: '酿皮', desc: '青海特色小吃', price: '8-12元/份' },
+            { name: '酸奶', desc: '青海老酸奶醇厚', price: '5-8元/碗' },
+            { name: '甜醅', desc: '青海特色甜品', price: '5-8元/杯' },
+            { name: '尕面片', desc: '青海特色面食', price: '10-15元/碗' }
+        ],
+        accommodations: [
+            { area: '城中区/莫家街附近', pros: '市中心，美食多', cons: '海拔较高注意高反' },
+            { area: '海湖新区', pros: '现代化，设施好', cons: '距离老城区稍远' },
+            { area: '塔尔寺附近', pros: '游览方便', cons: '选择少' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；去青海湖需包车或跟团' },
+            { type: '外部交通', info: '曹家堡国际机场；西宁站、西宁西站等火车站' }
+        ],
+        budget: { low: '1000', medium: '2000', high: '3500+' },
+        tips: {
+            prepare: ['身份证必带', '防晒霜（高原紫外线强）', '墨镜', '保暖衣物（早晚温差大）', '红景天（预防高反）', '舒适的鞋子'],
+            avoid: ['不要在景区买高价藏饰', '初到高原前两天不要剧烈运动']
+        },
+        links: {
+            official: 'https://www.xining.gov.cn/',
+            attractions: [
+                { name: '塔尔寺', url: 'http://www.taersi.com/', mustVisit: true },
+                { name: '青海湖', url: 'http://www.qinghaihu.gov.cn/', mustVisit: true },
+                { name: '东关清真大寺', url: 'http://www.dongguanqzds.com/' }
+            ],
+            booking: [{ name: '塔尔寺门票', url: 'http://www.taersi.com/' }],
+            food: [{ name: '西宁美食', url: 'https://www.dianping.com/xining/food' }]
+        },
+        poster: {
+            title: '夏都西宁',
+            subtitle: '青藏门户，清凉世界',
+            elements: ['塔尔寺', '青海湖', '清真大寺', '莫家街'],
+            layout: '顶部塔尔寺金顶，中央青海湖蓝宝石，底部藏族风情',
+            colors: ['#f39c12', '#e74c3c', '#3498db', '#27ae60', '#9b59b6']
+        }
+    },
+    '银川': {
+        tags: ['凤城', '塞上江南', '西夏王陵'],
+        season: '夏秋两季（6-10月）',
+        atmosphere: '塞上江南，西夏故地，回族风情',
+        days: '2-3天',
+        routes: ['西夏王陵 → 贺兰山岩画 → 镇北堡西部影城', '沙坡头（一日游）', '沙湖（一日游）', '宁夏博物馆 → 承天寺塔 → 羊肉一条街'],
+        foods: [
+            { name: '手抓羊肉', desc: '宁夏滩羊肉质鲜美', price: '80-130元/斤', mustTry: true },
+            { name: '羊肉泡馍', desc: '宁夏特色面食', price: '20-35元/碗' },
+            { name: '烩羊杂碎', desc: '宁夏传统小吃', price: '20-30元/碗' },
+            { name: '八宝茶', desc: '回族待客茶', price: '10-15元/壶' },
+            { name: '枸杞', desc: '宁夏特产', price: '30-80元/斤' }
+        ],
+        accommodations: [
+            { area: '兴庆区/鼓楼附近', pros: '市中心，交通便利', cons: '一般' },
+            { area: '金凤区', pros: '新区，设施好', cons: '距离老城区稍远' },
+            { area: '沙坡头附近', pros: '沙漠体验', cons: '距离银川市远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、出租车；去沙坡头需包车或跟团' },
+            { type: '外部交通', info: '河东国际机场；银川站、银川东站等火车站' }
+        ],
+        budget: { low: '900', medium: '1800', high: '3200+' },
+        tips: {
+            prepare: ['身份证必带', '防晒霜（沙漠紫外线极强）', '围巾/头巾（防风沙）', '墨镜', '舒适的鞋子'],
+            avoid: ['不要在景区买高价枸杞', '尊重回族风俗习惯']
+        },
+        links: {
+            official: 'https://www.yinchuan.gov.cn/',
+            attractions: [
+                { name: '镇北堡西部影城', url: 'http://www.zhenbeibu.com/', mustVisit: true },
+                { name: '西夏王陵', url: 'http://www.xixiawangling.com/', mustVisit: true },
+                { name: '沙坡头', url: 'http://www.shapotou.com/' }
+            ],
+            booking: [{ name: '镇北堡门票', url: 'http://www.zhenbeibu.com/' }],
+            food: [{ name: '银川美食', url: 'https://www.dianping.com/yinchuan/food' }]
+        },
+        poster: {
+            title: '凤城银川',
+            subtitle: '塞上江南，神奇宁夏',
+            elements: ['西夏王陵', '镇北堡影城', '沙坡头', '贺兰山'],
+            layout: '顶部西夏陵金字塔，中央影视城城墙，底部沙漠驼队',
+            colors: ['#f39c12', '#e67e22', '#d35400', '#c0392b', '#27ae60']
+        }
+    },
+    '乌鲁木齐': {
+        tags: ['乌市', '天山天池', '大巴扎'],
+        season: '夏秋两季（6-10月）',
+        atmosphere: '亚心之都，多元文化交融，瓜果之乡',
+        days: '3-4天',
+        routes: ['国际大巴扎 → 新疆维吾尔自治区博物馆 → 红山公园', '天山天池（一日游）', '吐鲁番（葡萄沟→火焰山→坎儿井，一日游）', '喀纳斯（3-4日深度游，可选）'],
+        foods: [
+            { name: '烤羊肉串', desc: '新疆最具代表性美食', price: '5-10元/串', mustTry: true },
+            { name: '大盘鸡', desc: '新疆招牌菜', price: '68-128元/份' },
+            { name: '手抓饭', desc: '维吾尔族传统美食', price: '30-50元/份' },
+            { name: '馕', desc: '新疆特色主食', price: '3-5元/个' },
+            { name: '哈密瓜/葡萄', desc: '新疆瓜果甜美', price: '季节性价格' }
+        ],
+        accommodations: [
+            { area: '天山区/大巴扎附近', pros: '市中心，体验民族风情', cons: '人流量大' },
+            { area: '沙依巴克区', pros: '商业区，交通便利', cons: '一般' },
+            { area: '天池附近', pros: '风景优美', cons: '距离市区远'
+            }
+        ],
+        transport: [
+            { type: '内部交通', info: '公交、BRT、出租车；去天池/吐鲁番需包车或跟团' },
+            { type: '外部交通', info: '地窝铺国际机场；乌鲁木齐站、乌鲁木齐南站等火车站' }
+        ],
+        budget: { low: '1500', medium: '3000', high: '5500+' },
+        tips: {
+            prepare: ['身份证必带（新疆安检严格）', '防晒霜（紫外线强）', '舒适的鞋子', '保暖衣物（昼夜温差极大）', '少量现金'],
+            avoid: ['不要在景区买高价玉石干果', '尊重少数民族宗教习俗', '时差比内地晚2小时']
+        },
+        links: {
+            official: 'https://www.urumqi.gov.cn/',
+            attractions: [
+                { name: '天山天池', url: 'http://www.xjtianshan.com/', mustVisit: true },
+                { name: '国际大巴扎', url: 'http://www.dabazhar.com/', mustVisit: true },
+                { name: '新疆博物馆', url: 'http://www.xjmuseum.com/' }
+            ],
+            booking: [{ name: '天池门票', url: 'http://www.xjtianshan.com/' }],
+            food: [{ name: '乌鲁木齐美食', url: 'https://www.dianping.com/wulumuqi/food' }]
+        },
+        poster: {
+            title: '亚心乌鲁木齐',
+            subtitle: '丝路重镇，瓜果飘香',
+            elements: ['天池', '大巴扎', '雪山', '葡萄架'],
+            layout: '顶部天池倒映雪山，中央大巴扎风情，底部瓜果丰收',
+            colors: ['#27ae60', '#f39c12', '#e74c3c', '#3498db', '#9b59b6']
+        }
+    },
+    '澳门': {
+        tags: ['濠江', '赌城', '葡式风情'],
+        season: '秋冬两季（10月-次年3月）',
+        atmosphere: '中西合璧，博彩之都，美食天堂',
+        days: '2天',
+        routes: ['大三巴牌坊 → 大炮台 → 恋爱巷', '威尼斯人/巴黎人（娱乐场）', '妈祖阁 → 路环渔村 → 黑沙滩', '氹仔旧城区（葡式建筑）'],
+        foods: [
+            { name: '蛋挞', desc: '澳门安德鲁蛋挞闻名世界', price: '10-15元/个', mustTry: true },
+            { name: '猪扒包', desc: '澳门特色汉堡', price: '30-50元/个' },
+            { name: '水蟹粥', desc: '澳门特色粥品', price: '60-100元/份' },
+            { name: '葡国鸡', desc: '澳门葡式菜肴', price: '80-120元/份' },
+            { name: '杏仁饼', desc: '澳门手信特产', price: '10-20元/盒' }
+        ],
+        accommodations: [
+            { area: '氹仔/路凼', pros: '大型度假村，设施豪华', cons: '价格昂贵' },
+            { area: '澳门半岛', pros: '老城区，历史文化', cons: '住宿条件一般' },
+            { area: '路环', pros: '安静悠闲，自然风光', cons: '距离主要景点远' }
+        ],
+        transport: [
+            { type: '内部交通', info: '免费发财巴士（各大赌场）、公交、出租车', info: '' },
+            { type: '外部交通', info: '澳门国际机场；拱北口岸（过关即可）' }
+        ],
+        budget: { low: '1500', medium: '4000', high: '10000+' },
+        tips: {
+            prepare: ['港澳通行证+签注必办', '转换插头（与香港相同）', '舒适的鞋子', '充电宝'],
+            avoid: ['不要在赌场沉迷', '不要在大三巴买高价手信', '澳门币与港币通用']
+        },
+        links: {
+            official: 'https://www.macau.gov.cn/',
+            attractions: [
+                { name: '大三巴牌坊', url: 'http://www.senado.gov.mo/', mustVisit: true },
+                { name: '威尼斯人', url: 'https://www.venetianmacao.com/', mustVisit: true },
+                { name: '妈祖阁', url: 'http://www.amamao.gov.mo/' }
+            ],
+            booking: [],
+            food: [{ name: '澳门美食', url: 'https://www.openrice.com/macau' }]
+        },
+        poster: {
+            title: '濠江澳门',
+            subtitle: '东方蒙特卡洛，葡式风情',
+            elements: ['大三巴', '威尼斯人', '妈阁庙', '葡式街道'],
+            layout: '顶部大三巴牌坊，中央威尼斯人运河，底部葡式碎石路',
+            colors: ['#e74c3c', '#f39c12', '#27ae60', '#3498db', '#9b59b6']
+        }
     }
 };
 
@@ -2866,7 +3641,7 @@ function updateTotalSearches() {
 // ==========================================
 // 实时数据更新系统
 // ==========================================
-const DATA_VERSION = '2026.04.28-v2';
+const DATA_VERSION = '2026.04.28-v3';
 let lastSyncTime = null;
 let autoSyncInterval = null;
 
@@ -3410,6 +4185,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 50% { background-position: 100% 50%; }
                 100% { background-position: 0% 50%; }
             }
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            @keyframes shimmer {
+                0% { background-position: -200% center; }
+                100% { background-position: 200% center; }
+            }
+            @keyframes float {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+            }
+            @keyframes glow {
+                0%, 100% { box-shadow: 0 5px 20px rgba(102,126,234,0.3); }
+                50% { box-shadow: 0 5px 40px rgba(102,126,234,0.6); }
+            }
             .refreshing {
                 animation: pulse 0.5s ease-in-out;
             }
@@ -3435,80 +4232,167 @@ document.addEventListener('DOMContentLoaded', function() {
                 background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
                 background-size: 400% 400%;
                 animation: gradientBG 15s ease infinite;
+                min-height: 100vh;
             }
             .poster {
-                backdrop-filter: blur(10px);
-                background: rgba(255, 255, 255, 0.95);
-                border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                transition: all 0.3s ease;
+                backdrop-filter: blur(20px);
+                background: rgba(255, 255, 255, 0.97);
+                border-radius: 24px;
+                box-shadow: 
+                    0 25px 80px rgba(0,0,0,0.25),
+                    0 10px 40px rgba(0,0,0,0.15),
+                    inset 0 1px 0 rgba(255,255,255,0.9);
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                animation: fadeInUp 0.6s ease-out;
+                overflow: hidden;
             }
             .poster:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 25px 70px rgba(0,0,0,0.35);
+                transform: translateY(-8px) scale(1.01);
+                box-shadow: 
+                    0 35px 100px rgba(0,0,0,0.3),
+                    0 15px 50px rgba(0,0,0,0.2),
+                    inset 0 1px 0 rgba(255,255,255,0.9);
             }
             .section-title {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
                 font-weight: 800;
                 position: relative;
+                display: inline-block;
+                letter-spacing: 0.5px;
             }
             .section-title::after {
                 content: '';
                 position: absolute;
-                bottom: -8px;
+                bottom: -10px;
                 left: 0;
-                width: 60px;
-                height: 3px;
-                background: linear-gradient(90deg, #667eea, #764ba2);
+                width: 70px;
+                height: 4px;
+                background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
                 border-radius: 2px;
+                animation: shimmer 3s ease-in-out infinite;
+                background-size: 200% auto;
             }
-            .food-card, .hotel-card, .transport-card, .budget-card {
-                border-radius: 15px;
-                transition: all 0.3s ease;
-                border: 1px solid rgba(0,0,0,0.05);
+            .food-card {
+                border-radius: 18px;
+                transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                border: 1px solid rgba(0,0,0,0.06);
+                background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+                position: relative;
+                overflow: hidden;
             }
-            .food-card:hover, .hotel-card:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-                border-color: rgba(102, 126, 234, 0.3);
+            .food-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+                transition: left 0.5s;
+            }
+            .food-card:hover::before {
+                left: 100%;
+            }
+            .food-card:hover {
+                transform: translateY(-6px) rotateX(2deg);
+                box-shadow: 
+                    0 15px 40px rgba(102,126,234,0.2),
+                    0 5px 15px rgba(0,0,0,0.08);
+                border-color: rgba(102, 126, 234, 0.4);
+            }
+            .hotel-card, .transport-card, .budget-card {
+                border-radius: 18px;
+                transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                border: 1px solid rgba(0,0,0,0.06);
+                background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+            }
+            .hotel-card:hover, .transport-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+                border-color: rgba(118, 75, 162, 0.3);
+            }
+            .budget-card {
+                text-align: center;
+                padding: 25px 15px;
+            }
+            .budget-card:hover {
+                transform: translateY(-5px) scale(1.05);
+                box-shadow: 0 12px 35px rgba(0,0,0,0.12);
             }
             .badge-must {
                 background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
                 color: white;
-                padding: 2px 8px;
-                border-radius: 10px;
+                padding: 3px 10px;
+                border-radius: 12px;
                 font-size: 11px;
                 font-weight: bold;
                 animation: pulse 2s infinite;
+                box-shadow: 0 3px 10px rgba(240,147,251,0.4);
             }
             .route-item {
+                background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%);
+                border-left: 5px solid transparent;
+                border-image: linear-gradient(180deg, #667eea, #764ba2) 1;
+                border-radius: 14px;
+                padding: 18px 20px;
+                margin: 12px 0;
+                transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                position: relative;
+                overflow: hidden;
+            }
+            .route-item::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
                 background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
-                border-left: 4px solid #667eea;
-                border-radius: 10px;
-                padding: 15px;
-                margin: 10px 0;
-                transition: all 0.3s ease;
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+            .route-item:hover::before {
+                opacity: 1;
             }
             .route-item:hover {
-                background: linear-gradient(135deg, rgba(102,126,234,0.2) 0%, rgba(118,75,162,0.2) 100%);
-                transform: translateX(5px);
+                transform: translateX(8px);
+                box-shadow: 0 8px 25px rgba(102,126,234,0.15);
             }
             .weather-card {
-                background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+                background: linear-gradient(135deg, #74b9ff 0%, #0984e3 50%, #0652DD 100%);
                 color: white;
-                border-radius: 20px;
-                padding: 25px;
-                margin: 20px 0;
-                box-shadow: 0 10px 30px rgba(9, 132, 227, 0.3);
+                border-radius: 24px;
+                padding: 30px;
+                margin: 25px 0;
+                box-shadow: 
+                    0 15px 40px rgba(9, 132, 227, 0.35),
+                    0 5px 15px rgba(9, 132, 227, 0.2);
+                position: relative;
+                overflow: hidden;
+            }
+            .weather-card::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+                animation: pulse 5s ease-in-out infinite;
+            }
+            .weather-temp {
+                font-size: 48px !important;
+                font-weight: 700 !important;
+                text-shadow: 0 2px 10px rgba(0,0,0,0.2);
             }
             .poster-header {
-                background: linear-gradient(135deg, var(--header-color-1, #667eea) 0%, var(--header-color-2, #764ba2) 100%);
+                background: linear-gradient(135deg, var(--header-color-1, #667eea) 0%, var(--header-color-2, #764ba2) 50%, var(--header-color-3, #f093fb) 100%);
                 color: white;
-                padding: 40px 30px;
-                border-radius: 20px 20px 0 0;
+                padding: 50px 35px;
+                border-radius: 24px 24px 0 0;
                 position: relative;
                 overflow: hidden;
             }
@@ -3517,65 +4401,347 @@ document.addEventListener('DOMContentLoaded', function() {
                 position: absolute;
                 top: -50%;
                 right: -50%;
-                width: 200%;
-                height: 200%;
-                background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-                animation: pulse 4s ease-in-out infinite;
+                width: 250%;
+                height: 250%;
+                background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+                animation: pulse 6s ease-in-out infinite;
+            }
+            .poster-header::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                background: linear-gradient(to top, rgba(255,255,255,0.95), transparent);
+            }
+            .poster-city {
+                font-size: 36px !important;
+                font-weight: 900 !important;
+                text-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                letter-spacing: 2px;
+                animation: float 4s ease-in-out infinite;
+            }
+            .poster-slogan {
+                font-size: 16px !important;
+                opacity: 0.95 !important;
+                margin-top: 8px !important;
+                letter-spacing: 1px;
+            }
+            .poster-tag {
+                background: rgba(255,255,255,0.2);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.3);
+                padding: 6px 14px;
+                border-radius: 20px;
+                font-size: 13px;
+                font-weight: 500;
+                display: inline-block;
+                margin: 4px 6px 4px 0;
+                transition: all 0.3s ease;
+            }
+            .poster-tag:hover {
+                background: rgba(255,255,255,0.35);
+                transform: translateY(-2px);
             }
             .action-btn {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 border: none;
                 color: white;
-                padding: 12px 28px;
-                border-radius: 25px;
+                padding: 14px 32px;
+                border-radius: 28px;
                 cursor: pointer;
                 font-weight: 600;
-                transition: all 0.3s ease;
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+                position: relative;
+                overflow: hidden;
+            }
+            .action-btn::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+                transition: left 0.5s;
+            }
+            .action-btn:hover::before {
+                left: 100%;
             }
             .action-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+                transform: translateY(-3px) scale(1.03);
+                box-shadow: 0 8px 28px rgba(102, 126, 234, 0.55);
             }
             .rank-item {
-                background: rgba(255,255,255,0.9);
-                border-radius: 12px;
-                padding: 12px 16px;
-                margin: 8px 0;
-                transition: all 0.3s ease;
-                border: 1px solid rgba(0,0,0,0.05);
+                background: rgba(255,255,255,0.95);
+                backdrop-filter: blur(10px);
+                border-radius: 14px;
+                padding: 14px 18px;
+                margin: 10px 0;
+                transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                border: 1px solid rgba(0,0,0,0.06);
+                box-shadow: 0 2px 10px rgba(0,0,0,0.04);
             }
             .rank-item:hover {
                 background: white;
-                box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-                transform: translateX(5px);
+                box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+                transform: translateX(8px) scale(1.02);
+                border-color: rgba(102, 126, 234, 0.3);
             }
             .rank-bar {
-                background: linear-gradient(90deg, #667eea, #764ba2);
-                height: 6px;
-                border-radius: 3px;
-                transition: width 0.5s ease;
+                background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+                height: 7px;
+                border-radius: 4px;
+                transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                box-shadow: 0 2px 8px rgba(102,126,234,0.3);
             }
             .suggestion-item {
-                padding: 12px 16px;
+                padding: 14px 18px;
                 cursor: pointer;
-                transition: all 0.2s ease;
-                border-radius: 10px;
-                margin: 4px 0;
+                transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                border-radius: 12px;
+                margin: 5px 0;
+                background: rgba(255,255,255,0.9);
+                border: 1px solid rgba(0,0,0,0.05);
             }
             .suggestion-item:hover {
-                background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
-                transform: translateX(5px);
+                background: linear-gradient(135deg, rgba(102,126,234,0.12), rgba(118,75,162,0.12));
+                transform: translateX(8px) scale(1.02);
+                box-shadow: 0 4px 15px rgba(102,126,234,0.15);
+                border-color: rgba(102, 126, 234, 0.3);
+            }
+            .itinerary-tab {
+                padding: 12px 24px;
+                border-radius: 12px;
+                transition: all 0.3s ease;
+                font-weight: 600;
+                border: 2px solid transparent;
             }
             .itinerary-tab.active {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                transform: scale(1.05);
+            }
+            .itinerary-tab:not(.active):hover {
+                background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+                border-color: rgba(102, 126, 234, 0.3);
             }
             .tip-card {
-                background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%);
-                border-radius: 15px;
+                background: linear-gradient(135deg, rgba(102,126,234,0.06) 0%, rgba(118,75,162,0.06) 100%);
+                border-radius: 18px;
+                padding: 24px;
+                border: 1px solid rgba(102,126,234,0.15);
+                transition: all 0.3s ease;
+            }
+            .tip-card:hover {
+                box-shadow: 0 8px 25px rgba(102,126,234,0.1);
+                border-color: rgba(102, 126, 234, 0.3);
+            }
+            .tip-list li {
+                padding: 8px 0;
+                border-bottom: 1px dashed rgba(0,0,0,0.06);
+                transition: all 0.2s ease;
+            }
+            .tip-list li:last-child {
+                border-bottom: none;
+            }
+            .tip-list li:hover {
+                padding-left: 8px;
+                color: #667eea;
+            }
+            .tip-list.avoid li:hover {
+                color: #e74c3c;
+            }
+            .links-section {
+                background: linear-gradient(135deg, rgba(102,126,234,0.04) 0%, rgba(118,75,162,0.04) 100%);
+                border-radius: 18px;
+                padding: 24px;
+                margin-top: 25px;
+                border: 1px solid rgba(102,126,234,0.1);
+            }
+            .link-item {
+                display: flex;
+                align-items: center;
+                padding: 12px 16px;
+                border-radius: 12px;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                color: inherit;
+                border: 1px solid rgba(0,0,0,0.05);
+                margin: 6px 0;
+            }
+            .link-item:hover {
+                background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+                transform: translateX(5px);
+                box-shadow: 0 4px 15px rgba(102,126,234,0.12);
+                border-color: rgba(102, 126, 234, 0.3);
+            }
+            .link-arrow {
+                margin-left: auto;
+                transition: transform 0.3s ease;
+            }
+            .link-item:hover .link-arrow {
+                transform: translateX(5px);
+            }
+            .poster-design {
+                background: linear-gradient(135deg, rgba(102,126,234,0.04) 0%, rgba(118,75,162,0.04) 100%);
+                border-radius: 18px;
+                padding: 24px;
+                margin-top: 25px;
+                border: 1px solid rgba(102,126,234,0.1);
+            }
+            .design-tag {
+                display: inline-block;
+                padding: 6px 14px;
+                border-radius: 20px;
+                margin: 4px 6px 4px 0;
+                font-size: 13px;
+                font-weight: 500;
+                background: linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15));
+                color: #667eea;
+                transition: all 0.3s ease;
+            }
+            .design-tag:hover {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                transform: translateY(-2px);
+            }
+            .color-dot {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                display: inline-block;
+                margin: 4px;
+                transition: all 0.3s ease;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            }
+            .color-dot:hover {
+                transform: scale(1.3) rotate(10deg);
+                box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            }
+            .food-icon {
+                font-size: 28px !important;
+                animation: float 3s ease-in-out infinite;
+            }
+            .food-name {
+                font-weight: 700 !important;
+                font-size: 15px !important;
+                color: #2c3e50 !important;
+            }
+            .food-price {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                font-weight: 700 !important;
+            }
+            .hotel-name {
+                font-weight: 700 !important;
+                color: #667eea !important;
+                font-size: 15px !important;
+            }
+            .transport-type {
+                font-weight: 700 !important;
+                color: #764ba2 !important;
+            }
+            .budget-level {
+                font-weight: 700 !important;
+                color: #2c3e50 !important;
+                font-size: 14px !important;
+            }
+            .budget-amount {
+                font-size: 22px !important;
+                font-weight: 900 !important;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .tip-title {
+                font-weight: 800 !important;
+                font-size: 17px !important;
+                margin-bottom: 15px !important;
+                color: #2c3e50 !important;
+            }
+            .poster-footer {
+                background: linear-gradient(to top, rgba(102,126,234,0.05), transparent);
+                padding: 25px 30px;
+                border-top: 1px solid rgba(0,0,0,0.06);
+                margin-top: 25px;
+                border-radius: 0 0 24px 24px;
+            }
+            .footer-text {
+                color: #999 !important;
+                font-size: 13px !important;
+            }
+            .footer-actions {
+                margin-top: 15px;
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+            .save-btn {
+                background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+                box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4) !important;
+            }
+            .share-btn {
+                background: linear-gradient(135deg, #3498db, #5dade2) !important;
+                box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4) !important;
+            }
+            .itinerary-panel {
+                animation: fadeInUp 0.4s ease-out;
+            }
+            .itinerary-route-item {
+                background: rgba(255,255,255,0.8);
+                border-radius: 12px;
+                padding: 14px 18px;
+                margin: 10px 0;
+                border-left: 4px solid #667eea;
+                transition: all 0.3s ease;
+            }
+            .itinerary-route-item:hover {
+                background: white;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+                transform: translateX(5px);
+            }
+            .route-time {
+                font-weight: 700 !important;
+                color: #667eea !important;
+            }
+            .route-period {
+                padding: 8px 0 !important;
+                border-bottom: 1px dashed rgba(0,0,0,0.08) !important;
+            }
+            .forecast-day {
+                background: rgba(255,255,255,0.15);
+                border-radius: 12px;
+                padding: 12px;
+                text-align: center;
+                transition: all 0.3s ease;
+            }
+            .forecast-day:hover {
+                background: rgba(255,255,255,0.25);
+                transform: translateY(-3px);
+            }
+            .design-main {
+                text-align: center;
                 padding: 20px;
-                border: 1px solid rgba(102,126,234,0.2);
+                background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1));
+                border-radius: 14px;
+                margin-bottom: 20px;
+            }
+            .design-title {
+                font-size: 26px !important;
+                font-weight: 900 !important;
+                background: linear-gradient(135deg, #667eea, #764ba2) !important;
+                -webkit-background-clip: text !important;
+                -webkit-text-fill-color: transparent !important;
+            }
+            .design-subtitle {
+                color: #888 !important;
+                font-style: italic !important;
+                margin-top: 8px !important;
             }
         `;
         document.head.appendChild(style);
