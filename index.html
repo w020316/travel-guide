@@ -1,153 +1,789 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>旅游攻略海报生成器</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <meta name="description" content="一键生成中国任意城市旅游攻略与精美海报 | AI智能推荐 | AR预览">
+    <meta name="theme-color" content="#FF6B6B">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" "black-translucent">
+    <meta name="apple-mobile-web-app-title" content="旅游攻略">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- 高德地图API -->
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=YOUR_AMAP_KEY"></script>
+    
+    <!-- AR.js -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    
+    <!-- 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- html2canvas for HD export -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <!-- 主样式 -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app">
-        <header class="header">
-            <div class="header-content">
-                <h1 class="logo">🗺️ 旅游攻略海报生成器</h1>
-                <p class="subtitle">输入任意中国城市名称，一键生成完整旅游攻略与精美海报</p>
+    <!-- 顶部导航栏（新增） -->
+    <nav class="top-navbar" id="topNavbar">
+        <div class="navbar-content">
+            <div class="navbar-brand">
+                <span class="brand-icon">🗺️</span>
+                <span class="brand-text" data-i18n="app.title">旅游攻略生成器</span>
             </div>
-        </header>
-
-        <main class="main">
-            <div class="features">
-                <div class="feature">
-                    <span class="feature-icon">🏙️</span>
-                    <span class="feature-text">全国城市支持</span>
-                    <span class="feature-desc">支持全国所有城市，智能生成专属攻略</span>
-                </div>
-                <div class="feature">
-                    <span class="feature-icon">🗺️</span>
-                    <span class="feature-text">智能行程规划</span>
-                    <span class="feature-desc">基于城市特色，自动生成最优游玩路线</span>
-                </div>
-                <div class="feature">
-                    <span class="feature-icon">🎨</span>
-                    <span class="feature-text">精美海报生成</span>
-                    <span class="feature-desc">行程地标可视化，箭头串联展示路线</span>
+            
+            <div class="navbar-center">
+                <!-- 语言切换器（新增） -->
+                <div class="language-switcher">
+                    <button class="lang-btn active" data-lang="zh-CN">中文</button>
+                    <button class="lang-btn" data-lang="en">EN</button>
+                    <button class="lang-btn" data-lang="ja">日本語</button>
+                    <button class="lang-btn" data-lang="ko">한국어</button>
                 </div>
             </div>
-
-            <div class="search-box">
-                <div class="province-selector">
-                    <label for="provinceSelect">按省份查找：</label>
-                    <select id="provinceSelect">
-                        <option value="">选择省份</option>
-                    </select>
-                    <select id="citySelect" disabled>
-                        <option value="">选择城市</option>
-                    </select>
-                </div>
-                <div class="search-input-wrapper">
-                    <input type="text" id="cityInput" placeholder="输入城市名称，如：北京、上海、成都..." autocomplete="off">
-                    <div id="searchSuggestions" class="search-suggestions hidden"></div>
-                </div>
-                <button id="generateBtn">生成攻略</button>
-                <span class="search-hint">按 Enter 快速搜索</span>
-            </div>
-
-            <div class="quick-btns">
-                <button class="quick-btn" data-city="北京">北京</button>
-                <button class="quick-btn" data-city="上海">上海</button>
-                <button class="quick-btn" data-city="成都">成都</button>
-                <button class="quick-btn" data-city="杭州">杭州</button>
-                <button class="quick-btn" data-city="西安">西安</button>
-                <button class="quick-btn" data-city="重庆">重庆</button>
-                <button class="quick-btn" data-city="广州">广州</button>
-                <button class="quick-btn" data-city="厦门">厦门</button>
-                <button class="quick-btn" data-city="南京">南京</button>
-                <button class="quick-btn" data-city="青岛">青岛</button>
-                <button class="quick-btn" data-city="苏州">苏州</button>
-                <button class="quick-btn" data-city="丽江">丽江</button>
-                <button class="quick-btn" data-city="三亚">三亚</button>
-                <button class="quick-btn" data-city="哈尔滨">哈尔滨</button>
-                <button class="quick-btn" data-city="武汉">武汉</button>
-                <button class="quick-btn" data-city="长沙">长沙</button>
-                <button class="quick-btn" data-city="天津">天津</button>
-                <button class="quick-btn" data-city="大理">大理</button>
-                <button class="quick-btn" data-city="桂林">桂林</button>
-                <button class="quick-btn" data-city="香港">香港</button>
-                <button class="quick-btn" data-city="洛阳">洛阳</button>
-                <button class="quick-btn" data-city="张家界">张家界</button>
-                <button class="quick-btn" data-city="深圳">深圳</button>
-                <button class="quick-btn" data-city="珠海">珠海</button>
-                <button class="quick-btn" data-city="昆明">昆明</button>
-                <button class="quick-btn" data-city="拉萨">拉萨</button>
-                <button class="quick-btn" data-city="乌鲁木齐">乌鲁木齐</button>
-                <button class="quick-btn" data-city="兰州">兰州</button>
-                <button class="quick-btn" data-city="沈阳">沈阳</button>
-                <button class="quick-btn" data-city="郑州">郑州</button>
-                <button class="quick-btn" data-city="贵阳">贵阳</button>
-                <button class="quick-btn" data-city="济南">济南</button>
-                <button class="quick-btn" data-city="太原">太原</button>
-                <button class="quick-btn" data-city="南宁">南宁</button>
-                <button class="quick-btn" data-city="西宁">西宁</button>
-                <button class="quick-btn" data-city="银川">银川</button>
-                <button class="quick-btn" data-city="海口">海口</button>
-                <button class="quick-btn" data-city="福州">福州</button>
-                <button class="quick-btn" data-city="呼和浩特">呼和浩特</button>
-                <button class="quick-btn" data-city="大连">大连</button>
-                <button class="quick-btn" data-city="宁波">宁波</button>
-                <button class="quick-btn" data-city="黄山">黄山</button>
-                <button class="quick-btn" data-city="敦煌">敦煌</button>
-            </div>
-
-            <div class="custom-days-section">
-                <h3>🧳 自定义旅行天数</h3>
-                <div class="days-selector">
-                    <button class="day-btn" data-days="1">1天</button>
-                    <button class="day-btn" data-days="2">2天1晚</button>
-                    <button class="day-btn" data-days="3">3天2晚</button>
-                    <button class="day-btn" data-days="4">4天3晚</button>
-                    <button class="day-btn" data-days="5">5天4晚</button>
-                    <button class="day-btn" data-days="6">6天5晚</button>
-                    <button class="day-btn" data-days="7">7天6晚</button>
-                    <div class="custom-input">
-                        <input type="number" id="customDays" min="1" max="30" placeholder="自定义天数">
-                        <button id="applyCustomDays">应用</button>
+            
+            <div class="navbar-right">
+                <!-- 语音输入按钮（新增） -->
+                <button class="nav-btn voice-btn" id="voiceInputBtn" title="语音搜索">
+                    🎤
+                </button>
+                
+                <!-- 用户菜单（新增） -->
+                <div class="user-menu" id="userMenu">
+                    <button class="login-btn" id="loginBtn" data-i18n="auth.login">登录</button>
+                    <div class="user-profile hidden" id="userProfile">
+                        <div class="avatar" id="userAvatar">👤</div>
+                        <span class="username" id="userName">用户</span>
+                        <div class="dropdown-menu" id="userDropdown">
+                            <a href="#" class="dropdown-item" id="myProfileBtn">📋 我的资料</a>
+                            <a href="#" class="dropdown-item" id="myPostsBtn">📝 我的攻略</a>
+                            <a href="#" class="dropdown-item" id="myFavoritesNavBtn">❤️ 我的收藏</a>
+                            <a href="#" class="dropdown-item" id="settingsBtn">⚙️ 设置</a>
+                            <hr class="dropdown-divider">
+                            <a href="#" class="dropdown-item logout" id="logoutBtn">🚪 退出登录</a>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </nav>
 
-            <div class="ranking-section">
-                <div class="ranking-header">
-                    <div class="ranking-title">
-                        <span class="ranking-icon">🏆</span>
-                        <span>热门城市排行榜</span>
-                        <span id="seasonBadge" class="season-badge">🌸 春季推荐</span>
+    <!-- 首页 -->
+    <div class="home-page" id="homePage">
+        <div class="hero-section">
+            <div class="hero-bg"></div>
+            <div class="hero-content">
+                <h1 class="hero-title" data-i18n="home.title">🗺️ 旅游攻略海报生成器</h1>
+                <p class="hero-subtitle" data-i18n="home.subtitle">输入任意中国城市名称，AI一键生成完整旅游攻略与精美海报</p>
+                
+                <div class="search-container">
+                    <div class="search-box-main">
+                        <!-- 语音输入状态指示器（新增） -->
+                        <div class="voice-status hidden" id="voiceStatus">
+                            <div class="voice-wave">
+                                <span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                            <p class="voice-hint" data-i18n="voice.listening">正在聆听...</p>
+                        </div>
+                        
+                        <div class="province-selector">
+                            <label for="provinceSelect" data-i18n="search.byProvince">按省份查找：</label>
+                            <select id="provinceSelect">
+                                <option value="" data-i18n="search.selectProvince">选择省份</option>
+                            </select>
+                            <select id="citySelect" disabled>
+                                <option value="" data-i18n="search.selectCity">选择城市</option>
+                            </select>
+                        </div>
+                        
+                        <div class="search-input-wrapper">
+                            <input type="text" id="cityInput" placeholder="🔍 输入城市名称或使用语音..." data-i18n="search.placeholder" autocomplete="off">
+                            <div id="searchSuggestions" class="search-suggestions hidden"></div>
+                        </div>
+                        
+                        <div class="search-actions">
+                            <button id="generateBtn" class="generate-main-btn" data-i18n="search.generate">✨ AI生成攻略</button>
+                            
+                            <!-- AI增强选项（新增） -->
+                            <div class="ai-toggle">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="aiEnhancedToggle" checked>
+                                    <span class="toggle-slider"></span>
+                                    <span data-i18n="ai.enhanced">AI增强模式</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="live-indicator">
-                        <span class="live-dot"></span>
-                        <span class="live-text">实时更新</span>
+
+                    <div class="quick-tags">
+                        <span class="tag-label" data-i18n="home.hotCities">热门城市：</span>
+                        <button class="quick-btn" data-city="北京">北京</button>
+                        <button class="quick-btn" data-city="上海">上海</button>
+                        <button class="quick-btn" data-city="成都">成都</button>
+                        <button class="quick-btn" data-city="杭州">杭州</button>
+                        <button class="quick-btn" data-city="西安">西安</button>
+                        <button class="quick-btn" data-city="重庆">重庆</button>
+                        <button class="quick-btn" data-city="广州">广州</button>
+                        <button class="quick-btn" data-city="厦门">厦门</button>
+                        <button class="quick-btn" data-city="南京">南京</button>
+                        <button class="quick-btn" data-city="青岛">青岛</button>
+                        <button class="quick-btn" data-city="苏州">苏州</button>
+                        <button class="quick-btn" data-city="丽江">丽江</button>
+                        <button class="quick-btn" data-city="三亚">三亚</button>
+                        <button class="quick-btn" data-city="哈尔滨">哈尔滨</button>
+                        <button class="quick-btn" data-city="武汉">武汉</button>
+                        <button class="quick-btn" data-city="长沙">长沙</button>
+                        <button class="quick-btn" data-city="天津">天津</button>
+                        <button class="quick-btn" data-city="大理">大理</button>
+                        <button class="quick-btn" data-city="桂林">桂林</button>
+                        <button class="quick-btn" data-city="香港">香港</button>
+                        <button class="quick-btn" data-city="洛阳">洛阳</button>
+                        <button class="quick-btn" data-city="张家界">张家界</button>
+                        <button class="quick-btn" data-city="深圳">深圳</button>
+                        <button class="quick-btn" data-city="珠海">珠海</button>
+                        <button class="quick-btn" data-city="昆明">昆明</button>
+                        <button class="quick-btn" data-city="拉萨">拉萨</button>
+                        <button class="quick-btn" data-city="乌鲁木齐">乌鲁木齐</button>
+                        <button class="quick-btn" data-city="兰州">兰州</button>
+                        <button class="quick-btn" data-city="沈阳">沈阳</button>
+                        <button class="quick-btn" data-city="郑州">郑州</button>
+                        <button class="quick-btn" data-city="贵阳">贵阳</button>
+                        <button class="quick-btn" data-city="济南">济南</button>
+                        <button class="quick-btn" data-city="太原">太原</button>
+                        <button class="quick-btn" data-city="南宁">南宁</button>
+                        <button class="quick-btn" data-city="西宁">西宁</button>
+                        <button class="quick-btn" data-city="银川">银川</button>
+                        <button class="quick-btn" data-city="海口">海口</button>
+                        <button class="quick-btn" data-city="福州">福州</button>
+                        <button class="quick-btn" data-city="呼和浩特">呼和浩特</button>
+                        <button class="quick-btn" data-city="大连">大连</button>
+                        <button class="quick-btn" data-city="宁波">宁波</button>
+                        <button class="quick-btn" data-city="黄山">黄山</button>
+                        <button class="quick-btn" data-city="敦煌">敦煌</button>
                     </div>
-                </div>
-                <div id="aiRecommendSection" class="ai-recommend-section">
-                    <div class="ai-recommend-title">🤖 AI智能推荐</div>
-                    <div id="aiRecommendList" class="ai-recommend-list"></div>
-                </div>
-                <div id="rankingList" class="ranking-list"></div>
-                <div class="ranking-footer">
-                    <span class="ranking-update-time">最后更新：--</span>
-                    <span class="ranking-total">总搜索：<span id="totalSearches">0</span>次</span>
+
+                    <div class="days-selector-wrapper">
+                        <h3>🧳 <span data-i18n="days.customize">自定义旅行天数</span></h3>
+                        <div class="days-selector">
+                            <button class="day-btn active" data-days="1">1天</button>
+                            <button class="day-btn" data-days="2">2天1晚</button>
+                            <button class="day-btn" data-days="3">3天2晚</button>
+                            <button class="day-btn" data-days="4">4天3晚</button>
+                            <button class="day-btn" data-days="5">5天4晚</button>
+                            <button class="day-btn" data-days="6">6天5晚</button>
+                            <button class="day-btn" data-days="7">7天6晚</button>
+                            <div class="custom-input">
+                                <input type="number" id="customDays" min="1" max="30" placeholder="自定义天数">
+                                <button id="applyCustomDays" data-i18n="days.apply">应用</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI个性化偏好设置 -->
+                    <div class="ai-preferences-wrapper">
+                        <h3>🤖 <span data-i18n="ai.preferences">AI个性化设置</span></h3>
+                        <div class="ai-preferences-grid">
+                            <div class="preference-item">
+                                <label data-i18n="pref.travelType">旅行类型：</label>
+                                <select id="travelType">
+                                    <option value="balanced" data-i18n="type.balanced">均衡型（景点+美食+休闲）</option>
+                                    <option value="culture" data-i18n="type.culture">文化深度游（历史古迹+博物馆）</option>
+                                    <option value="nature" data-i18n="type.nature">自然风光游（山水+草原+森林）</option>
+                                    <option value="foodie" data-i18n="type.foodie">美食探店游（当地特色+网红店）</option>
+                                    <option value="adventure" data-i18n="type.adventure">户外探险游（徒步+登山+极限）</option>
+                                    <option value="relaxation" data-i18n="type.relaxation">休闲度假游（温泉+海岛+慢生活）</option>
+                                    <option value="budget" data-i18n="type.budget">经济实惠游（高性价比+免费景点）</option>
+                                    <option value="luxury" data-i18n="type.luxury">豪华享受游（高端酒店+精致体验）</option>
+                                </select>
+                            </div>
+                            <div class="preference-item">
+                                <label data-i18n="pref.budgetRange">预算范围：</label>
+                                <select id="budgetRange">
+                                    <option value="low" data-i18n="budget.economy">经济型（<1000元）</option>
+                                    <option value="medium" selected data-i18n="budget.comfortable">舒适型（1000-3000元）</option>
+                                    <option value="high" data-i18n="budget.luxury">豪华型（3000-8000元）</option>
+                                    <option value="unlimited" data-i18n="budget.unlimited">不设限（土豪随意）</option>
+                                </select>
+                            </div>
+                            <div class="preference-item">
+                                <label data-i18n="pref.companion">同行人员：</label>
+                                <select id="companionType">
+                                    <option value="solo" data-i18n="companion.solo">独自一人</option>
+                                    <option value="couple" data-i18n="companion.couple">情侣/夫妻</option>
+                                    <option value="family" data-i18n="companion.family">家庭亲子</option>
+                                    <option value="friends" data-i18n="companion.friends">朋友结伴</option>
+                                    <option value="elderly" data-i18n="companion.elderly">带老人出行</option>
+                                    <option value="team" data-i18n="companion.team">公司团建</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </main>
-
-        <div id="loading" class="loading hidden">
-            <div class="loading-spinner"></div>
-            <p>正在生成专属攻略...</p>
         </div>
 
-        <div id="result" class="result hidden"></div>
+        <div class="ranking-section-home">
+            <div class="ranking-header">
+                <div class="ranking-title">
+                    <span class="ranking-icon">🏆</span>
+                    <span data-i18n="ranking.title">热门城市排行榜</span>
+                    <span id="seasonBadge" class="season-badge">🌸 春季推荐</span>
+                </div>
+                <div class="live-indicator">
+                    <span class="live-dot"></span>
+                    <span class="live-text" data-i18n="common.realtime">实时更新</span>
+                </div>
+                
+                <!-- 我的收藏入口 -->
+                <button class="my-favorites-btn" id="myFavoritesBtn">
+                    ❤️ <span data-i18n="favorites.myFavorites">我的收藏</span> (<span id="favoritesCount">0</span>)
+                </button>
+            </div>
+            
+            <!-- AI智能推荐区域 -->
+            <div id="aiRecommendSection" class="ai-recommend-section">
+                <div class="ai-recommend-title">🤖 <span data-i18n="ai.recommendations">AI智能推荐</span></div>
+                <div id="aiRecommendList" class="ai-recommend-list"></div>
+            </div>
+            
+            <div id="rankingList" class="ranking-list"></div>
+            
+            <!-- 最近浏览历史 -->
+            <div class="recent-history-section">
+                <h3 class="section-heading">🕐 <span data-i18n="history.recent">最近浏览</span></h3>
+                <div id="recentHistoryList" class="recent-history-list"></div>
+            </div>
+            
+            <div class="ranking-footer">
+                <span class="ranking-update-time"><span data-i18n="common.lastUpdate">最后更新</span>：--</span>
+                <span class="ranking-total"><span data-i18n="common.totalSearches">总搜索</span>：<span id="totalSearches">0</span><span data-i18n="common.times">次</span></span>
+            </div>
+        </div>
+        
+        <!-- 收藏管理弹窗 -->
+        <div id="favoritesModal" class="modal-overlay hidden">
+            <div class="modal-content favorites-modal">
+                <div class="modal-header">
+                    <h2>❤️ <span data-i18n="favorites.title">我的收藏</span></h2>
+                    <button class="modal-close" id="closeFavoritesModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="favoritesList" class="favorites-list"></div>
+                    <div id="emptyFavorites" class="empty-state hidden">
+                        <p data-i18n="favorites.empty">还没有收藏任何城市哦~</p>
+                        <p class="hint" data-i18n="favorites.emptyHint">点击攻略页的⭐收藏按钮即可收藏</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="clearAllFavorites" data-i18n="favorites.clearAll">清空所有收藏</button>
+                    <button class="btn-primary" id="exportFavorites" data-i18n="favorites.export">导出收藏列表</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 登录弹窗（新增） -->
+        <div id="loginModal" class="modal-overlay hidden">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h2>🔐 <span data-i18n="auth.loginTitle">登录 / 注册</span></h2>
+                    <button class="modal-close" id="closeLoginModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <!-- 邮箱登录表单 -->
+                    <form id="emailLoginForm" class="auth-form">
+                        <div class="form-group">
+                            <label data-i18n="auth.email">邮箱地址</label>
+                            <input type="email" id="emailInput" required placeholder="your@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="auth.password">密码</label>
+                            <input type="password" id="passwordInput" required placeholder="•••••••••">
+                        </div>
+                        <button type="submit" class="btn-primary btn-full" data-i18n="auth.signIn">登录</button>
+                    </form>
+                    
+                    <div class="auth-divider">
+                        <span data-i18n="auth.orContinueWith">或继续使用</span>
+                    </div>
+                    
+                    <!-- 社交登录按钮 -->
+                    <div class="social-login-buttons">
+                        <button class="social-btn google-btn" id="googleLoginBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                            Google
+                        </button>
+                        <button class="social-btn github-btn" id="githubLoginBtn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 2.258 2.673 5.147 4.091 8.334 4.093 3.178-.006 6.305-1.42 8.412-4.143V16.96h-2.953v-3.779H12V9.727h2.953V7.587c0-2.916 1.78-4.508 4.387-4.508 1.245 0 2.548.222 3.548.63v2.844h-1.997c-.985 0-1.294.49-1.294 1.216v2.033h3.328l-.532 3.779h-2.796V19.93c5.365-.54 9.192-5.594 9.192-11.093 0-6.627-5.373-12-12-12z"/></svg>
+                            GitHub
+                        </button>
+                    </div>
+                    
+                    <p class="auth-switch" data-i18n="auth.noAccount">还没有账号？</p>
+                    <button class="btn-link" id="showRegisterForm" data-i18n="auth.registerNow">立即注册</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 注册表单弹窗 -->
+        <div id="registerModal" class="modal-overlay hidden">
+            <div class="modal-content register-modal">
+                <div class="modal-header">
+                    <h2>📝 <span data-i18n="auth.registerTitle">创建账号</span></h2>
+                    <button class="modal-close" id="closeRegisterModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerForm" class="auth-form">
+                        <div class="form-group">
+                            <label data-i18n="register.displayName">显示名称</label>
+                            <input type="text" id="displayNameInput" required placeholder="您的昵称">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="auth.email">邮箱地址</label>
+                            <input type="email" id="regEmailInput" required placeholder="your@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="auth.password">密码</label>
+                            <input type="password" id="regPasswordInput" required placeholder="至少6位字符" minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="register.confirmPassword">确认密码</label>
+                            <input type="password" id="confirmPasswordInput" required placeholder="再次输入密码">
+                        </div>
+                        <button type="submit" class="btn-primary btn-full" data-i18n="auth.createAccount">创建账号</button>
+                    </form>
+                    
+                    <p class="auth-switch" data-i18n="auth.hasAccount">已有账号？</p>
+                    <button class="btn-link" id="showLoginForm" data-i18n="auth.loginNow">立即登录</button>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- 加载状态 -->
+    <div id="loading" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="loading-text" id="loadingText" data-i18n="loading.generating">正在规划您的<span id="loadingCity">XX</span>之旅...</p>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">0%</span>
+            </div>
+            
+            <!-- AI加载提示 -->
+            <div class="ai-loading-tips">
+                <p>✨ <span data-i18n="ai.workingOn">AI正在为您</span>：</p>
+                <ul id="aiLoadingSteps">
+                    <li data-i18n="ai.step1">分析城市特色数据...</li>
+                    <li data-i18n="ai.step2">匹配您的旅行偏好...</li>
+                    <li data-i18n="ai.step3">生成个性化行程路线...</li>
+                    <li data-i18n="ai.step4">设计专属海报配色...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 攻略结果页 -->
+    <div id="resultPage" class="result-page hidden">
+        <div class="result-header">
+            <button class="back-btn" id="backBtn">← <span data-i18n="common.backHome">返回首页</span></button>
+            <h2 class="result-title" id="resultTitle">XX 旅游攻略</h2>
+            
+            <div class="action-buttons-group">
+                <!-- 收藏按钮 -->
+                <button class="action-btn favorite-btn" id="favoriteBtn">⭐ <span data-i18n="actions.favorite">收藏</span></button>
+                
+                <!-- 海报风格切换 -->
+                <div class="style-switcher">
+                    <span class="style-label" data-i18n="poster.style">海报风格：</span>
+                    <button class="style-btn active" data-style="fresh" data-i18n="style.fresh">清新风</button>
+                    <button class="style-btn" data-style="vintage" data-i18n="style.vintage">复古风</button>
+                    <button class="style-btn" data-style="minimal" data-i18n="style.minimal">极简风</button>
+                </div>
+                
+                <!-- 分享按钮组 -->
+                <div class="share-buttons">
+                    <button class="share-btn" id="shareTextBtn" title="复制文本攻略">📋 <span data-i18n="share.copyText">复制文本</span></button>
+                    <button class="share-btn" id="shareLinkBtn" title="复制链接">🔗 <span data-i18n="share.copyLink">复制链接</span></button>
+                    <button class="share-btn" id="wechatShareBtn" title="微信分享">💬 <span data-i18n="share.wechat">微信</span></button>
+                </div>
+                
+                <!-- AR预览按钮（新增） -->
+                <button class="action-btn ar-preview-btn" id="arPreviewBtn" title="AR实景预览">
+                    🥽 <span data-i18n="ar.preview">AR预览</span>
+                </button>
+                
+                <!-- 语音朗读按钮（新增） -->
+                <button class="action-btn voice-read-btn" id="voiceReadBtn" title="朗读攻略">
+                    🔊 <span data-i18n="voice.readGuide">朗读</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="result-content">
+            <!-- 左侧：海报 + 地图 + AR -->
+            <div class="poster-section">
+                <div class="poster-header-bar">
+                    <h3>📱 <span data-i18n="preview.posterPreview">海报预览</span></h3>
+                    <div class="poster-actions">
+                        <button class="poster-action-btn download-hd" id="downloadHDBtn">⬇️ <span data-i18n="download.hd">下载高清 (1080×1920)</span></button>
+                        <button class="poster-action-btn download-png" id="downloadPngBtn">📷 <span data-i18n="download.saveImage">保存图片</span></button>
+                    </div>
+                </div>
+                
+                <!-- Tab切换 -->
+                <div class="preview-tabs">
+                    <button class="tab-btn active" data-tab="poster">🎨 <span data-i18n="tabs.poster">海报</span></button>
+                    <button class="tab-btn" data-tab="map">🗺️ <span data-i18n="tabs.map">地图</span></button>
+                    <button class="tab-btn" data-tab="ar">🥽 <span data-i18n="tabs.ar">AR</span></button>
+                </div>
+                
+                <!-- 海报容器 -->
+                <div class="poster-tab-content active" id="posterTabContent">
+                    <div class="poster-container" id="posterContainer">
+                        <div class="poster poster-fresh" id="poster"></div>
+                    </div>
+                </div>
+                
+                <!-- 地图容器 -->
+                <div class="map-tab-content hidden" id="mapTabContent">
+                    <div class="map-container" id="mapContainer">
+                        <div id="amap" style="width: 100%; height: 400px;"></div>
+                        <div class="map-controls">
+                            <button class="map-control-btn" id="resetMapView">🔄 <span data-i18n="map.resetView">重置视图</span></button>
+                            <button class="map-control-btn" id="showAllSpots">📍 <span data-i18n="map.showAllSpots">显示全部景点</span></button>
+                        </div>
+                        <div class="map-legend">
+                            <h4 data-i18n="map.legend">图例说明</h4>
+                            <div class="legend-items">
+                                <div class="legend-item"><span class="legend-dot day1"></span> Day 1</div>
+                                <div class="legend-item"><span class="legend-dot day2"></span> Day 2</div>
+                                <div class="legend-item"><span class="legend-dot day3"></span> Day 3</div>
+                                <div class="legend-item"><span class="legend-dot food"></span> <span data-i18n="map.food">美食</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AR预览容器（新增） -->
+                <div class="ar-tab-content hidden" id="arTabContent">
+                    <div class="ar-container" id="arContainer">
+                        <div class="ar-placeholder">
+                            <p>🥽 <span data-i18n="ar.scanHint">将手机摄像头对准平面表面</span></p>
+                            <p class="ar-subtitle" data-i18n="ar.placingPoster">放置您的旅游海报</p>
+                            <div class="ar-demo-poster" id="arDemoPoster">
+                                <!-- AR渲染的海报内容将通过JS动态插入 -->
+                            </div>
+                            <button class="btn-primary" id="exitARMode" data-i18n="ar.exitAR">退出AR模式</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：攻略详情 + 社交互动 -->
+            <div class="guide-section">
+                <div class="guide-scroll-area" id="guideContent"></div>
+                
+                <!-- 社交互动区（新增） -->
+                <div class="social-interaction-area" id="socialInteractionArea">
+                    <div class="interaction-stats">
+                        <div class="stat-item">
+                            <span class="stat-icon">👁️</span>
+                            <span class="stat-value" id="viewCount">0</span>
+                            <span class="stat-label" data-i18n="social.views">浏览量</span>
+                        </div>
+                        <div class="stat-item">
+                            <button class="stat-btn like-btn" id="likeBtn">
+                                <span class="stat-icon">👍</span>
+                                <span class="stat-value" id="likeCount">0</span>
+                            </button>
+                            <span class="stat-label" data-i18n="social.likes">点赞</span>
+                        </div>
+                        <div class="stat-item">
+                            <button class="stat-btn favorite-stat-btn" id="favoriteStatBtn">
+                                <span class="stat-icon">❤️</span>
+                                <span class="stat-value" id="favoriteStatCount">0</span>
+                            </button>
+                            <span class="stat-label" data-i18n="social.favorites">收藏</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">💬</span>
+                            <span class="stat-value" id="commentCount">0</span>
+                            <span class="stat-label" data-i18n="social.comments">评论</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 评论列表（新增） -->
+                    <div class="comments-section" id="commentsSection">
+                        <h3 class="comments-heading">💬 <span data-i18n="comments.title">评论</span></h3>
+                        <div class="comment-form" id="commentForm">
+                            <textarea id="commentInput" rows="3" placeholder="分享你的旅行体验或建议..." data-i18n="comments.placeholder"></textarea>
+                            <div class="comment-form-actions">
+                                <button class="btn-primary" id="submitComment" data-i18n="comments.submit">发表评论</button>
+                            </div>
+                        </div>
+                        <div class="comments-list" id="commentsList"></div>
+                        <div class="no-comments" id="noComments">
+                            <p data-i18n="comments.noCommentsYet">暂无评论，快来发表第一条吧！</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 分享成功提示 -->
+    <div id="shareSuccessToast" class="share-success-toast hidden">
+        <div class="toast-icon">✅</div>
+        <div class="toast-message" id="shareSuccessMessage"></div>
+    </div>
+    
+    <!-- Toast通知容器 -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- PWA安装提示 -->
+    <div id="pwaInstallPrompt" class="pwa-install-prompt hidden">
+        <div class="pwa-install-content">
+            <p>💡 <span data-i18n="pwa.installHint">将此应用添加到主屏幕，可离线使用！</span></p>
+            <div class="pwa-install-buttons">
+                <button class="btn-primary" id="installPWA" data-i18n="pwa.installApp">安装应用</button>
+                <button class="btn-secondary" id="dismissPWA" data-i18n="pwa.later">稍后再说</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 设置页面（新增） -->
+    <div id="settingsPage" class="settings-page hidden">
+        <div class="settings-header">
+            <button class="back-btn" id="settingsBackBtn">← 返回</button>
+            <h2>⚙️ 设置</h2>
+        </div>
+        <div class="settings-content">
+            <div class="settings-section">
+                <h3>🌐 语言设置</h3>
+                <div class="setting-option">
+                    <label>界面语言</label>
+                    <select id="settingsLanguage">
+                        <option value="zh-CN">简体中文</option>
+                        <option value="en">English</option>
+                        <option value="ja">日本語</option>
+                        <option value="ko">한국어</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>🎤 语音设置</h3>
+                <div class="setting-option">
+                    <label>语音识别语言</label>
+                    <select id="voiceLang">
+                        <option value="zh-CN">中文（普通话）</option>
+                        <option value="en-US">English (US)</option>
+                        <option value="ja-JP">日本語</option>
+                        <option value="ko-KR">한국어</option>
+                    </select>
+                </div>
+                <div class="setting-option">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="autoReadEnabled">
+                        <span class="toggle-slider"></span>
+                        自动朗读生成的攻略
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>🤖 AI设置</h3>
+                <div class="setting-option">
+                    <label>AI API提供商</label>
+                    <select id="aiProvider">
+                        <option value="local">本地数据（无需API）</option>
+                        <option value="tongyi">通义千问（阿里云）</option>
+                        <option value="wenxin">文心一言（百度）</option>
+                        <option value="openai">OpenAI GPT</option>
+                    </select>
+                </div>
+                <div class="setting-option api-key-input hidden" id="apiKeySection">
+                    <label>API Key</label>
+                    <input type="password" id="apiKeyInput" placeholder="输入您的API密钥">
+                    <button class="btn-secondary" id="saveApiKey">保存</button>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>🗑️ 数据管理</h3>
+                <div class="settings-actions">
+                    <button class="btn-secondary" id="exportAllData">导出所有数据</button>
+                    <button class="btn-danger" id="clearAllData">清除所有本地数据</button>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>ℹ️ 关于</h3>
+                <div class="about-info">
+                    <p><strong>旅游攻略海报生成器</strong></p>
+                    <p>版本: v3.0 Enterprise Edition</p>
+                    <p data-i18n="about.description">AI驱动的智能旅游规划工具，支持121个中国城市的个性化攻略生成。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 社交互动面板（新增） -->
+    <div class="social-panel hidden" id="socialPanel">
+        <div class="panel-header">
+            <h3>💬 社区互动</h3>
+            <button class="close-panel-btn" id="closeSocialPanel">×</button>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="comments">评论</button>
+            <button class="tab-btn" data-tab="likes">点赞</button>
+            <button class="tab-btn" data-tab="followers">关注</button>
+        </div>
+        
+        <!-- 评论区 -->
+        <div class="tab-content active" id="commentsTab">
+            <div class="comment-input-area">
+                <textarea id="commentInput" placeholder="分享你的旅行体验..." maxlength="500"></textarea>
+                <div class="comment-actions">
+                    <span class="char-count"><span id="commentCharCount">0</span>/500</span>
+                    <button class="btn-primary btn-sm" id="submitComment" disabled>发表评论</button>
+                </div>
+            </div>
+            
+            <div class="comments-list" id="commentsList">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+        
+        <!-- 点赞列表 -->
+        <div class="tab-content hidden" id="likesTab">
+            <div class="empty-state">
+                <p>👍 暂无点赞记录</p>
+                <p class="hint">点赞你喜欢的城市和攻略</p>
+            </div>
+        </div>
+        
+        <!-- 关注列表 -->
+        <div class="tab-content hidden" id="followersTab">
+            <div class="follow-stats">
+                <div class="stat-item">
+                    <strong id="followersCount">0</strong>
+                    <span>粉丝</span>
+                </div>
+                <div class="stat-item">
+                    <strong id="followingCount">0</strong>
+                    <span>关注</span>
+                </div>
+            </div>
+            <div class="follow-list empty-state">
+                <p>👥 暂无关注数据</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户登录/注册模态框（新增） -->
+    <div class="modal-overlay hidden" id="authModal">
+        <div class="modal-content auth-modal">
+            <button class="modal-close" id="closeAuthModal">×</button>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-auth="login">登录</button>
+                <button class="auth-tab" data-auth="register">注册</button>
+            </div>
+            
+            <!-- 登录表单 -->
+            <form id="loginForm" class="auth-form active">
+                <h2>欢迎回来 👋</h2>
+                
+                <div class="form-group">
+                    <label for="loginEmail">邮箱地址</label>
+                    <input type="email" id="loginEmail" required placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">密码</label>
+                    <input type="password" id="loginPassword" required placeholder="输入密码">
+                </div>
+                
+                <button type="submit" class="btn-primary btn-full">登录</button>
+                
+                <div class="divider"><span>或使用以下方式登录</span></div>
+                
+                <div class="social-login-buttons">
+                    <button type="button" class="btn-social google" id="googleLoginBtn">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Google 登录
+                    </button>
+                    
+                    <button type="button" class="btn-social github" id="githubLoginBtn">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        GitHub 登录
+                    </button>
+                </div>
+            </form>
+            
+            <!-- 注册表单 -->
+            <form id="registerForm" class="auth-form hidden">
+                <h2>创建账号 ✨</h2>
+                
+                <div class="form-group">
+                    <label for="registerName">用户名</label>
+                    <input type="text" id="registerName" required placeholder="你的昵称">
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerEmail">邮箱地址</label>
+                    <input type="email" id="registerEmail" required placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerPassword">密码</label>
+                    <input type="password" id="registerPassword" required placeholder="至少6位字符" minlength="6">
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerConfirmPassword">确认密码</label>
+                    <input type="password" id="registerConfirmPassword" required placeholder="再次输入密码">
+                </div>
+                
+                <button type="submit" class="btn-primary btn-full">注册</button>
+                
+                <p class="auth-hint">注册即表示同意我们的服务条款和隐私政策</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- API状态指示器（新增） -->
+    <div class="api-status-indicator" id="apiStatusIndicator">
+        <div class="status-dot" id="apiStatusDot"></div>
+        <span class="status-text" id="apiStatusText">本地模式</span>
+    </div>
+
+    <!-- Toast通知容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="apiClient.js"></script>
     <script src="app_backup.js"></script>
 </body>
 </html>

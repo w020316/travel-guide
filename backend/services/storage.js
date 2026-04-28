@@ -183,6 +183,10 @@ class StorageService {
   getCityNames() {
     return Array.from(this.citiesCache.keys());
   }
+
+  getCitySync(name) {
+    return this.citiesCache.get(name) || null;
+  }
 }
 
 const storage = new StorageService();
