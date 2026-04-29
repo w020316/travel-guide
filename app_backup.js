@@ -1120,18 +1120,19 @@ async function generateCityGuide(cityName) {
     }
 
     const normalizedCity = normalizeCityName(cityName.trim());
-    
-    if (!normalizedCity || !EMBEDDED_CITIES[normalizedCity]) {
+
+    // 优先检查扩展城市数据库（627个城市），然后回退到内置数据库
+    if (!normalizedCity || (!cityDatabase[normalizedCity] && !EMBEDDED_CITIES[normalizedCity])) {
         showToast(`暂未收录"${cityName}"的数据，敬请期待！`, 'error');
         return;
     }
 
     try {
         showLoadingState(true);
-        
+
         // 使用APIClient调用后端API
         let guideData;
-        
+
         if (typeof APIClient !== 'undefined') {
             try {
                 guideData = await APIClient.generateGuide(normalizedCity, {
@@ -1140,7 +1141,7 @@ async function generateCityGuide(cityName) {
                     budgetRange: getSelectedBudget(),
                     companionType: getSelectedCompanion()
                 });
-                
+
                 updateAPIStatus(guideData.source === 'ai' ? 'backend' : 'local');
             } catch (apiError) {
                 console.warn('API调用失败，使用本地数据:', apiError.message);
@@ -1151,20 +1152,20 @@ async function generateCityGuide(cityName) {
             guideData = generateLocalGuide(normalizedCity);
             updateAPIStatus('local');
         }
-        
+
         currentCityData = guideData;
-        
+
         // 更新搜索统计
         searchStats.totalSearches++;
         searchStats.citySearches[normalizedCity] = (searchStats.citySearches[normalizedCity] || 0) + 1;
         searchStats.lastUpdated = new Date().toISOString();
         saveStatsToStorage();
-        
+
         // 显示结果
         displayGuideResult(guideData);
-        
+
         showToast(`成功生成${normalizedCity}旅游攻略！`, 'success');
-        
+
     } catch (error) {
         console.error('生成攻略失败:', error);
         showToast('生成失败，请稍后重试', 'error');
@@ -1174,55 +1175,73 @@ async function generateCityGuide(cityName) {
 }
 
 function generateLocalGuide(cityName) {
-    const baseData = EMBEDDED_CITIES[cityName];
+    // 优先使用扩展城市数据库，回退到内置数据库
+    const baseData = cityDatabase[cityName] || EMBEDDED_CITIES[cityName];
     if (!baseData) return null;
-    
+
     const guideData = JSON.parse(JSON.stringify(baseData));
-    
+
     // 根据天数调整行程
     if (guideData.routes && guideData.routes.length > selectedDays) {
         guideData.routes = guideData.routes.slice(0, selectedDays);
     }
-    
+
     guideData.generatedAt = new Date().toISOString();
     guideData.source = 'local';
-    
+
     return guideData;
 }
 
 function normalizeCityName(input) {
     if (!input) return '';
-    
+
     input = input.trim();
-    
-    // 直接匹配
+
+    // 直接匹配扩展城市数据库（627个城市）
+    if (cityDatabase[input]) return input;
+
+    // 直接匹配内置数据库
     if (EMBEDDED_CITIES[input]) return input;
-    
+
     // 别名匹配
     for (const [cityName, aliases] of Object.entries(cityAliases)) {
         if (cityName === input) return cityName;
-        
+
         for (const alias of aliases) {
             if (alias.toLowerCase() === input.toLowerCase()) {
                 return cityName;
             }
         }
     }
-    
-    // 模糊匹配
+
+    // 模糊匹配扩展城市数据库
+    for (const cityName of Object.keys(cityDatabase)) {
+        if (cityName.includes(input) || input.includes(cityName)) {
+            return cityName;
+        }
+    }
+
+    // 模糊匹配内置数据库
     for (const cityName of Object.keys(EMBEDDED_CITIES)) {
         if (cityName.includes(input) || input.includes(cityName)) {
             return cityName;
         }
     }
-    
+
     return null;
 }
 
 function showLoadingState(show) {
-    const loadingEl = document.getElementById('loadingState');
+    const loadingEl = document.getElementById('loading');
     if (loadingEl) {
         loadingEl.classList.toggle('hidden', !show);
+        
+        // 更新加载文字中的城市名称
+        const loadingCityEl = document.getElementById('loadingCity');
+        if (loadingCityEl && currentCityData && currentCityData.title) {
+            const cityName = currentCityData.title.split('·')[0];
+            loadingCityEl.textContent = cityName;
+        }
     }
 }
 
@@ -1258,12 +1277,146 @@ function updateAPIStatus(mode) {
 }
 
 function displayGuideResult(data) {
-    // 这里实现显示攻略结果的逻辑
-    // 由于篇幅限制，这里只是框架代码
-    console.log('显示攻略数据:', data);
-    
-    // 实际项目中这里会更新DOM显示完整的攻略内容
-    // 包括：行程路线、美食推荐、住宿建议、实用贴士等
+    if (!data) {
+        console.error('❌ 没有数据可显示');
+        showToast('没有找到相关数据', 'error');
+        return;
+    }
+
+    console.log('📋 显示攻略数据:', data.title);
+
+    // 隐藏首页，显示结果页
+    const homePage = document.getElementById('homePage');
+    const resultPage = document.getElementById('resultPage');
+
+    if (homePage) homePage.classList.add('hidden');
+    if (resultPage) resultPage.classList.remove('hidden');
+
+    // 更新结果页标题
+    const resultTitle = document.getElementById('resultTitle');
+    if (resultTitle) {
+        resultTitle.textContent = `${data.title} 旅游攻略`;
+    }
+
+    // 获取攻略内容容器
+    const guideContent = document.getElementById('guideContent');
+    if (!guideContent) {
+        console.error('❌ 找不到攻略内容容器');
+        return;
+    }
+
+    // 生成完整的攻略HTML内容
+    let html = `
+        <div class="guide-header">
+            <h2 class="guide-title">${data.title}</h2>
+            <div class="guide-meta">
+                <span class="meta-item">📍 ${data.season || '四季皆宜'}</span>
+                <span class="meta-item">⏱️ 建议游玩: ${data.days || '3-5'}天</span>
+                <span class="meta-item">🏷️ ${data.tags ? data.tags.join(' | ') : ''}</span>
+            </div>
+            ${data.atmosphere ? `<p class="atmosphere">${data.atmosphere}</p>` : ''}
+            ${data.poster && data.poster.subtitle ? `<p class="poster-subtitle">${data.poster.subtitle}</p>` : ''}
+        </div>
+
+        <div class="guide-section">
+            <h3>🗺️ 推荐路线</h3>
+            <div class="routes-list">
+                ${data.routes && data.routes.length > 0 ?
+                    data.routes.map((route, index) => `
+                        <div class="route-item">
+                            <span class="route-day">Day ${index + 1}</span>
+                            <span class="route-content">${route}</span>
+                        </div>
+                    `).join('') :
+                    '<p class="no-data">暂无路线信息</p>'
+                }
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3>🍜 美食推荐</h3>
+            <div class="foods-grid">
+                ${data.foods && data.foods.length > 0 ?
+                    data.foods.map(food => `
+                        <div class="food-card ${food.mustTry ? 'must-try' : ''}">
+                            <div class="food-name">${food.mustTry ? '⭐ ' : ''}${food.name}</div>
+                            ${food.description ? `<div class="food-desc">${food.description}</div>` : ''}
+                            <div class="food-meta">
+                                ${food.price ? `<span class="food-price">💰 ${food.price}</span>` : ''}
+                                ${food.location ? `<span class="food-location">📍 ${food.location}</span>` : ''}
+                            </div>
+                        </div>
+                    `).join('') :
+                    '<p class="no-data">暂无美食推荐</p>'
+                }
+            </div>
+        </div>
+
+        ${data.accommodations && data.accommodations.length > 0 ? `
+        <div class="guide-section">
+            <h3>🏨 住宿推荐</h3>
+            <div class="accommodations-list">
+                ${data.accommodations.map(acc => `
+                    <div class="accommodation-card">
+                        <div class="acc-name">${acc.name}</div>
+                        <div class="acc-meta">
+                            <span>📍 ${acc.area || ''}</span>
+                            <span>💰 ${acc.priceRange || ''}</span>
+                        </div>
+                        ${acc.features && acc.features.length > 0 ? `
+                            <div class="acc-features">
+                                ${acc.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+
+        ${data.tips ? `
+        <div class="guide-section">
+            <h3>💡 实用贴士</h3>
+            ${data.tips.prepare && data.tips.prepare.length > 0 ? `
+                <div class="tips-group">
+                    <h4>✅ 必备物品</h4>
+                    <ul class="tips-list">
+                        ${data.tips.prepare.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            ${data.tips.avoid && data.tips.avoid.length > 0 ? `
+                <div class="tips-group">
+                    <h4>⚠️ 注意事项</h4>
+                    <ul class="tips-list warning">
+                        ${data.tips.avoid.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            ${data.tips.bestTime && data.tips.bestTime.length > 0 ? `
+                <div class="tips-group">
+                    <h4>🌟 最佳时间</h4>
+                    <ul class="tips-list">
+                        ${data.tips.bestTime.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+        </div>
+        ` : ''}
+
+        <div class="guide-footer">
+            <p class="generated-time">生成时间: ${data.generatedAt ? new Date(data.generatedAt).toLocaleString() : new Date().toLocaleString()}</p>
+            <p class="data-source">数据来源: ${data.source === 'ai' ? 'AI智能生成' : '本地数据库'}</p>
+        </div>
+    `;
+
+    // 更新DOM
+    guideContent.innerHTML = html;
+
+    // 滚动到顶部
+    resultPage.scrollTop = 0;
+
+    console.log(`✅ 成功显示 "${data.title}" 的旅游攻略`);
 }
 
 // ==========================================
@@ -1271,19 +1424,192 @@ function displayGuideResult(data) {
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 旅游攻略生成器 v3.0 Enterprise Edition 已加载');
-    console.log(`📊 已加载 ${Object.keys(EMBEDDED_CITIES).length} 个城市数据`);
-    
+    console.log(`📊 已加载 ${Object.keys(EMBEDDED_CITIES).length} 个内置城市数据`);
+    console.log(`🌍 扩展城市数据库: ${Object.keys(cityDatabase).length} 个城市`);
+
+    // 强制隐藏所有AI相关元素（防止动态生成的AI UI）
+    forceHideAIElements();
+
     // 初始化APIClient状态
     if (typeof APIClient !== 'undefined') {
         updateAPIStatus(APIClient.mode);
     }
-    
+
+    // 初始化省份选择功能
+    initProvinceSelector();
+
     // 绑定事件监听器
     bindEventListeners();
 });
 
+/**
+ * 强制隐藏所有AI相关的UI元素
+ */
+function forceHideAIElements() {
+    const aiSelectors = [
+        '.ai-status-bar',
+        '.ai-provider-info',
+        '.ai-provider-select',
+        '.ai-provider-selector',
+        '.ai-engine-selector',
+        '.ai-generation-status',
+        '.ai-label',
+        '.ai-enhanced-mode',
+        '#aiEnhancedToggle',
+        '.ai-toggle',
+        '[class*="ai-status"]',
+        '[id*="aiStatus"]',
+        '[id*="aiProvider"]',
+        'select[id*="ai"]',
+        'input[id*="aiEnhanced"]'
+    ];
+
+    let hiddenCount = 0;
+
+    aiSelectors.forEach(selector => {
+        try {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(el => {
+                el.style.display = 'none';
+                el.style.visibility = 'hidden';
+                el.style.opacity = '0';
+                el.style.pointerEvents = 'none';
+                el.style.position = 'absolute';
+                el.style.left = '-9999px';
+                hiddenCount++;
+            });
+        } catch (e) {
+            // 忽略无效选择器
+        }
+    });
+
+    // 额外检查：隐藏包含"AI引擎"文字的元素
+    const allElements = document.querySelectorAll('*');
+    allElements.forEach(el => {
+        const text = el.textContent || '';
+        if ((text.includes('AI引擎') || text.includes('AI增强')) &&
+            (el.tagName === 'BUTTON' || el.tagName === 'SELECT' || el.classList.contains('ai'))) {
+            el.style.display = 'none';
+            el.style.visibility = 'hidden';
+            hiddenCount++;
+        }
+    });
+
+    if (hiddenCount > 0) {
+        console.log(`🙈 已强制隐藏 ${hiddenCount} 个AI相关元素`);
+    }
+}
+
+// 省份城市数据（基于627个城市数据库）
+const provinceCityData = {
+    '直辖市': ['北京', '上海', '天津', '重庆'],
+    '河北省': ['石家庄', '唐山', '秦皇岛', '邯郸', '邢台', '保定', '张家口', '承德', '沧州', '廊坊', '衡水'],
+    '山西省': ['太原', '大同', '阳泉', '长治', '晋城', '朔州', '晋中', '运城', '忻州', '临汾', '吕梁'],
+    '内蒙古自治区': ['呼和浩特', '包头', '乌海', '赤峰', '通辽', '鄂尔多斯', '呼伦贝尔', '巴彦淖尔', '乌兰察布', '兴安盟', '锡林郭勒', '阿拉善'],
+    '辽宁省': ['沈阳', '大连', '鞍山', '抚顺', '本溪', '丹东', '锦州', '营口', '阜新', '辽阳', '盘锦', '铁岭', '朝阳', '葫芦岛'],
+    '吉林省': ['长春', '吉林', '四平', '辽源', '通化', '白山', '松原', '白城', '延边'],
+    '黑龙江省': ['哈尔滨', '齐齐哈尔', '鸡西', '鹤岗', '双鸭山', '大庆', '伊春', '佳木斯', '七台河', '牡丹江', '黑河', '绥化'],
+    '江苏省': ['南京', '无锡', '徐州', '常州', '苏州', '南通', '连云港', '淮安', '盐城', '扬州', '镇江', '泰州', '宿迁'],
+    '浙江省': ['杭州', '宁波', '温州', '嘉兴', '湖州', '绍兴', '金华', '衢州', '舟山', '台州', '丽水'],
+    '安徽省': ['合肥', '芜湖', '蚌埠', '淮南', '马鞍山', '淮北', '铜陵', '安庆', '黄山', '滁州', '宿州', '六安', '亳州', '池州', '宣城'],
+    '福建省': ['福州', '厦门', '莆田', '三明', '泉州', '漳州', '南平', '龙岩', '宁德'],
+    '江西省': ['南昌', '景德镇', '萍乡', '九江', '新余', '鹰潭', '赣州', '吉安', '宜春', '抚州', '上饶'],
+    '山东省': ['济南', '青岛', '淄博', '枣庄', '东营', '烟台', '潍坊', '济宁', '泰安', '威海', '日照', '临沂', '德州', '聊城', '滨州', '菏泽'],
+    '河南省': ['郑州', '开封', '洛阳', '平顶山', '安阳', '鹤壁', '新乡', '焦作', '濮阳', '许昌', '漯河', '三门峡', '南阳', '商丘', '信阳', '周口', '驻马店', '济源'],
+    '湖北省': ['武汉', '黄石', '十堰', '宜昌', '襄阳', '鄂州', '荆门', '孝感', '荆州', '黄冈', '咸宁', '随州', '恩施'],
+    '湖南省': ['长沙', '株洲', '湘潭', '衡阳', '邵阳', '岳阳', '常德', '张家界', '益阳', '郴州', '永州', '怀化', '娄底', '湘西'],
+    '广东省': ['广州', '韶关', '深圳', '珠海', '汕头', '佛山', '江门', '湛江', '茂名', '肇庆', '惠州', '梅州', '汕尾', '河源', '阳江', '清远', '东莞', '中山', '潮州', '揭阳', '云浮'],
+    '广西壮族自治区': ['南宁', '柳州', '桂林', '梧州', '北海', '防城港', '钦州', '贵港', '玉林', '百色', '贺州', '河池', '来宾', '崇左'],
+    '海南省': ['海口', '三亚', '三沙', '儋州'],
+    '四川省': ['成都', '自贡', '攀枝花', '泸州', '德阳', '绵阳', '广元', '遂宁', '内江', '乐山', '南充', '眉山', '宜宾', '广安', '达州', '雅安', '巴中', '资阳', '阿坝', '甘孜', '凉山'],
+    '贵州省': ['贵阳', '六盘水', '遵义', '安顺', '毕节', '铜仁', '黔西南', '黔东南', '黔南'],
+    '云南省': ['昆明', '曲靖', '玉溪', '保山', '昭通', '丽江', '普洱', '临沧', '楚雄', '红河', '文山', '西双版纳', '德宏', '怒江', '迪庆'],
+    '西藏自治区': ['拉萨', '日喀则', '昌都', '林芝', '山南', '那曲', '阿里'],
+    '陕西省': ['西安', '铜川', '宝鸡', '咸阳', '渭南', '延安', '汉中', '榆林', '安康', '商洛'],
+    '甘肃省': ['兰州', '嘉峪关', '金昌', '白银', '天水', '武威', '张掖', '平凉', '酒泉', '庆阳', '定西', '陇南', '甘南', '临夏'],
+    '青海省': ['西宁', '海东'],
+    '宁夏回族自治区': ['银川', '石嘴山', '吴忠', '固原', '中卫'],
+    '新疆维吾尔自治区': ['乌鲁木齐', '克拉玛依', '吐鲁番', '哈密', '昌吉', '博尔塔拉', '巴音郭楞', '阿克苏', '克孜勒苏柯', '喀什', '和田', '伊犁哈萨克', '塔城地区', '阿勒泰地区', '石河子']
+};
+
+/**
+ * 初始化省份选择器
+ */
+function initProvinceSelector() {
+    const provinceSelect = document.getElementById('provinceSelect');
+    const citySelect = document.getElementById('citySelect');
+
+    if (!provinceSelect || !citySelect) {
+        console.warn('⚠️ 省份选择器元素未找到');
+        return;
+    }
+
+    // 填充省份下拉列表
+    Object.keys(provinceCityData).forEach(province => {
+        const option = document.createElement('option');
+        option.value = province;
+        option.textContent = province;
+        provinceSelect.appendChild(option);
+    });
+
+    // 监听省份选择变化
+    provinceSelect.addEventListener('change', function() {
+        const selectedProvince = this.value;
+
+        // 清空城市列表
+        citySelect.innerHTML = '<option value="" data-i18n="search.selectCity">选择城市</option>';
+
+        if (selectedProvince && provinceCityData[selectedProvince]) {
+            // 启用城市选择器
+            citySelect.disabled = false;
+
+            // 填充城市列表
+            const cities = provinceCityData[selectedProvince];
+            cities.forEach(city => {
+                // 只添加在扩展城市数据库中存在的城市
+                if (cityDatabase[city]) {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    citySelect.appendChild(option);
+                }
+            });
+
+            console.log(`📍 已加载 ${province}: ${cities.filter(c => cityDatabase[c]).length} 个城市`);
+        } else {
+            // 未选择省份，禁用城市选择器
+            citySelect.disabled = true;
+        }
+    });
+
+    // 监听城市选择变化
+    citySelect.addEventListener('change', function() {
+        const selectedCity = this.value;
+
+        if (selectedCity && cityDatabase[selectedCity]) {
+            console.log(`🏙️ 从省份选择器选择城市: ${selectedCity}`);
+
+            // 设置到输入框并生成攻略
+            const cityInput = document.getElementById('cityInput');
+            if (cityInput) {
+                cityInput.value = selectedCity;
+                handleSearch();
+            }
+        }
+    });
+
+    console.log('✅ 省份选择器初始化完成');
+}
+
 function bindEventListeners() {
-    // 搜索按钮
+    // 生成攻略按钮（修复ID不匹配问题）
+    const generateBtn = document.getElementById('generateBtn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', handleSearch);
+        console.log('✅ 已绑定生成攻略按钮事件');
+    }
+
+    // 搜索按钮（兼容旧版本）
     const searchBtn = document.getElementById('searchBtn');
     if (searchBtn) {
         searchBtn.addEventListener('click', handleSearch);
@@ -1365,6 +1691,27 @@ function bindEventListeners() {
     });
 
     console.log(`✅ 已绑定 ${quickBtns.length} 个快捷城市按钮事件`);
+
+    // 返回首页按钮
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', function() {
+            console.log('🏠 返回首页');
+
+            const homePage = document.getElementById('homePage');
+            const resultPage = document.getElementById('resultPage');
+
+            if (homePage) homePage.classList.remove('hidden');
+            if (resultPage) resultPage.classList.add('hidden');
+
+            // 清空输入框
+            const cityInput = document.getElementById('cityInput');
+            if (cityInput) cityInput.value = '';
+
+            // 移除快捷按钮的选中状态
+            quickBtns.forEach(b => b.classList.remove('selected'));
+        });
+    }
 
     // 搜索建议自动补全功能
     initSearchSuggestions();

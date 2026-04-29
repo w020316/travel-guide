@@ -3063,65 +3063,54 @@ body {
     line-height: 1.5;
 }
 
-/* ========== AI状态栏 ========== */
-.ai-status-bar {
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 18px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    z-index: 9998;
-    font-size: 0.85rem;
-    color: white;
+/* ========== AI状态栏 - 完全隐藏 ========== */
+.ai-status-bar,
+.ai-provider-info,
+.ai-provider-select,
+.ai-generation-status,
+.ai-label,
+.ai-enhanced-mode,
+#aiEnhancedToggle,
+.ai-toggle,
+.ai-provider-selector,
+.ai-engine-selector,
+[class*="ai-provider"],
+[id*="aiProvider"],
+[id*="ai-engine"],
+[id*="aiEngine"],
+select[id*="ai"],
+input[id*="aiEnhanced"],
+[data-ai],
+[aria-label*="AI引擎"],
+[aria-label*="ai"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
 }
 
-.ai-provider-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+/* 确保AI相关元素在任何情况下都隐藏 */
+div[class*="ai-status"],
+div[id*="aiStatus"],
+select[id*="aiProvider"],
+input[id*="aiEnhanced"] {
+    display: none !important;
 }
 
-.ai-label {
-    font-weight: 700;
-    font-size: 0.9rem;
+/* 隐藏包含"AI"文字的特定元素 */
+.generate-main-btn:has(span:contains("AI")),
+button:contains("AI引擎"),
+button:contains("AI增强") {
+    display: none !important;
 }
 
-.ai-provider-select {
-    padding: 6px 12px;
-    border: none;
-    border-radius: var(--radius-md);
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    outline: none;
-    backdrop-filter: blur(10px);
-    transition: var(--transition);
-}
-
-.ai-provider-select:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.ai-provider-select option {
-    background: #333;
-    color: white;
-}
-
-.ai-generation-status {
-    display: flex;
-    align-items: center;
-}
-
-.status-text-ready {
-    color: #4ade80;
-    font-weight: 700;
-}
+/* ========== 语言切换器 - 全新美化设计 ========== */
 
 .status-text-generating {
     color: #fbbf24;
@@ -3577,43 +3566,58 @@ body {
     }
 }
 
-/* ========== 语言切换器样式 ========== */
+/* ========== 语言切换器 - 全新美化设计 ========== */
 .language-switcher {
     position: fixed;
     top: 20px;
-    right: 20px;
-    z-index: 1000;
+    left: 20px;  /* 改到左上角，避免与右侧元素冲突 */
+    z-index: 10000;  /* 提高层级确保显示在最上层 */
     display: flex;
-    gap: 6px;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: var(--radius-full);
-    box-shadow: var(--shadow-md);
-    border: 1px solid rgba(102, 126, 234, 0.2);
-    transition: all 0.3s ease;
+    gap: 4px;
+    padding: 6px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 50px;  /* 胶囊形状 */
+    box-shadow:
+        0 8px 32px rgba(102, 126, 234, 0.15),
+        0 2px 8px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(102, 126, 234, 0.25);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: langSwitcherFloat 3s ease-in-out infinite;
+}
+
+@keyframes langSwitcherFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
 }
 
 .language-switcher:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow:
+        0 12px 40px rgba(102, 126, 234, 0.25),
+        0 4px 12px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .lang-btn {
-    padding: 6px 14px;
+    position: relative;
+    padding: 8px 18px;
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.88rem;
+    font-weight: 600;
     cursor: pointer;
-    border-radius: var(--radius-full);
-    transition: all 0.3s ease;
-    position: relative;
+    border-radius: 50px;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    letter-spacing: 0.3px;
     overflow: hidden;
+    z-index: 1;
 }
 
+/* 每个按钮的国旗emoji前缀（通过伪元素添加） */
 .lang-btn::before {
     content: '';
     position: absolute;
@@ -3621,28 +3625,54 @@ body {
     left: 50%;
     width: 0;
     height: 0;
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
     border-radius: 50%;
-    transition: all 0.4s ease;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     transform: translate(-50%, -50%);
     z-index: -1;
 }
 
 .lang-btn:hover::before,
 .lang-btn.active::before {
-    width: 200%;
-    height: 200%;
+    width: 250%;
+    height: 250%;
 }
 
-.lang-btn:hover,
+.lang-btn:hover {
+    color: white;
+    transform: scale(1.08) translateY(-2px);
+    text-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
 .lang-btn.active {
     color: white;
+    font-weight: 800;
     transform: scale(1.05);
+    box-shadow:
+        0 6px 20px rgba(102, 126, 234, 0.45),
+        0 2px 8px rgba(102, 126, 234, 0.25);
+    text-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
 }
 
-.lang-btn.active {
-    font-weight: 700;
-    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+/* 活跃状态的光晕效果 */
+.lang-btn.active::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.4), rgba(118, 75, 162, 0.4));
+    border-radius: 50px;
+    z-index: -2;
+    filter: blur(8px);
+    opacity: 0.6;
+    animation: activeGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes activeGlow {
+    from { opacity: 0.4; }
+    to { opacity: 0.8; }
 }
 
 /* 语言切换动画 */
@@ -3692,4 +3722,274 @@ body {
     .guide-section {
         page-break-inside: avoid;
     }
+}
+
+/* ========== 攻略详情页样式 ========== */
+.guide-header {
+    background: linear-gradient(135deg, var(--primary) 0%, #ff8a80 100%);
+    color: white;
+    padding: 30px;
+    border-radius: var(--radius-lg);
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-lg);
+}
+
+.guide-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 16px 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.guide-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.meta-item {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-size: 0.9rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+}
+
+.atmosphere,
+.poster-subtitle {
+    margin: 8px 0 0 0;
+    opacity: 0.95;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.guide-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.guide-section:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.guide-section h3 {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 18px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.routes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.route-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary);
+    transition: all 0.3s ease;
+}
+
+.route-item:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-md);
+}
+
+.route-day {
+    background: var(--primary);
+    color: white;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 0.85rem;
+    min-width: 60px;
+    text-align: center;
+}
+
+.route-content {
+    flex: 1;
+    color: var(--text-primary);
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.foods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.food-card {
+    background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+    padding: 18px;
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.food-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    transform: scale(1.02);
+}
+
+.food-card.must-try {
+    background: linear-gradient(135deg, #fff9e6 0%, #fff 100%);
+    border-color: #ffc107;
+}
+
+.food-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.food-desc {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.food-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.85rem;
+}
+
+.food-price,
+.food-location {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.accommodations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.accommodation-card {
+    background: linear-gradient(135deg, #f0f9ff 0%, #fff 100%);
+    padding: 18px;
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--secondary);
+    transition: all 0.3s ease;
+}
+
+.accommodation-card:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-md);
+}
+
+.acc-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.acc-meta {
+    display: flex;
+    gap: 16px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.acc-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.feature-tag {
+    background: rgba(78, 205, 196, 0.15);
+    color: var(--secondary);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.tips-group {
+    margin-bottom: 18px;
+}
+
+.tips-group:last-child {
+    margin-bottom: 0;
+}
+
+.tips-group h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+}
+
+.tips-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tips-list li {
+    padding-left: 24px;
+    position: relative;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.tips-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #10b981;
+    font-weight: 700;
+}
+
+.tips-list.warning li::before {
+    content: '⚠';
+    color: #f59e0b;
+}
+
+.no-data {
+    color: var(--text-tertiary);
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+.guide-footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-tertiary);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border-light);
+    margin-top: 20px;
+}
+
+.generated-time,
+.data-source {
+    margin: 4px 0;
 }
