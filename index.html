@@ -114,15 +114,6 @@
                         
                         <div class="search-actions">
                             <button id="generateBtn" class="generate-main-btn" data-i18n="search.generate">✨ AI生成攻略</button>
-                            
-                            <!-- AI增强选项（新增） -->
-                            <div class="ai-toggle">
-                                <label class="toggle-label">
-                                    <input type="checkbox" id="aiEnhancedToggle" checked>
-                                    <span class="toggle-slider"></span>
-                                    <span data-i18n="ai.enhanced">AI增强模式</span>
-                                </label>
-                            </div>
                         </div>
                     </div>
 
@@ -774,20 +765,12 @@
         </div>
     </div>
 
-    <!-- AI状态指示器（新增） -->
-    <div class="ai-status-bar" id="aiStatusBar">
-        <div class="ai-provider-info">
-            <span class="ai-label">🤖 AI引擎:</span>
-            <select id="aiProviderSelect" class="ai-provider-select">
-                <option value="tongyi">通义千问 (Qwen-Plus)</option>
-                <option value="zhipu">智谱AI (GLM-4)</option>
-                <option value="deepseek">DeepSeek</option>
-                <option value="local">本地数据模式</option>
-            </select>
-        </div>
-        <div class="ai-generation-status">
-            <span id="aiStatusText" class="status-text-ready">✅ 就绪</span>
-        </div>
+    <!-- 语言切换器 -->
+    <div class="language-switcher" id="languageSwitcher">
+        <button class="lang-btn active" data-lang="zh">中文</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="ja">日本語</button>
+        <button class="lang-btn" data-lang="ko">한국어</button>
     </div>
 
     <!-- API状态指示器（新增） -->
@@ -801,6 +784,12 @@
 
     <!-- 扩展城市数据库 (627个城市) -->
     <script src="data/expandedCities.js"></script>
+
+    <!-- 国际化多语言系统 -->
+    <script src="i18n.js"></script>
+
+    <!-- 数据验证工具 -->
+    <script src="dataValidator.js"></script>
 
     <!-- 主应用脚本 -->
     <script src="apiClient.js"></script>

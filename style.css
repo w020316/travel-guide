@@ -3577,7 +3577,99 @@ body {
     }
 }
 
-/* 打印样式 */
+/* ========== 语言切换器样式 ========== */
+.language-switcher {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    transition: all 0.3s ease;
+}
+
+.language-switcher:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.lang-btn {
+    padding: 6px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-full);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.lang-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 50%;
+    transition: all 0.4s ease;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+}
+
+.lang-btn:hover::before,
+.lang-btn.active::before {
+    width: 200%;
+    height: 200%;
+}
+
+.lang-btn:hover,
+.lang-btn.active {
+    color: white;
+    transform: scale(1.05);
+}
+
+.lang-btn.active {
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+}
+
+/* 语言切换动画 */
+@keyframes langSwitch {
+    0% { opacity: 0; transform: scale(0.9) translateY(-5px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.lang-switching {
+    animation: langSwitch 0.3s ease;
+}
+
+/* RTL语言支持 */
+[dir="rtl"] .language-switcher {
+    right: auto;
+    left: 20px;
+}
+
+[dir="rtl"] .search-container {
+    direction: rtl;
+}
+
+[dir="rtl"] .quick-tags {
+    justify-content: flex-end;
+}
+
+/* 打印时隐藏语言切换器 */
 @media print {
     .hero-section,
     .search-container,
@@ -3586,7 +3678,8 @@ body {
     .social-panel,
     .api-status-indicator,
     .toast-container,
-    .poster-actions {
+    .poster-actions,
+    .language-switcher {
         display: none !important;
     }
 
