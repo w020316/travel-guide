@@ -774,10 +774,26 @@
         </div>
     </div>
 
+    <!-- AI状态指示器（新增） -->
+    <div class="ai-status-bar" id="aiStatusBar">
+        <div class="ai-provider-info">
+            <span class="ai-label">🤖 AI引擎:</span>
+            <select id="aiProviderSelect" class="ai-provider-select">
+                <option value="tongyi">通义千问 (Qwen-Plus)</option>
+                <option value="zhipu">智谱AI (GLM-4)</option>
+                <option value="deepseek">DeepSeek</option>
+                <option value="local">本地数据模式</option>
+            </select>
+        </div>
+        <div class="ai-generation-status">
+            <span id="aiStatusText" class="status-text-ready">✅ 就绪</span>
+        </div>
+    </div>
+
     <!-- API状态指示器（新增） -->
     <div class="api-status-indicator" id="apiStatusIndicator">
-        <div class="status-dot" id="apiStatusDot"></div>
-        <span class="status-text" id="apiStatusText">本地模式</span>
+        <div class="status-dot backend" id="apiStatusDot"></div>
+        <span class="status-text" id="apiStatusText">后端模式</span>
     </div>
 
     <!-- Toast通知容器 -->

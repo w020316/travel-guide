@@ -2794,6 +2794,76 @@ body {
     line-height: 1.5;
 }
 
+/* ========== AI状态栏 ========== */
+.ai-status-bar {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 9998;
+    font-size: 0.85rem;
+    color: white;
+}
+
+.ai-provider-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ai-label {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.ai-provider-select {
+    padding: 6px 12px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    backdrop-filter: blur(10px);
+    transition: var(--transition);
+}
+
+.ai-provider-select:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.ai-provider-select option {
+    background: #333;
+    color: white;
+}
+
+.ai-generation-status {
+    display: flex;
+    align-items: center;
+}
+
+.status-text-ready {
+    color: #4ade80;
+    font-weight: 700;
+}
+
+.status-text-generating {
+    color: #fbbf24;
+    animation: pulse 1s infinite;
+}
+
+.status-text-error {
+    color: #f87171;
+    font-weight: 700;
+}
+
 /* ========== API状态指示器 ========== */
 .api-status-indicator {
     position: fixed;
