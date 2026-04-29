@@ -267,6 +267,239 @@ body {
     transform: translateY(-1px);
 }
 
+#generateBtn.loading {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+#generateBtn.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.search-input-wrapper input:focus {
+    animation: inputGlow 0.3s ease;
+}
+
+@keyframes inputGlow {
+    0% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.2); }
+    100% { box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1); }
+}
+
+/* ========== 搜索建议下拉框 ========== */
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    animation: slideDown 0.2s ease;
+}
+
+.search-suggestions.hidden {
+    display: none;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.suggestion-item {
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08) 0%, rgba(var(--secondary-rgb), 0.08) 100%);
+    transform: translateX(5px);
+}
+
+.suggestion-item.active {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+}
+
+.suggestion-item .suggestion-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.suggestion-item .suggestion-text {
+    flex: 1;
+}
+
+.suggestion-item .suggestion-name {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.suggestion-item .suggestion-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.suggestion-item.active .suggestion-subtitle {
+    color: rgba(255,255,255,0.8);
+}
+
+.suggestion-item .suggestion-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.suggestion-tag {
+    padding: 3px 8px;
+    background: rgba(var(--primary-rgb), 0.1);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--primary);
+}
+
+.suggestion-item.active .suggestion-tag {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+/* ========== 骨架屏加载效果 ========== */
+.skeleton {
+    background: linear-gradient(90deg,
+        var(--bg-secondary) 25%,
+        var(--border-light) 50%,
+        var(--bg-secondary) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+    height: 16px;
+    margin-bottom: 12px;
+}
+
+.skeleton-title {
+    height: 24px;
+    width: 60%;
+    margin-bottom: 20px;
+}
+
+.skeleton-card {
+    height: 200px;
+    border-radius: var(--radius-md);
+}
+
+/* ========== 城市卡片增强 ========== */
+.city-card-enhanced {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: var(--bg-card);
+}
+
+.city-card-enhanced:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-xl);
+}
+
+.city-card-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.city-card-enhanced:hover::before {
+    transform: scaleX(1);
+}
+
+.city-card-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.city-card-enhanced:hover .city-card-image {
+    transform: scale(1.1);
+}
+
+.city-card-content {
+    padding: 20px;
+}
+
+.city-card-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* ========== 统计数字动画 ========== */
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: countUp 0.8s ease-out;
+}
+
+@keyframes countUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* ========== 热门城市标签云 ========== */
 .quick-tags {
     display: flex;
@@ -304,6 +537,42 @@ body {
     border-color: transparent;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);
+}
+
+.quick-btn:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 6px rgba(var(--primary-rgb), 0.2);
+}
+
+.quick-btn.selected {
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+    animation: pulse 0.5s ease;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.quick-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    line-height: 2;
+}
+
+.tag-label {
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-right: 8px;
+    width: 100%;
+    margin-bottom: 8px;
 }
 
 /* ========== 天数选择器 ========== */
@@ -3014,5 +3283,320 @@ body {
     .toast-notification {
         min-width: auto;
         max-width: none;
+    }
+}
+
+/* ========== 移动端全面优化（2024增强版） ========== */
+
+/* 触控优化 */
+@media (hover: none) and (pointer: coarse) {
+    .quick-btn {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 10px 16px;
+    }
+
+    #generateBtn {
+        min-height: 50px;
+        font-size: 1.05rem;
+    }
+
+    .suggestion-item {
+        min-height: 56px;
+        padding: 14px 18px;
+    }
+
+    .poster-action-btn {
+        min-height: 44px;
+    }
+}
+
+/* 平板优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .search-container {
+        max-width: 90%;
+    }
+
+    .quick-tags {
+        gap: 8px;
+    }
+
+    .guide-section {
+        max-width: 95%;
+    }
+}
+
+/* 小屏手机优化 */
+@media (max-width: 480px) {
+    :root {
+        --radius-lg: 20px;
+        --radius-xl: 24px;
+    }
+
+    body {
+        font-size: 15px;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    .hero-section {
+        min-height: auto;
+        padding: 30px 12px;
+    }
+
+    .search-container {
+        padding: 20px 16px;
+        margin: 0 8px;
+    }
+
+    .search-input-wrapper input {
+        font-size: 16px; /* 防止iOS自动缩放 */
+        padding: 14px 50px 14px 18px;
+    }
+
+    #generateBtn {
+        width: 100%;
+        margin-top: 12px;
+        padding: 15px 24px;
+        border-radius: var(--radius-md);
+    }
+
+    .quick-tags {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .quick-btn {
+        text-align: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    /* 搜索建议移动端适配 */
+    .search-suggestions {
+        max-height: 250px;
+        margin: 0 8px;
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+
+    .suggestion-item {
+        padding: 12px 16px;
+        gap: 10px;
+    }
+
+    .suggestion-icon {
+        font-size: 1.2rem;
+    }
+
+    .suggestion-name {
+        font-size: 0.95rem;
+    }
+
+    .suggestion-subtitle {
+        display: none; /* 小屏隐藏副标题 */
+    }
+
+    .suggestion-tags {
+        margin-top: 6px;
+    }
+
+    .suggestion-tag {
+        font-size: 0.7rem;
+        padding: 2px 7px;
+    }
+
+    /* 结果区域 */
+    .result-container {
+        margin: 0;
+        padding: 16px 12px;
+    }
+
+    .guide-section {
+        padding: 16px 12px;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+    }
+
+    .food-card-mini,
+    .route-card-mini {
+        padding: 14px;
+    }
+
+    /* 海报卡片 */
+    .poster {
+        padding: 24px 20px;
+    }
+
+    .poster-title {
+        font-size: 1.5rem;
+    }
+
+    .poster-subtitle {
+        font-size: 0.9rem;
+    }
+
+    /* 预算卡片 */
+    .budget-card {
+        padding: 16px;
+    }
+
+    .budget-amount {
+        font-size: 1.5rem;
+    }
+
+    /* 底部操作按钮 */
+    .poster-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .poster-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* 社交面板 */
+    .social-panel {
+        width: 100%;
+        height: 100vh;
+    }
+
+    /* Toast通知 */
+    .toast-notification {
+        left: 12px !important;
+        right: 12px !important;
+        bottom: 80px !important;
+        font-size: 0.85rem;
+        padding: 12px 16px;
+    }
+
+    /* API状态指示器 */
+    .api-status-indicator {
+        bottom: 70px;
+        left: 12px;
+        right: 12px;
+        font-size: 0.75rem;
+    }
+
+    /* 滚动条隐藏（移动端） */
+    ::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+}
+
+/* 超小屏手机 */
+@media (max-width: 360px) {
+    .quick-tags {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hero-title {
+        font-size: 1.35rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.85rem;
+    }
+
+    .search-input-wrapper input {
+        padding: 12px 45px 12px 16px;
+        font-size: 15px;
+    }
+
+    .quick-btn {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+    }
+
+    .poster-title {
+        font-size: 1.3rem;
+    }
+
+    .section-title {
+        font-size: 1.15rem;
+    }
+}
+
+/* 横屏模式优化 */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero-section {
+        min-height: auto;
+        padding: 20px 16px;
+    }
+
+    .search-container {
+        padding: 16px 20px;
+    }
+
+    .quick-tags {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+/* 高分辨率屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .quick-btn,
+    #generateBtn,
+    .suggestion-item {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* 减少动画模式（无障碍） */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .skeleton {
+        animation: none;
+        background: var(--bg-secondary);
+    }
+}
+
+/* 深色模式优化 */
+@media (prefers-color-scheme: dark) {
+    .search-suggestions {
+        background: rgba(30, 30, 40, 0.98);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .suggestion-item:hover,
+    .suggestion-item.active {
+        background: rgba(102, 126, 234, 0.15);
+    }
+}
+
+/* 打印样式 */
+@media print {
+    .hero-section,
+    .search-container,
+    .quick-tags,
+    #generateBtn,
+    .social-panel,
+    .api-status-indicator,
+    .toast-container,
+    .poster-actions {
+        display: none !important;
+    }
+
+    .result-container {
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .guide-section {
+        page-break-inside: avoid;
     }
 }

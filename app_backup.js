@@ -1070,6 +1070,13 @@ const EMBEDDED_CITIES = {
 
 cityDatabase = EMBEDDED_CITIES;
 
+// 如果扩展城市数据可用，合并到cityDatabase
+if (typeof EXPANDED_CITIES !== 'undefined') {
+    console.log(`🌍 加载扩展城市数据库: ${Object.keys(EXPANDED_CITIES).length} 个城市`);
+    cityDatabase = { ...EMBEDDED_CITIES, ...EXPANDED_CITIES };
+    console.log(`📊 城市数据库总计: ${Object.keys(cityDatabase).length} 个城市`);
+}
+
 // ==========================================
 // Toast通知系统
 // ==========================================
@@ -1325,6 +1332,224 @@ function bindEventListeners() {
     const commentInput = document.getElementById('commentInput');
     if (commentInput) {
         commentInput.addEventListener('input', updateCommentCharCount);
+    }
+
+    // 快捷城市按钮点击事件（修复点击无反应问题）
+    const quickBtns = document.querySelectorAll('.quick-btn');
+    quickBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const cityName = this.dataset.city;
+            if (cityName) {
+                console.log(`🏙️ 点击城市: ${cityName}`);
+
+                // 移除其他按钮的选中状态
+                quickBtns.forEach(b => b.classList.remove('selected'));
+
+                // 添加当前按钮的选中状态
+                this.classList.add('selected');
+
+                const cityInput = document.getElementById('cityInput');
+                if (cityInput) {
+                    cityInput.value = cityName;
+
+                    // 添加输入框聚焦动画
+                    cityInput.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        cityInput.style.transform = 'scale(1)';
+                    }, 150);
+
+                    handleSearch();
+                }
+            }
+        });
+    });
+
+    console.log(`✅ 已绑定 ${quickBtns.length} 个快捷城市按钮事件`);
+
+    // 搜索建议自动补全功能
+    initSearchSuggestions();
+}
+
+function initSearchSuggestions() {
+    const cityInput = document.getElementById('cityInput');
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+
+    if (!cityInput || !suggestionsContainer) {
+        console.warn('⚠️ 搜索建议元素未找到');
+        return;
+    }
+
+    let debounceTimer = null;
+    let currentFocus = -1;
+
+    // 输入事件监听（带防抖）
+    cityInput.addEventListener('input', function(e) {
+        clearTimeout(debounceTimer);
+        const query = this.value.trim();
+
+        if (query.length < 1) {
+            hideSuggestions();
+            return;
+        }
+
+        // 防抖300ms
+        debounceTimer = setTimeout(() => {
+            showSearchSuggestions(query);
+        }, 300);
+    });
+
+    // 键盘导航
+    cityInput.addEventListener('keydown', function(e) {
+        const items = suggestionsContainer.querySelectorAll('.suggestion-item');
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            currentFocus++;
+            if (currentFocus >= items.length) currentFocus = 0;
+            setActiveSuggestion(items, currentFocus);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            currentFocus--;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            setActiveSuggestion(items, currentFocus);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentFocus > -1 && items[currentFocus]) {
+                selectSuggestion(items[currentFocus].dataset.city);
+            } else {
+                handleSearch();
+            }
+        } else if (e.key === 'Escape') {
+            hideSuggestions();
+        }
+    });
+
+    // 点击外部关闭建议
+    document.addEventListener('click', function(e) {
+        if (!cityInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+            hideSuggestions();
+        }
+    });
+
+    console.log('✅ 搜索建议功能已初始化');
+}
+
+function showSearchSuggestions(query) {
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    if (!suggestionsContainer) return;
+
+    const matches = searchCities(query);
+
+    if (matches.length === 0) {
+        hideSuggestions();
+        return;
+    }
+
+    // 限制显示数量为8个
+    const displayMatches = matches.slice(0, 8);
+
+    let html = '';
+    displayMatches.forEach((match, index) => {
+        const cityData = cityDatabase[match];
+        if (cityData) {
+            html += `
+                <div class="suggestion-item ${index === 0 ? 'active' : ''}" data-city="${match}" data-index="${index}">
+                    <span class="suggestion-icon">🏙️</span>
+                    <div class="suggestion-text">
+                        <div class="suggestion-name">${highlightMatch(match, query)}</div>
+                        <div class="suggestion-subtitle">${cityData.title || cityData.season || ''}</div>
+                        ${cityData.tags && cityData.tags.length > 0 ? `
+                            <div class="suggestion-tags">
+                                ${cityData.tags.slice(0, 3).map(tag => `<span class="suggestion-tag">${tag}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    suggestionsContainer.innerHTML = html;
+    suggestionsContainer.classList.remove('hidden');
+
+    // 绑定点击事件
+    suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+        item.addEventListener('click', function() {
+            selectSuggestion(this.dataset.city);
+        });
+
+        item.addEventListener('mouseenter', function() {
+            setActiveSuggestion(
+                suggestionsContainer.querySelectorAll('.suggestion-item'),
+                parseInt(this.dataset.index)
+            );
+        });
+    });
+}
+
+function searchCities(query) {
+    const results = [];
+    const lowerQuery = query.toLowerCase();
+
+    // 精确匹配优先
+    for (const cityName of Object.keys(cityDatabase)) {
+        if (cityName.includes(query) || cityName.toLowerCase().includes(lowerQuery)) {
+            results.push(cityName);
+
+            if (results.length >= 20) break; // 限制结果数量
+        }
+    }
+
+    // 如果精确匹配不足，尝试模糊匹配
+    if (results.length < 10) {
+        for (const [cityName, cityData] of Object.entries(cityDatabase)) {
+            if (results.includes(cityName)) continue;
+
+            // 匹配标签
+            if (cityData.tags && cityData.tags.some(tag =>
+                tag.toLowerCase().includes(lowerQuery)
+            )) {
+                results.push(cityName);
+                if (results.length >= 15) break;
+            }
+        }
+    }
+
+    return results;
+}
+
+function highlightMatch(text, query) {
+    const regex = new RegExp(`(${query})`, 'gi');
+    return text.replace(regex, '<strong style="color: var(--primary);">$1</strong>');
+}
+
+function setActiveSuggestion(items, index) {
+    items.forEach((item, i) => {
+        item.classList.toggle('active', i === index);
+    });
+}
+
+function selectSuggestion(cityName) {
+    const cityInput = document.getElementById('cityInput');
+    if (cityInput) {
+        cityInput.value = cityName;
+
+        // 添加选中动画
+        cityInput.style.transform = 'scale(1.02)';
+        setTimeout(() => {
+            cityInput.style.transform = 'scale(1)';
+        }, 150);
+
+        hideSuggestions();
+        handleSearch();
+    }
+}
+
+function hideSuggestions() {
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    if (suggestionsContainer) {
+        suggestionsContainer.classList.add('hidden');
+        suggestionsContainer.innerHTML = '';
     }
 }
 

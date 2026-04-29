@@ -8,6 +8,9 @@ const { getCityWeather, getRealWeather, startWeatherSync, clearWeatherCache } = 
 const { getTrendingCities, getSeasonalTags } = require('../services/realTimeSync');
 const { validateCityName, validateSearchQuery, validatePagination, rateLimiter } = require('../middleware/validation');
 
+// 加载扩展城市数据库（627个城市）
+const expandedCitiesLoader = require('../data/expandedCitiesLoader');
+
 // 应用限流中间件
 router.use(rateLimiter(200, 60000));
 
@@ -504,6 +507,115 @@ router.get('/cities/search', validateSearchQuery, async (req, res) => {
   } catch (error) {
     console.error('搜索城市失败:', error);
     res.status(500).json({ error: '搜索城市失败' });
+  }
+});
+
+// ==================== 扩展城市数据库接口（627个城市） ====================
+
+// 获取扩展数据库统计信息
+router.get('/expanded/stats', (req, res) => {
+  try {
+    const stats = expandedCitiesLoader.getStatistics();
+    res.json({
+      success: true,
+      data: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('获取统计数据失败:', error);
+    res.status(500).json({ error: '获取统计数据失败' });
+  }
+});
+
+// 获取热门城市排行
+router.get('/expanded/trending', (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const trending = expandedCitiesLoader.getTrendingCities(limit);
+
+    res.json({
+      success: true,
+      count: trending.length,
+      data: trending
+    });
+  } catch (error) {
+    console.error('获取热门城市失败:', error);
+    res.status(500).json({ error: '获取热门城市失败' });
+  }
+});
+
+// 智能搜索（支持模糊匹配、标签、标题）
+router.get('/expanded/search', (req, res) => {
+  try {
+    const { q, limit } = req.query;
+
+    if (!q || !q.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: '请提供搜索关键词'
+      });
+    }
+
+    const searchLimit = Math.min(parseInt(limit) || 15, 50);
+    const results = expandedCitiesLoader.searchCities(q, searchLimit);
+
+    res.json({
+      success: true,
+      query: q,
+      count: results.length,
+      data: results.map(r => ({
+        name: r.name,
+        score: r.score,
+        title: r.data.title,
+        season: r.data.season,
+        tags: r.data.tags || [],
+        subtitle: r.data.poster?.subtitle
+      }))
+    });
+  } catch (error) {
+    console.error('智能搜索失败:', error);
+    res.status(500).json({ error: '搜索失败' });
+  }
+});
+
+// 获取省份城市列表
+router.get('/expanded/provinces/:province?', (req, res) => {
+  try {
+    const { province } = req.params;
+    const citiesByProvince = expandedCitiesLoader.getCitiesByProvince(province);
+
+    if (province && citiesByProvince.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: `未找到 ${province} 省份的城市数据`
+      });
+    }
+
+    res.json({
+      success: true,
+      province: province || '全部',
+      count: Array.isArray(citiesByProvince)
+        ? citiesByProvince.length
+        : Object.keys(citiesByProvince).length,
+      data: citiesByProvince
+    });
+  } catch (error) {
+    console.error('获取省份数据失败:', error);
+    res.status(500).json({ error: '获取省份数据失败' });
+  }
+});
+
+// 清除缓存
+router.post('/expanded/cache/clear', (req, res) => {
+  try {
+    expandedCitiesLoader.clearCache();
+    res.json({
+      success: true,
+      message: '缓存已清除'
+    });
+  } catch (error) {
+    console.error('清除缓存失败:', error);
+    res.status(500).json({ error: '清除缓存失败' });
   }
 });
 
