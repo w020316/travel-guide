@@ -38,12 +38,63 @@
         origin: '',           // 出发地（v9.0 新增）
         destination: '',      // 目的地（v9.0 新增，优先作为攻略城市）
         travelers: '2',       // 人数（v9.0 新增）
+        travelDate: '',       // 出行日期（v10.1 新增，YYYY-MM-DD）
         currentGuide: null,
         currentCity: null,
         posterStyle: 'fresh',
         favorites: loadFavorites(),
         history: loadHistory()
     };
+
+    // v10.1: 省份/直辖市识别（用户输入省份名时给出友好提示）
+    const PROVINCES = ['北京','上海','天津','重庆','广东','浙江','江苏','四川','湖北','湖南','陕西','山东','河南','辽宁','吉林','黑龙江','云南','贵州','广西','海南','甘肃','青海','宁夏','新疆','西藏','安徽','福建','江西','河北','山西','内蒙古','香港','澳门','台湾'];
+    // 各省热门城市（用于省份输入时推荐）
+    const PROVINCE_HOT_CITIES = {
+        '黑龙江':['哈尔滨','齐齐哈尔','牡丹江','大庆','漠河','雪乡'],
+        '吉林':['长春','吉林','延吉','长白山','集安'],
+        '辽宁':['沈阳','大连','鞍山','丹东','旅顺'],
+        '广东':['广州','深圳','珠海','汕头','佛山','湛江'],
+        '浙江':['杭州','宁波','温州','绍兴','嘉兴','舟山'],
+        '江苏':['南京','苏州','无锡','常州','扬州','连云港'],
+        '四川':['成都','绵阳','乐山','宜宾','西昌','峨眉山'],
+        '湖北':['武汉','宜昌','襄阳','荆州','恩施','神农架'],
+        '湖南':['长沙','张家界','株洲','岳阳','凤凰','韶山'],
+        '陕西':['西安','宝鸡','咸阳','延安','汉中','华山'],
+        '山东':['济南','青岛','烟台','威海','潍坊','泰山','曲阜'],
+        '河南':['郑州','洛阳','开封','南阳','安阳','少林寺'],
+        '云南':['昆明','大理','丽江','西双版纳','香格里拉','腾冲'],
+        '贵州':['贵阳','遵义','安顺','毕节','荔波','梵净山'],
+        '广西':['南宁','桂林','柳州','北海','阳朔','黄姚'],
+        '海南':['海口','三亚','三沙','儋州','文昌','博鳌'],
+        '甘肃':['兰州','天水','酒泉','张掖','敦煌','嘉峪关'],
+        '青海':['西宁','海东','海北','玉树','青海湖','茶卡'],
+        '新疆':['乌鲁木齐','喀什','伊犁','阿勒泰','吐鲁番','禾木'],
+        '西藏':['拉萨','日喀则','昌都','林芝','纳木错','珠峰'],
+        '安徽':['合肥','芜湖','蚌埠','黄山','安庆','九华山','宏村'],
+        '福建':['福州','厦门','泉州','漳州','武夷山','鼓浪屿'],
+        '江西':['南昌','景德镇','九江','赣州','庐山','婺源'],
+        '河北':['石家庄','唐山','秦皇岛','邯郸','保定','承德','北戴河'],
+        '山西':['太原','大同','运城','临汾','平遥','五台山','云冈'],
+        '内蒙古':['呼和浩特','包头','赤峰','鄂尔多斯','呼伦贝尔','满洲里','阿尔山']
+    };
+
+    // v10.1: 检测用户输入是否为省份名（支持"省/市/区/自治区/特别行政区"等后缀）
+    function detectProvince(input) {
+        if (!input) return null;
+        const raw = input.trim();
+        if (PROVINCES.includes(raw)) return raw;
+        // 移除常见后缀：省/市/区/自治区/壮族自治区/回族自治区/维吾尔自治区/特别行政区
+        const cleaned = raw
+            .replace(/特别行政区$/, '')
+            .replace(/维吾尔自治区$/, '')
+            .replace(/壮族自治区$/, '')
+            .replace(/回族自治区$/, '')
+            .replace(/自治区$/, '')
+            .replace(/[省市]$/, '')
+            .trim();
+        if (PROVINCES.includes(cleaned)) return cleaned;
+        return null;
+    }
 
     // ---------- API 客户端 ----------
     const API = {
@@ -563,6 +614,7 @@
         cityInput: $('cityInput'), suggestions: $('searchSuggestions'), form: $('searchForm'),
         dayPills: $('dayPills'), travelType: $('travelType'), budgetRange: $('budgetRange'),
         originInput: $('originInput'), destinationInput: $('destinationInput'), travelers: $('travelers'),
+        travelDateInput: $('travelDateInput'),
         quickCities: $('quickCities'), rankingList: $('rankingList'),
         historySection: $('historySection'), historyList: $('recentHistoryList'),
         loading: $('loading'), loadingCity: $('loadingCity'), loadingSub: $('loadingSub'), loadingBar: $('loadingBar'),
@@ -799,6 +851,15 @@
         dom.originInput.addEventListener('input', () => state.origin = dom.originInput.value.trim());
         dom.destinationInput.addEventListener('input', () => state.destination = dom.destinationInput.value.trim());
         dom.travelers.onchange = () => state.travelers = dom.travelers.value;
+        // v10.1: 出行日期
+        if (dom.travelDateInput) {
+            // 默认设置为今天
+            dom.travelDateInput.value = formatDate();
+            state.travelDate = formatDate();
+            dom.travelDateInput.addEventListener('change', () => {
+                state.travelDate = dom.travelDateInput.value;
+            });
+        }
         // 目的地输入时同步到城市输入框（攻略以目的地为准）
         dom.destinationInput.addEventListener('change', () => {
             if (dom.destinationInput.value.trim()) {
@@ -883,13 +944,44 @@
         // v9.0: 优先使用目的地作为攻略城市
         const targetCity = state.destination || city;
         if (!targetCity) { toast('请输入城市名称', 'error'); return; }
+
+        // v10.1: 省份识别 — 用户输入"黑龙江"等省份名时，提示选择具体城市
+        const province = detectProvince(targetCity);
+        if (province) {
+            const hotCities = PROVINCE_HOT_CITIES[province] || [];
+            const msg = hotCities.length
+                ? `「${province}」是一个省份，请选择具体城市。推荐：${hotCities.slice(0,4).join('、')}`
+                : `「${province}」是一个省份，请输入具体城市名`;
+            toast(msg, 'error');
+            // 自动填充推荐城市到搜索框，方便用户
+            if (hotCities.length) {
+                dom.cityInput.value = '';
+                dom.destinationInput.value = '';
+                showSuggestions(province);
+                dom.cityInput.focus();
+            }
+            return;
+        }
+
+        // v10.1: 出行日期校验 — 如果选了过去的日期，提示用户
+        if (state.travelDate) {
+            const today = formatDate().replace(/-/g, '');
+            const selected = state.travelDate.replace(/-/g, '');
+            if (selected < today) {
+                toast('出行日期是过去的时间，请重新选择', 'error');
+                dom.travelDateInput && dom.travelDateInput.focus();
+                return;
+            }
+        }
+
         showLoading(targetCity);
         const prefs = {
             days: state.selectedDays,
             travelType: state.travelType,
             budgetRange: state.budgetRange,
             origin: state.origin,           // v9.0 出发地
-            travelers: state.travelers      // v9.0 人数
+            travelers: state.travelers,     // v9.0 人数
+            travelDate: state.travelDate    // v10.1 出行日期
         };
         try {
             let guide = normalizeGuideData(await API.generateGuide(targetCity, prefs));
@@ -1177,9 +1269,17 @@
                 if (name) allSpots.push(name);
             });
         });
-        // 匹配需要预约的景点
+        // v10.1: 精确匹配逻辑 — 景点名需完整包含预约景点名，且长度差异不能太大（避免"故宫"误匹配"故宫角楼"）
+        // 改为：行程景点名包含预约景点名，或预约景点名包含行程景点名（但短词需≥2字）
         const matched = cityReservations.filter(r => {
-            return allSpots.some(s => s.includes(r.name) || r.name.includes(s));
+            const targetName = r.name;
+            return allSpots.some(s => {
+                // 行程景点包含预约景点名（如"故宫博物院"包含"故宫"）
+                if (s.includes(targetName) && targetName.length >= 2) return true;
+                // 预约景点名包含行程景点（如"故宫"包含在"故宫博物院"中），但避免短词误匹配
+                if (targetName.includes(s) && s.length >= 3) return true;
+                return false;
+            });
         });
         // 如果行程中没有明确提到，返回该城市所有需预约景点（提示用户）
         return matched.length ? matched : cityReservations;
@@ -1256,8 +1356,13 @@
     }
 
     // 通用：格式化当前日期为 YYYY-MM-DD
+    // v10.1: 支持传入 Date 对象或字符串，优先使用用户选择的出行日期
     function formatDate(d) {
+        // v10.1: 如果没有传入日期，优先使用用户选择的出行日期
+        if (!d && state.travelDate) return state.travelDate;
         d = d || new Date();
+        // 如果是字符串，直接返回（已经是 YYYY-MM-DD 格式）
+        if (typeof d === 'string') return d;
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
@@ -1665,20 +1770,23 @@
     function handleFiles(files) {
         if (!files || !files.length) return;
         const photos = loadPhotos();
-        const remaining = 8 - photos.length;
+        // v10.1: 按当前城市过滤显示，但存储上限提升到 12 张
+        const remaining = 12 - photos.length;
         if (remaining <= 0) {
-            toast('最多存储 8 张照片，请先删除旧照片', 'error');
+            toast('相册已满（12 张），请先删除部分照片', 'error');
             return;
         }
         const toProcess = Array.from(files).slice(0, remaining);
         let processed = 0;
+        let skipped = 0;
         toProcess.forEach(file => {
-            if (!file.type.startsWith('image/')) { toast('仅支持图片文件', 'error'); return; }
-            if (file.size > 2 * 1024 * 1024) { toast(`图片 ${file.name} 超过 2MB，已跳过`, 'error'); return; }
+            if (!file.type.startsWith('image/')) { toast(`「${file.name}」不是图片，已跳过`, 'error'); skipped++; return; }
+            // v10.1: 限制提升到 5MB（压缩后会更小）
+            if (file.size > 5 * 1024 * 1024) { toast(`图片 ${file.name} 超过 5MB，已跳过`, 'error'); skipped++; return; }
             const reader = new FileReader();
             reader.onload = (e) => {
-                // 压缩图片到 400px 宽度，减少 localStorage 占用
-                compressImage(e.target.result, 400, (compressed) => {
+                // v10.1: 压缩到 800px 宽度（提升海报打印质量），JPEG 0.75 质量
+                compressImage(e.target.result, 800, (compressed) => {
                     photos.push({
                         id: Date.now() + '-' + Math.random().toString(36).substr(2, 6),
                         data: compressed,
@@ -1687,10 +1795,13 @@
                         time: new Date().toISOString()
                     });
                     processed++;
-                    if (processed === toProcess.length) {
+                    if (processed + skipped === toProcess.length) {
                         savePhotos(photos);
                         renderPhotoGrid();
-                        toast(`已上传 ${processed} 张照片`, 'success');
+                        const msg = processed === toProcess.length
+                            ? `已上传 ${processed} 张照片`
+                            : `上传 ${processed} 张，跳过 ${skipped} 张`;
+                        toast(msg, processed ? 'success' : 'error');
                     }
                 });
             };
@@ -1707,21 +1818,34 @@
             canvas.width = img.width * scale;
             canvas.height = img.height * scale;
             const ctx = canvas.getContext('2d');
+            // v10.1: 白色背景填充（避免 PNG 透明区域变黑）
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            callback(canvas.toDataURL('image/jpeg', 0.7));
+            // v10.1: 质量提升到 0.78（平衡清晰度与体积）
+            callback(canvas.toDataURL('image/jpeg', 0.78));
         };
         img.onerror = () => callback(dataUrl); // 压缩失败返回原图
         img.src = dataUrl;
     }
 
     // 渲染照片网格
+    // v10.1: 优先显示当前城市的照片，无则显示全部
     function renderPhotoGrid() {
         const photoGrid = document.getElementById('photoGrid');
         if (!photoGrid) return;
-        const photos = loadPhotos();
-        if (!photos.length) { photoGrid.innerHTML = ''; return; }
+        const allPhotos = loadPhotos();
+        if (!allPhotos.length) {
+            photoGrid.innerHTML = '<p class="photo-empty-hint">还没有照片，点击上方上传</p>';
+            return;
+        }
+        // v10.1: 按当前城市过滤，无结果则显示全部
+        const currentCity = state.currentCity;
+        let photos = currentCity ? allPhotos.filter(p => p.city === currentCity) : [];
+        if (!photos.length) photos = allPhotos;
+
         photoGrid.innerHTML = photos.map(p => `
-            <div class="photo-item">
+            <div class="photo-item" data-id="${p.id}" title="${escapeHtml(p.city || '未标注城市')} · ${escapeHtml(p.name)}">
                 <img src="${p.data}" alt="${escapeHtml(p.name)}" loading="lazy">
                 <button class="photo-delete" data-id="${p.id}" title="删除">×</button>
             </div>
@@ -1735,6 +1859,14 @@
                 savePhotos(photos);
                 renderPhotoGrid();
                 toast('已删除', 'success');
+            });
+        });
+        // v10.1: 点击照片选中（用于 AI 修图选照片）
+        photoGrid.querySelectorAll('.photo-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (e.target.classList.contains('photo-delete')) return;
+                photoGrid.querySelectorAll('.photo-item').forEach(x => x.classList.remove('selected'));
+                item.classList.add('selected');
             });
         });
     }
@@ -1794,15 +1926,23 @@
     }
 
     // AI 修图建议
+    // v10.1: 支持用户选中的照片（点击照片选中），无选择时用第一张
     async function getAIEditAdvice() {
         const photos = loadPhotos();
         if (!photos.length) { toast('请先上传照片', 'error'); return; }
         const aiResult = document.getElementById('aiResult');
         if (!aiResult) return;
+        // v10.1: 检查用户是否选中了某张照片
+        const selectedEl = document.querySelector('.photo-item.selected');
+        let photo = photos[0];
+        if (selectedEl) {
+            const selectedId = selectedEl.dataset.id;
+            const found = photos.find(p => p.id === selectedId);
+            if (found) photo = found;
+        }
         aiResult.hidden = false;
         aiResult.innerHTML = '<div class="ai-loading">AI 正在分析照片，请稍候...</div>';
         const g = state.currentGuide;
-        const photo = photos[0];
         try {
             // 调用后端 AI 获取修图建议
             const response = await fetch(`${API.base}/api/ai/edit-photo`, {
@@ -1820,14 +1960,16 @@
             });
             const data = await response.json();
             if (data.success && data.advice) {
-                aiResult.innerHTML = `<div class="ai-advice"><h4>AI 修图建议</h4><p>${escapeHtml(data.advice)}</p></div>`;
+                aiResult.innerHTML = `<div class="ai-advice"><h4>AI 修图建议 · ${escapeHtml(photo.name || '当前照片')}</h4><p>${escapeHtml(data.advice)}</p></div>`;
             } else {
                 // 后端失败，提供本地建议
-                aiResult.innerHTML = `<div class="ai-advice"><h4>修图建议（本地）</h4>${getLocalEditAdvice(g)}</div>`;
+                aiResult.innerHTML = `<div class="ai-advice"><h4>修图建议（本地） · ${escapeHtml(photo.name || '当前照片')}</h4>${getLocalEditAdvice(g)}</div>`;
+                toast('AI 服务暂不可用，已使用本地建议', 'info');
             }
         } catch (e) {
             // 网络失败，提供本地建议
-            aiResult.innerHTML = `<div class="ai-advice"><h4>修图建议（本地）</h4>${getLocalEditAdvice(g)}</div>`;
+            aiResult.innerHTML = `<div class="ai-advice"><h4>修图建议（本地） · ${escapeHtml(photo.name || '当前照片')}</h4>${getLocalEditAdvice(g)}</div>`;
+            toast('网络异常，已使用本地建议', 'info');
         }
     }
 

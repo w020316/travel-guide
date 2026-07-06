@@ -1100,3 +1100,59 @@ input, select { font-family: inherit; }
     .photo-actions { flex-direction: column; }
     .photo-actions .btn-secondary { width: 100%; }
 }
+
+/* =========================================================
+   v10.1 用户体验优化样式
+   ========================================================= */
+
+/* 照片选中态（点击照片后高亮，用于 AI 修图选照片） */
+.photo-item.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft), 0 4px 12px rgba(200,85,61,.2);
+    transform: translateY(-2px);
+}
+.photo-item.selected::after {
+    content: '✓'; position: absolute; top: 6px; left: 6px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--paper);
+    font-size: 14px; line-height: 1;
+    display: grid; place-items: center;
+    font-weight: 700;
+}
+.photo-item { cursor: pointer; }
+
+/* 照片空状态提示 */
+.photo-empty-hint {
+    grid-column: 1 / -1;
+    text-align: center; padding: 24px 16px;
+    color: var(--muted-2); font-size: 13px;
+    background: var(--paper-2); border-radius: var(--radius-sm);
+    border: 1px dashed var(--line);
+}
+
+/* 日期输入框样式（与现有 input-ghost 一致） */
+input[type="date"].input-ghost {
+    padding: 8px 12px; font-size: 14px;
+    color: var(--ink-2);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all .2s;
+    min-width: 130px;
+}
+input[type="date"].input-ghost:hover {
+    border-color: var(--accent);
+}
+input[type="date"].input-ghost:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* 比价区块日期提示增强 */
+.compare-note .compare-date {
+    background: var(--accent-soft); color: var(--accent-dark);
+    padding: 3px 10px; border-radius: 4px;
+    font-weight: 600; font-size: 12px;
+}
