@@ -143,11 +143,14 @@ class AIService {
 
   buildPrompt(city, preferences) {
     const days = Math.min(Math.max(preferences.days || 3, 1), 7);
+    const origin = preferences.origin || '';        // v9.0 出发地
+    const travelers = preferences.travelers || '2'; // v9.0 人数
 
     // 精简版 prompt：要求 AI 输出与本地数据结构兼容的紧凑 JSON
     // 避免过长 prompt 导致 AI 后端 502 或超时
     // 关键：在 prompt 开头和结尾都强烈强调城市名，防止 AI 混淆城市
     const prompt = `【重要：本次任务是为「${city}」生成攻略，所有内容必须严格属于${city}，禁止返回其他城市的数据】
+${origin ? `游客从【${origin}】出发前往【${city}】，` : ''}出行人数 ${travelers} 人。
 
 请为【${city}】生成一份${days}日旅游攻略，以严格 JSON 格式输出（不要 markdown 标记、不要额外说明）。
 
@@ -169,7 +172,7 @@ JSON 结构如下（字段名保持一致，值用中文）：
   ],
   "transport": [
     {"type": "内部交通", "info": "${city}市内交通简述"},
-    {"type": "外部交通", "info": "如何到达${city}（仅${city}本地机场/高铁站）"}
+    {"type": "外部交通", "info": "${origin ? '从' + origin + '到' + city + '的交通方式（仅' + city + '本地机场/高铁站）' : '如何到达' + city + '（仅' + city + '本地机场/高铁站）'}"}
   ],
   "budget": {"low": "XX", "medium": "XX", "high": "XX+"},
   "tips": {
@@ -186,10 +189,9 @@ JSON 结构如下（字段名保持一致，值用中文）：
   "itineraries": {
     "1天": {
       "routes": [
-        {"time": "09:00-12:00", "morning": "${city}行程"},
-        {"time": "12:00-14:00", "afternoon": "${city}午餐"},
-        {"time": "14:00-17:00", "afternoon2": "${city}行程"},
-        {"time": "18:00-21:00", "evening": "${city}晚餐/夜景"}
+        {"time": "09:00-12:00", "period": "上午", "spots": ["${city}景点A", "${city}景点B"]},
+        {"time": "14:00-17:00", "period": "下午", "spots": ["${city}景点C", "${city}景点D"]},
+        {"time": "18:00-21:00", "period": "晚上", "spots": ["${city}景点E"]}
       ],
       "tips": ["提示1", "提示2"],
       "budget": "XX-XX元"
@@ -201,11 +203,11 @@ JSON 结构如下（字段名保持一致，值用中文）：
 1. routes 数组提供 ${days} 条路线，每条一行，所有景点必须位于${city}市内
 2. foods 提供 4-6 道当地特色美食，必须是${city}本地美食
 3. accommodations 提供 2-3 个区域建议，区域必须是${city}的行政区或地标
-4. transport 提供内部+外部交通，外部交通中的机场/高铁站必须服务于${city}
-5. budget 给出低/中/高三档人均预算（元/天）
+4. transport 提供内部+外部交通，外部交通中的机场/高铁站必须服务于${city}${origin ? '，需包含从' + origin + '出发的具体建议' : ''}
+5. budget 给出低/中/高三档人均预算（元/天），考虑 ${travelers} 人出行的分摊效应
 6. tips.prepare 至少 4 项，avoid 至少 3 项
 7. poster.colors 提供 5 个十六进制颜色
-8. itineraries 至少提供 "1天" 的行程
+8. itineraries 至少提供 "1天" 的行程，包含时间段（上午/下午/晚上）
 9. 所有内容必须真实合理，符合 ${city} 的实际情况
 10. 【最高优先级】所有内容必须严格围绕【${city}】生成：
     - 不得出现其他城市的景点、美食、机场、高铁站

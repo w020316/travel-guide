@@ -60,6 +60,25 @@
 
                     <div class="search-meta">
                         <div class="meta-group">
+                            <span class="meta-label">出发地</span>
+                            <input type="text" id="originInput" class="input-ghost" placeholder="如 北京" autocomplete="off">
+                        </div>
+                        <div class="meta-group">
+                            <span class="meta-label">目的地</span>
+                            <input type="text" id="destinationInput" class="input-ghost" placeholder="如 成都" autocomplete="off">
+                        </div>
+                        <div class="meta-group">
+                            <span class="meta-label">人数</span>
+                            <select id="travelers" class="select-ghost">
+                                <option value="1">1 人</option>
+                                <option value="2" selected>2 人</option>
+                                <option value="3">3 人</option>
+                                <option value="4">4 人</option>
+                                <option value="5">5 人</option>
+                                <option value="6+">6+ 人</option>
+                            </select>
+                        </div>
+                        <div class="meta-group">
                             <span class="meta-label">天数</span>
                             <div class="day-pills" id="dayPills">
                                 <button type="button" class="pill" data-days="1">1</button>

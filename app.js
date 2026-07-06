@@ -35,6 +35,9 @@
         selectedDays: 3,
         travelType: 'balanced',
         budgetRange: 'medium',
+        origin: '',           // 出发地（v9.0 新增）
+        destination: '',      // 目的地（v9.0 新增，优先作为攻略城市）
+        travelers: '2',       // 人数（v9.0 新增）
         currentGuide: null,
         currentCity: null,
         posterStyle: 'fresh',
@@ -308,20 +311,29 @@
         return 3;
     }
 
-    // 智能预算计算（基于城市等级+天数+偏好）
-    function calcBudget(city, days, budgetRange) {
+    // 智能预算计算（基于城市等级+天数+偏好+人数）
+    function calcBudget(city, days, budgetRange, travelers) {
         const tier = getCityTier(city);
         const tierMul = tier === 1 ? 1.3 : tier === 2 ? 1.0 : 0.8;
         const budgetMul = budgetRange === 'low' ? 0.7 : budgetRange === 'high' ? 1.6 : 1.0;
+        // v9.0: 人数影响（多人可分摊住宿，人均略降）
+        const travelerCount = parseInt(travelers, 10) || 2;
+        const travelerMul = travelerCount >= 4 ? 0.85 : travelerCount >= 2 ? 0.92 : 1.0;
         const base = { transport: 300, hotel: 280, food: 150, ticket: 120 };
         const breakdown = {
-            '交通': `${Math.round(base.transport * tierMul * budgetMul)}元`,
-            '住宿': `${Math.round(base.hotel * tierMul * budgetMul * days)}元`,
-            '餐饮': `${Math.round(base.food * tierMul * budgetMul * days)}元`,
-            '门票': `${Math.round(base.ticket * budgetMul)}元`
+            '交通': `${Math.round(base.transport * tierMul * budgetMul * travelerMul)}元`,
+            '住宿': `${Math.round(base.hotel * tierMul * budgetMul * travelerMul * days)}元`,
+            '餐饮': `${Math.round(base.food * tierMul * budgetMul * travelerMul * days)}元`,
+            '门票': `${Math.round(base.ticket * budgetMul * travelerMul)}元`
         };
-        const total = Math.round((base.transport + (base.hotel + base.food) * days + base.ticket) * tierMul * budgetMul);
-        return { total: `${total}元`, breakdown, moneySavingTips: ['提前预订酒店享早鸟价', '关注景区免票日/学生证半价', '避开节假日高峰节省 30% 开销'] };
+        const total = Math.round((base.transport + (base.hotel + base.food) * days + base.ticket) * tierMul * budgetMul * travelerMul);
+        const personTotal = Math.round(total / Math.max(travelerCount, 1));
+        return {
+            total: `${total}元（人均 ${personTotal}元）`,
+            personTotal: `${personTotal}元`,
+            breakdown,
+            moneySavingTips: ['提前预订酒店享早鸟价', '关注景区免票日/学生证半价', '避开节假日高峰节省 30% 开销', travelerCount >= 2 ? '多人同行住宿可分摊，人均更划算' : '单人出行建议青旅或民宿']
+        };
     }
 
     // 智能住宿推荐（基于省份+城市标签）
@@ -347,13 +359,33 @@
         return list.slice(0, 3);
     }
 
-    // 智能交通信息（基于城市等级）
-    function genTransportation(city, province) {
+    // 智能交通信息（基于城市等级+出发地）
+    function genTransportation(city, province, origin) {
         const tier = getCityTier(city);
         const hasMetro = tier <= 2;
         const hasAirport = tier <= 2;
+        // v9.0: 如有出发地，生成具体的出发地→目的地交通建议
+        let arrivalInfo;
+        if (origin) {
+            const originTier = getCityTier(origin);
+            const originProvince = PROVINCE_MAP[origin] || '';
+            // 判断出发地与目的地距离
+            if (origin === city) {
+                arrivalInfo = `您已在${city}本地，建议步行或骑行开始游览`;
+            } else if (originProvince === province) {
+                arrivalInfo = `从${origin}到${city}同省，可乘高铁（约1-2小时）或自驾走省内高速`;
+            } else if (hasAirport && originTier <= 2) {
+                arrivalInfo = `从${origin}到${city}：飞机约2-3小时直达，或高铁约4-8小时，自驾走高速约8-12小时`;
+            } else if (hasAirport) {
+                arrivalInfo = `从${origin}到${city}：可乘飞机中转，或高铁至${province}内枢纽站转车`;
+            } else {
+                arrivalInfo = `从${origin}到${city}：建议高铁+大巴组合，或自驾走国道/省道`;
+            }
+        } else {
+            arrivalInfo = hasAirport ? `${city}有机场，可乘飞机直达；高铁站连接全国铁路网，自驾可通过高速直达` : `可乘高铁至${province}内最近的枢纽站转车，或自驾走国道/省道到达`;
+        }
         return {
-            arrival: hasAirport ? `${city}有机场，可乘飞机直达；高铁站连接全国铁路网，自驾可通过高速直达` : `可乘高铁至${province}内最近的枢纽站转车，或自驾走国道/省道到达`,
+            arrival: arrivalInfo,
             localTransport: hasMetro ? `${city}地铁覆盖主要景点，公交网络发达，网约车便利，短途可骑共享单车` : `${city}以公交和网约车为主，景点集中区域可步行，建议拼车或包车游览`
         };
     }
@@ -383,6 +415,71 @@
         return tips;
     }
 
+    // v9.0 智能天气生成（基于城市+季节+省份）
+    function genWeather(city, season) {
+        const province = PROVINCE_MAP[city] || '';
+        const month = new Date().getMonth() + 1;
+        // 基础天气模板
+        const weatherBySeason = {
+            '春季最佳': { temp: '15-22℃', desc: '春暖花开，气候宜人，偶有春雨', advice: '建议穿薄外套，备雨具' },
+            '夏季最佳': { temp: '25-32℃', desc: '夏季炎热，注意防晒防暑', advice: '穿透气衣物，避开正午暴晒' },
+            '秋季最佳': { temp: '15-25℃', desc: '秋高气爽，温差适中，最佳出行季', advice: '穿长袖薄外套，适合户外活动' },
+            '冬季最佳': { temp: '-5-8℃', desc: '冬季寒冷，需注意保暖', advice: '穿羽绒服，备保暖内衣' },
+            '春秋最佳': { temp: '15-25℃', desc: '春秋两季气候舒适，适合出行', advice: '穿薄外套，温差较大注意增减' },
+            '夏秋最佳': { temp: '20-30℃', desc: '夏秋季节气候温暖，偶有降雨', advice: '备雨具，穿透气衣物' },
+            '春夏最佳': { temp: '18-28℃', desc: '春夏季节气候温和，植物茂盛', advice: '穿薄外套，防晒' },
+            '秋冬最佳': { temp: '5-18℃', desc: '秋冬季节气候凉爽，景色优美', advice: '穿保暖外套' },
+            '全年适宜': { temp: '15-25℃', desc: '全年气候温和，四季皆可游览', advice: '根据实时天气穿搭' },
+            '夏冬两季': { temp: '变化大', desc: '夏热冬冷，温差较大', advice: '根据季节准备衣物' }
+        };
+        let weather = weatherBySeason[season] || weatherBySeason['全年适宜'];
+
+        // 特殊地区调整
+        // 高原地区
+        if (['西藏','青海'].includes(province) || /拉萨|林芝|日喀则|西宁|香格里拉/.test(city)) {
+            weather = { temp: '8-18℃', desc: '高原气候，昼夜温差大，紫外线强', advice: '穿冲锋衣，防晒霜 SPF50+，预防高反' };
+        }
+        // 海滨城市
+        if (['海南','福建','广东','山东'].includes(province) && /海|岛|湾|港|三亚|厦门|青岛|威海|大连|北海/.test(city)) {
+            if (month >= 6 && month <= 9) {
+                weather = { temp: '26-32℃', desc: '海滨夏季炎热潮湿，偶有台风', advice: '防晒，关注台风预警' };
+            }
+        }
+        // 东北冬季
+        if (['黑龙江','吉林','辽宁','内蒙古','新疆'].includes(province)) {
+            if (month >= 11 || month <= 3) {
+                weather = { temp: '-20~-5℃', desc: '东北冬季严寒，雪景壮丽', advice: '穿羽绒服+保暖内衣+暖宝宝' };
+            }
+        }
+        // 当前月份提示
+        const monthWeather = getCurrentMonthWeather(month, province);
+        return {
+            ...weather,
+            currentMonth: `${month}月`,
+            currentMonthWeather: monthWeather,
+            province: province || '中国'
+        };
+    }
+
+    // 根据当前月份生成天气提示
+    function getCurrentMonthWeather(month, province) {
+        const monthWeatherMap = {
+            1: '冬季，北方寒冷，南方湿冷',
+            2: '初春，北方仍冷，南方回暖',
+            3: '春季，气温回升，北方风大',
+            4: '春暖花开，全国普遍舒适',
+            5: '暮春初夏，南方开始入夏',
+            6: '初夏，南方梅雨，北方干热',
+            7: '盛夏，全国高温，南方湿热',
+            8: '盛夏，高温持续，台风活跃',
+            9: '初秋，北方转凉，南方仍热',
+            10: '秋高气爽，全国舒适',
+            11: '深秋初冬，北方入冬',
+            12: '冬季，全国寒冷，北方降雪'
+        };
+        return monthWeatherMap[month] || '气候温和';
+    }
+
     // ---------- 本地攻略生成（基于 527 城数据库 + 智能数据增强）----------
     function buildLocalGuide(city, prefs) {
         const base = CITIES[city];
@@ -390,12 +487,15 @@
         const province = PROVINCE_MAP[city] || '';
         const tags = base?.tags || [];
         const season = base?.season || '四季皆宜';
+        const origin = prefs.origin || '';       // v9.0 出发地
+        const travelers = prefs.travelers || '2'; // v9.0 人数
 
         // 公共增强数据
         const accommodations = genAccommodations(city, tags, province);
-        const transportation = genTransportation(city, province);
+        const transportation = genTransportation(city, province, origin); // v9.0 传入出发地
         const tips = genTips(city, season, province);
-        const budget = calcBudget(city, days, prefs.budgetRange);
+        const budget = calcBudget(city, days, prefs.budgetRange, travelers); // v9.0 传入人数
+        const weather = genWeather(city, season); // v9.0 天气
 
         if (!base) {
             return {
@@ -404,8 +504,9 @@
                 difficulty: '适中', source: 'local-mock',
                 routes: buildMockRoutes(city, days),
                 foods: [{ name: `${city}特色菜`, description: `${province || '当地'}招牌美食，体现地方风味`, price: '38-68元', mustTry: true, whereToEat: [{ name: '当地老字号', address: '市中心' }] }],
-                accommodations, tips, budget, transportation,
-                tags: ['本地数据']
+                accommodations, tips, budget, transportation, weather,
+                tags: ['本地数据'],
+                origin, destination: city, travelers // v9.0
             };
         }
         // 基于 DB 数据按天数扩展
@@ -424,8 +525,9 @@
                 name: f.name, description: f.description || `${province}${city}特色美食`, price: f.price || '—',
                 mustTry: !!f.mustTry, rating: 5, whereToEat: [{ name: f.location || '当地老字号', address: '市区' }]
             })),
-            accommodations, tips, budget, transportation,
-            tags: base.tags || []
+            accommodations, tips, budget, transportation, weather,
+            tags: base.tags || [],
+            origin, destination: city, travelers // v9.0
         };
     }
 
@@ -460,6 +562,7 @@
     const dom = {
         cityInput: $('cityInput'), suggestions: $('searchSuggestions'), form: $('searchForm'),
         dayPills: $('dayPills'), travelType: $('travelType'), budgetRange: $('budgetRange'),
+        originInput: $('originInput'), destinationInput: $('destinationInput'), travelers: $('travelers'),
         quickCities: $('quickCities'), rankingList: $('rankingList'),
         historySection: $('historySection'), historyList: $('recentHistoryList'),
         loading: $('loading'), loadingCity: $('loadingCity'), loadingSub: $('loadingSub'), loadingBar: $('loadingBar'),
@@ -500,6 +603,15 @@
                 state.budgetRange = urlState.budgetRange;
                 dom.budgetRange.value = urlState.budgetRange;
             }
+            // v9.0: 恢复出发地/人数
+            if (urlState.origin) {
+                state.origin = urlState.origin;
+                if (dom.originInput) dom.originInput.value = urlState.origin;
+            }
+            if (urlState.travelers) {
+                state.travelers = urlState.travelers;
+                if (dom.travelers) dom.travelers.value = urlState.travelers;
+            }
             dom.cityInput.value = urlState.city;
             // 延迟一帧以等待页面渲染完成
             setTimeout(() => submitCity(urlState.city), 60);
@@ -515,6 +627,9 @@
             if (prefs.days) params.set('days', String(prefs.days));
             if (prefs.travelType) params.set('type', prefs.travelType);
             if (prefs.budgetRange) params.set('budget', prefs.budgetRange);
+            // v9.0: 同步出发地/人数
+            if (prefs.origin) params.set('origin', prefs.origin);
+            if (prefs.travelers) params.set('travelers', prefs.travelers);
             const newUrl = `${location.pathname}?${params.toString()}${location.hash}`;
             history.replaceState(null, '', newUrl);
         } catch (e) {
@@ -532,7 +647,9 @@
                 city: decodeURIComponent(city),
                 days: params.get('days') ? parseInt(params.get('days'), 10) : null,
                 travelType: params.get('type') || null,
-                budgetRange: params.get('budget') || null
+                budgetRange: params.get('budget') || null,
+                origin: params.get('origin') ? decodeURIComponent(params.get('origin')) : null,     // v9.0
+                travelers: params.get('travelers') || null                                          // v9.0
             };
         } catch (e) {
             return null;
@@ -567,6 +684,9 @@
         params.set('days', String(state.selectedDays));
         params.set('type', state.travelType);
         params.set('budget', state.budgetRange);
+        // v9.0: 同步出发地/人数
+        if (state.origin) params.set('origin', state.origin);
+        if (state.travelers) params.set('travelers', state.travelers);
         return `${location.pathname}?${params.toString()}`;
     }
 
@@ -675,6 +795,17 @@
         dom.travelType.onchange = () => state.travelType = dom.travelType.value;
         dom.budgetRange.onchange = () => state.budgetRange = dom.budgetRange.value;
 
+        // v9.0 新增：出发地/目的地/人数
+        dom.originInput.addEventListener('input', () => state.origin = dom.originInput.value.trim());
+        dom.destinationInput.addEventListener('input', () => state.destination = dom.destinationInput.value.trim());
+        dom.travelers.onchange = () => state.travelers = dom.travelers.value;
+        // 目的地输入时同步到城市输入框（攻略以目的地为准）
+        dom.destinationInput.addEventListener('change', () => {
+            if (dom.destinationInput.value.trim()) {
+                dom.cityInput.value = dom.destinationInput.value.trim();
+            }
+        });
+
         // 搜索建议
         let suggestTimer;
         dom.cityInput.addEventListener('input', () => {
@@ -749,28 +880,43 @@
 
     // ---------- 提交生成 ----------
     async function submitCity(city) {
-        if (!city) { toast('请输入城市名称', 'error'); return; }
-        showLoading(city);
-        const prefs = { days: state.selectedDays, travelType: state.travelType, budgetRange: state.budgetRange };
+        // v9.0: 优先使用目的地作为攻略城市
+        const targetCity = state.destination || city;
+        if (!targetCity) { toast('请输入城市名称', 'error'); return; }
+        showLoading(targetCity);
+        const prefs = {
+            days: state.selectedDays,
+            travelType: state.travelType,
+            budgetRange: state.budgetRange,
+            origin: state.origin,           // v9.0 出发地
+            travelers: state.travelers      // v9.0 人数
+        };
         try {
-            let guide = normalizeGuideData(await API.generateGuide(city, prefs));
+            let guide = normalizeGuideData(await API.generateGuide(targetCity, prefs));
             // 城市混淆检测：如果 AI 返回的内容明显属于其他城市，回退到本地智能数据
             if (guide && guide.cityMismatch) {
-                console.warn(`⚠️ AI 城市混淆，回退本地数据：${city}`);
+                console.warn(`⚠️ AI 城市混淆，回退本地数据：${targetCity}`);
                 toast('AI 数据异常，已切换为本地智能数据', 'info');
-                guide = normalizeGuideData(buildLocalGuide(city, prefs));
+                guide = normalizeGuideData(buildLocalGuide(targetCity, prefs));
             }
             // === 数据质量检测：如果 AI 数据质量过差（routes/foods 全空或全是占位），回退到本地智能数据 ===
-            if (guide && !isGuideDataValid(guide, city)) {
-                console.warn(`⚠️ AI 数据质量不佳，回退本地数据：${city}`);
+            if (guide && !isGuideDataValid(guide, targetCity)) {
+                console.warn(`⚠️ AI 数据质量不佳，回退本地数据：${targetCity}`);
                 toast('AI 数据不完整，已切换为本地智能数据', 'info');
-                guide = normalizeGuideData(buildLocalGuide(city, prefs));
+                guide = normalizeGuideData(buildLocalGuide(targetCity, prefs));
             }
+            // v9.0: 注入出发地/目的地/人数到攻略数据中
+            guide.origin = state.origin || '';
+            guide.destination = targetCity;
+            guide.travelers = state.travelers || '2';
+            // v9.0: 生成天气信息
+            if (!guide.weather) guide.weather = genWeather(targetCity, guide.season);
+
             state.currentGuide = guide;
-            state.currentCity = city;
-            addHistory(city);
+            state.currentCity = targetCity;
+            addHistory(targetCity);
             // 更新 URL，使当前攻略可通过链接分享
-            updateShareUrl(city, prefs);
+            updateShareUrl(targetCity, prefs);
             renderResult(guide);
             hideLoading();
             showResult();
@@ -830,16 +976,41 @@
         return `<a class="ext-link" href="${url}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(label || '查看详情')}">${escapeHtml(label || '详情')}<svg class="ext-link-icon" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M6 3h7v7M13 3L6 10M11 13H4V6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>`;
     }
 
+    // v9.0: 按时间段拆分景点（上午/下午/晚上）
+    // 将景点列表按 3 个时段分组，每个时段分配 1-2 个景点
+    function splitSpotsByTime(spots) {
+        if (!spots || !spots.length) return [{ time: '全天', period: '自由安排', spots: [] }];
+        // 时段定义
+        const slots = [
+            { time: '09:00-12:00', period: '上午', spots: [] },
+            { time: '14:00-17:00', period: '下午', spots: [] },
+            { time: '18:00-21:00', period: '晚上', spots: [] }
+        ];
+        // 按顺序分配景点到时段
+        spots.forEach((s, i) => {
+            const slotIdx = Math.min(Math.floor(i / Math.max(Math.ceil(spots.length / 3), 1)), 2);
+            slots[slotIdx].spots.push(s);
+        });
+        // 过滤掉没有景点的时段
+        return slots.filter(s => s.spots.length > 0);
+    }
+
     function renderGuide(g) {
         const sections = [];
 
-        // 头部
+        // v9.0: 出发地/目的地信息
+        const originText = g.origin ? `${escapeHtml(g.origin)} → ${escapeHtml(g.destination || g.city)}` : `${escapeHtml(g.city)}`;
+        const travelersText = g.travelers ? `${escapeHtml(g.travelers)} 人出行` : '2 人出行';
+
+        // 头部（v9.0: 新增出发地→目的地、人数、天气）
         sections.push(`
             <div class="gc-head">
                 <div class="gc-eyebrow">${g.source === 'local-db' || g.source === 'local-mock' ? '本地数据 · ' : ''}${g.duration || ''} · ${g.difficulty || '适中'}</div>
                 <h1>${g.title || g.city}</h1>
                 <p class="gc-sub">${g.subtitle || ''}</p>
                 <div class="gc-stats">
+                    <div class="gc-stat gc-stat-route">路线 <strong>${originText}</strong></div>
+                    <div class="gc-stat">出行 <strong>${travelersText}</strong></div>
                     <div class="gc-stat">最佳季节 <strong>${g.season || '四季皆宜'}</strong></div>
                     <div class="gc-stat">行程 <strong>${g.duration || '3天'}</strong></div>
                     <div class="gc-stat">预算 <strong>${g.overallBudget || (g.budget && g.budget.total) || '待估'}</strong></div>
@@ -847,7 +1018,29 @@
             </div>
         `);
 
-        // 行程
+        // v9.0: 天气情况区块（在行程之前展示）
+        if (g.weather) {
+            const w = g.weather;
+            sections.push(`
+                <section class="gc-section gc-weather">
+                    <h2><span class="gc-idx">00</span>天气情况</h2>
+                    <div class="weather-card">
+                        <div class="weather-main">
+                            <div class="weather-temp">${escapeHtml(w.temp || '')}</div>
+                            <div class="weather-desc">${escapeHtml(w.desc || '')}</div>
+                        </div>
+                        <div class="weather-meta">
+                            ${w.currentMonth ? `<div class="wm-item"><span class="wm-label">当前月份</span><strong>${escapeHtml(w.currentMonth)}</strong></div>` : ''}
+                            ${w.currentMonthWeather ? `<div class="wm-item"><span class="wm-label">当月天气</span><strong>${escapeHtml(w.currentMonthWeather)}</strong></div>` : ''}
+                            ${w.advice ? `<div class="wm-item"><span class="wm-label">穿衣建议</span><strong>${escapeHtml(w.advice)}</strong></div>` : ''}
+                            ${w.province ? `<div class="wm-item"><span class="wm-label">所属省份</span><strong>${escapeHtml(w.province)}</strong></div>` : ''}
+                        </div>
+                    </div>
+                </section>
+            `);
+        }
+
+        // 行程（v9.0: 每日行程添加时间段 上午/下午/晚上）
         if (g.routes && g.routes.length) {
             sections.push(`
                 <section class="gc-section">
@@ -857,6 +1050,8 @@
                             ? r.spots.map(s => typeof s === 'string' ? s : s.name).filter(Boolean)
                             : [];
                         const routeLine = r.routeLine || (typeof r.route === 'string' ? r.route : '') || '';
+                        // v9.0: 按时间段拆分景点
+                        const timeSlots = splitSpotsByTime(spots);
                         return `
                             <div class="route-day">
                                 <div class="route-day-head">
@@ -864,15 +1059,25 @@
                                     <span class="route-day-theme">${r.theme || r.title || `Day ${r.day || 1}`}</span>
                                 </div>
                                 ${routeLine ? `<div class="route-day-route">${routeLine}</div>` : ''}
-                                ${spots.length ? `<ul class="route-list">${spots.map(s => `
-                                    <li>
-                                        <span class="rl-name">${escapeHtml(s)}</span>
-                                        <span class="rl-links">
-                                            ${extLinkHtml(amapSearchUrl(g.city + ' ' + s), '地图')}
-                                            ${extLinkHtml(baikeUrl(s), '百科')}
-                                        </span>
-                                    </li>
-                                `).join('')}</ul>` : ''}
+                                ${timeSlots.map(slot => `
+                                    <div class="route-timeslot">
+                                        <div class="ts-label">
+                                            <span class="ts-time">${slot.time}</span>
+                                            <span class="ts-period">${slot.period}</span>
+                                        </div>
+                                        <ul class="route-list">
+                                            ${slot.spots.map(s => `
+                                                <li>
+                                                    <span class="rl-name">${escapeHtml(s)}</span>
+                                                    <span class="rl-links">
+                                                        ${extLinkHtml(amapSearchUrl(g.city + ' ' + s), '地图')}
+                                                        ${extLinkHtml(baikeUrl(s), '百科')}
+                                                    </span>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                `).join('')}
                             </div>
                         `;
                     }).join('')}
