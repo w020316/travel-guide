@@ -100,7 +100,17 @@
     function normalizeGuideData(g) {
         if (!g) return g;
 
+        // 0. 修复 days 字段重复"天"字（如 "1-2天天" → "1-2天"）
+        if (typeof g.days === 'string') {
+            g.days = g.days.replace(/天天+/g, '天').replace(/天+$/, '天');
+        }
+        if (typeof g.duration === 'string') {
+            g.duration = g.duration.replace(/天天+/g, '天').replace(/天+$/, '天');
+        }
+
         // 1. 标准化 routes：AI 可能返回字符串数组 ["Day1: A→B→C"] 或对象数组
+        //    同时检测并替换占位文本（"精选行程"/"主要景点"等无意义内容）
+        const PLACEHOLDER_PATTERNS = /^(精选行程|主要景点|行程安排|今日行程|Day\s*\d+\s*[:：]?\s*)$/i;
         if (Array.isArray(g.routes)) {
             g.routes = g.routes.map((r, i) => {
                 if (typeof r === 'string') {
@@ -125,6 +135,16 @@
                     if (!r.theme) r.theme = `Day ${r.day}`;
                 }
                 return r;
+            }).filter(r => {
+                // 过滤掉占位/空 routeLine
+                if (!r) return false;
+                const line = (typeof r === 'string') ? r : (r.routeLine || r.route || '');
+                if (!line || !line.trim()) return false;
+                if (PLACEHOLDER_PATTERNS.test(line.trim())) return false;
+                // spots 必须有实际内容
+                const spots = (typeof r === 'object') ? (r.spots || []) : [];
+                if (spots.length === 0 && line.split('→').length < 2) return false;
+                return true;
             });
         }
 
@@ -148,17 +168,41 @@
         }
 
         // 3. 标准化 foods：AI 返回 desc 字段，渲染期望 description
+        //    关键清洗：过滤 description 是 JSON 字符串/过长/包含 { 的垃圾数据
         if (Array.isArray(g.foods)) {
             g.foods = g.foods.map(f => {
                 if (f && typeof f === 'object') {
+                    // desc → description
                     if (!f.description && f.desc) f.description = f.desc;
+                    // priceRange → price
                     if (!f.price && f.priceRange) f.price = f.priceRange;
+                    // recommendedRestaurants → whereToEat
                     if (!f.whereToEat && f.recommendedRestaurants) {
                         f.whereToEat = f.recommendedRestaurants.map(r => typeof r === 'string' ? { name: r, address: '' } : r);
                     }
+                    // === 数据清洗：过滤垃圾 description ===
+                    if (f.description) {
+                        const desc = String(f.description).trim();
+                        // 检测 JSON 字符串（如 {"tags":["龙城"...）
+                        if (desc.startsWith('{') || desc.startsWith('[')) {
+                            f.description = '';
+                        }
+                        // 检测过长的 description（>100 字符可能是垃圾数据）
+                        else if (desc.length > 100) {
+                            f.description = desc.substring(0, 80) + '...';
+                        }
+                        // 检测包含 JSON 标记的 description
+                        else if (desc.includes('"tags"') || desc.includes('"name"') || desc.includes('"routes"')) {
+                            f.description = '';
+                        }
+                    }
+                    // === 清洗 name：如果是空字符串或 JSON，丢弃该 food ===
+                    if (!f.name || typeof f.name !== 'string' || f.name.startsWith('{') || f.name.startsWith('[')) {
+                        return null;
+                    }
                 }
                 return f;
-            });
+            }).filter(Boolean); // 移除 null
         }
 
         // 4. 标准化 accommodations：AI 返回 {area, pros, cons}，渲染期望 {name, area, features}
@@ -172,40 +216,50 @@
                     }
                 }
                 return a;
-            });
+            }).filter(a => a && a.name); // 移除无效项
         }
 
-        // 5. 修复 days 字段重复"天"字（如 "1-2天天" → "1-2天"）
-        if (typeof g.days === 'string') {
-            g.days = g.days.replace(/天天/g, '天').replace(/天+$/, '天');
+        // 5. 确保 budget 结构完整且 total 始终有值
+        //    截图问题：budget.total 显示"待计算"，需确保始终填充
+        if (!g.budget || typeof g.budget !== 'object') {
+            g.budget = {};
         }
-        if (typeof g.duration === 'string') {
-            g.duration = g.duration.replace(/天天/g, '天').replace(/天+$/, '天');
-        }
-
-        // 6. 确保 budget 结构完整
-        if (g.budget && typeof g.budget === 'object') {
-            if (!g.budget.breakdown && (g.budget.low || g.budget.medium || g.budget.high)) {
-                g.budget.breakdown = {
-                    '经济档': g.budget.low || '—',
-                    '舒适档': g.budget.medium || '—',
-                    '豪华档': g.budget.high || '—'
-                };
-            }
-            if (!g.budget.total && g.overallBudget) {
-                g.budget.total = g.overallBudget;
-            }
-        }
-
-        // 7. 确保 transportation 存在（本地模式 fallback）
-        if (!g.transportation && Array.isArray(g.transport)) {
-            const arrival = g.transport.find(t => t.type === '外部交通');
-            const local = g.transport.find(t => t.type === '内部交通');
-            g.transportation = {
-                arrival: arrival ? arrival.info : '高铁/飞机可达',
-                localTransport: local ? local.info : '地铁、公交便利'
+        if (!g.budget.breakdown && (g.budget.low || g.budget.medium || g.budget.high)) {
+            g.budget.breakdown = {
+                '经济档': g.budget.low || '—',
+                '舒适档': g.budget.medium || '—',
+                '豪华档': g.budget.high || '—'
             };
         }
+        if (!g.budget.total) {
+            // 优先用 overallBudget，否则从 low/medium 推算，最后用"约 XXX 元/人"
+            if (g.overallBudget && g.overallBudget !== '待估算') {
+                g.budget.total = g.overallBudget;
+            } else if (g.budget.medium) {
+                g.budget.total = `约 ${g.budget.medium}元/人/天`;
+            } else {
+                // 兜底：基于城市等级+天数计算
+                const fallbackBudget = calcBudget(g.city || '', 3, 'medium');
+                g.budget.total = fallbackBudget.total;
+                if (!g.budget.breakdown) g.budget.breakdown = fallbackBudget.breakdown;
+            }
+        }
+        // 同步 overallBudget
+        if (!g.overallBudget || g.overallBudget === '待估算') {
+            g.overallBudget = g.budget.total;
+        }
+
+        // 6. 确保 transportation 存在（本地模式 fallback）
+        if (!g.transportation) {
+            g.transportation = {
+                arrival: '高铁/飞机可达',
+                localTransport: '地铁、公交便利'
+            };
+        }
+
+        // 7. 确保 title/subtitle 始终有值
+        if (!g.title) g.title = `${g.city || ''}·旅行手记`;
+        if (!g.subtitle) g.subtitle = `发现${g.city || ''}的独特魅力`;
 
         return g;
     }
@@ -706,6 +760,12 @@
                 toast('AI 数据异常，已切换为本地智能数据', 'info');
                 guide = normalizeGuideData(buildLocalGuide(city, prefs));
             }
+            // === 数据质量检测：如果 AI 数据质量过差（routes/foods 全空或全是占位），回退到本地智能数据 ===
+            if (guide && !isGuideDataValid(guide, city)) {
+                console.warn(`⚠️ AI 数据质量不佳，回退本地数据：${city}`);
+                toast('AI 数据不完整，已切换为本地智能数据', 'info');
+                guide = normalizeGuideData(buildLocalGuide(city, prefs));
+            }
             state.currentGuide = guide;
             state.currentCity = city;
             addHistory(city);
@@ -718,6 +778,21 @@
             hideLoading();
             toast('生成失败：' + e.message, 'error');
         }
+    }
+
+    // 检测攻略数据质量：routes/foods 至少有一项有效内容
+    function isGuideDataValid(g, city) {
+        if (!g) return false;
+        // routes 必须至少有 1 条有效路线（含 → 分隔的景点）
+        const validRoutes = (g.routes || []).filter(r => {
+            const line = (typeof r === 'string') ? r : (r.routeLine || r.route || '');
+            return line && line.includes('→') && !/^(精选行程|主要景点|行程安排|今日行程)$/i.test(line.trim());
+        });
+        // foods 必须至少有 1 个有效美食（name 是正常字符串）
+        const validFoods = (g.foods || []).filter(f => f && f.name && typeof f.name === 'string'
+            && !f.name.startsWith('{') && !f.name.startsWith('[') && f.name.length >= 2);
+        // 至少 routes 或 foods 有一项有效
+        return validRoutes.length > 0 || validFoods.length > 0;
     }
 
     // ---------- 渲染结果 ----------
@@ -928,36 +1003,55 @@
         const g = state.currentGuide;
         if (!g) return;
         const style = state.posterStyle;
-        const tags = (g.tags || []).slice(0, 3);
-        const routes = (g.routes || []).slice(0, 4).map(r => r.routeLine || (typeof r.route === 'string' ? r.route : r.theme) || '').filter(Boolean);
-        const foods = (g.foods || []).slice(0, 3).filter(f => f.mustTry || f.name);
+        const tags = (g.tags || []).slice(0, 3).filter(t => t && typeof t === 'string');
+        // 清洗 routes：过滤空值和占位文本
+        const routes = (g.routes || []).slice(0, 4)
+            .map(r => {
+                const line = (typeof r === 'string') ? r : (r.routeLine || (typeof r.route === 'string' ? r.route : '') || r.theme || '');
+                return line.trim();
+            })
+            .filter(line => line && !/^(精选行程|主要景点|行程安排|今日行程)$/i.test(line));
+        // 清洗 foods：确保 name 是有效字符串
+        const foods = (g.foods || []).slice(0, 3)
+            .filter(f => f && f.name && typeof f.name === 'string' && !f.name.startsWith('{'))
+            .map(f => ({ name: String(f.name).trim() }))
+            .filter(f => f.name);
         const budget = g.budget?.total || g.overallBudget || '';
+        const city = g.city || '';
+        const subtitle = (g.subtitle || g.title || '').trim();
+
+        // 防御：如果关键数据全空，显示提示而非空白
+        if (!city && !routes.length && !foods.length) {
+            dom.poster.className = `poster style-${style}`;
+            dom.poster.innerHTML = `<div class="p-top"><div class="p-eyebrow">XING JI · TRAVEL POSTER</div><div class="p-city">攻略生成中</div></div>`;
+            return;
+        }
 
         dom.poster.className = `poster style-${style}`;
         dom.poster.innerHTML = `
             <div class="p-top">
                 <div class="p-eyebrow">XING JI · TRAVEL POSTER</div>
-                <div class="p-city">${g.city}</div>
-                <div class="p-sub">${g.subtitle || g.title || ''}</div>
+                <div class="p-city">${escapeHtml(city)}</div>
+                ${subtitle ? `<div class="p-sub">${escapeHtml(subtitle)}</div>` : ''}
             </div>
             <div class="p-mid">
                 ${routes.length ? `
                 <div class="p-section-label">行程路线</div>
                 <ul class="p-routes">
-                    ${routes.map(r => `<li>${r}</li>`).join('')}
+                    ${routes.map(r => `<li>${escapeHtml(r)}</li>`).join('')}
                 </ul>` : ''}
                 ${foods.length ? `
                 <div class="p-section-label" style="margin-top:14px;">必尝美食</div>
                 <div class="p-foods">
-                    ${foods.map(f => `<span class="p-food">${f.name}</span>`).join('')}
+                    ${foods.map(f => `<span class="p-food">${escapeHtml(f.name)}</span>`).join('')}
                 </div>` : ''}
                 ${budget ? `
                 <div class="p-section-label" style="margin-top:14px;">预估预算</div>
-                <div class="p-budget">${budget}</div>` : ''}
+                <div class="p-budget">${escapeHtml(budget)}</div>` : ''}
             </div>
             <div class="p-bot">
-                <div class="p-tags">${tags.map(t => `<span>${t}</span>`).join('')}</div>
-                <div class="p-days">${g.duration || '3天'}</div>
+                ${tags.length ? `<div class="p-tags">${tags.map(t => `<span>${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+                <div class="p-days">${escapeHtml(g.duration || '3天')}</div>
             </div>
         `;
     }

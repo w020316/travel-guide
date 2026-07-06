@@ -1,13 +1,83 @@
 # 行纪 · 中国城市旅行攻略生成器 — 项目交付报告
 
-> **版本**: v8.0（攻略链接功能 + AI 城市混淆检测增强 + 智能数据增强系统）
+> **版本**: v8.1（截图问题深度修复 + 数据清洗增强 + 质量检测自动回退）
 > **交付日期**: 2026-07-06
 > **项目仓库**: https://github.com/w020316/travel-guide
 > **线上部署**: https://travel-guide-w5cq.onrender.com
 
 ---
 
-## 〇、本轮（v8.0）新增功能：攻略链接
+## 〇、本轮（v8.1）截图问题深度修复
+
+### 0.1 截图暴露的严重问题
+
+| 问题 | 根因 | 修复方案 |
+|------|------|---------|
+| 美食 description 显示原始 JSON | AI 返回 `{"tags":["龙城"...]}` 被当作 description | `normalizeGuideData` 增加 JSON 检测：以 `{` 或 `[` 开头的 description 清空 |
+| 行程显示"精选行程"/"主要景点"占位 | AI 返回占位文本而非真实路线 | 新增 `PLACEHOLDER_PATTERNS` 正则过滤占位文本 |
+| 预算显示"待计算" | `budget.total` 为空时未兜底 | 三级兜底：overallBudget → medium → `calcBudget()` 城市等级计算 |
+| 海报重复渲染 | 数据清洗后 routes/foods 为空仍渲染空区块 | `renderPoster` 增加空数据检测，全空时显示"攻略生成中" |
+| AI 返回垃圾数据仍显示 | 缺少数据质量检测 | 新增 `isGuideDataValid()` 检测，routes/foods 全无效时回退本地智能数据 |
+
+### 0.2 数据清洗增强（normalizeGuideData）
+
+#### foods 清洗规则
+- description 以 `{` 或 `[` 开头 → 清空（JSON 垃圾数据）
+- description 包含 `"tags"` / `"name"` / `"routes"` → 清空（JSON 片段）
+- description 长度 > 100 字符 → 截断为 80 字符 + `...`
+- name 以 `{` 或 `[` 开头 → 移除整个 food 项
+- name 为空或非字符串 → 移除整个 food 项
+
+#### routes 清洗规则
+- routeLine 匹配 `^(精选行程|主要景点|行程安排|今日行程|Day\s*\d+\s*[:：]?\s*)$` → 过滤
+- routeLine 为空 → 过滤
+- spots 为空且 routeLine 不含 `→` → 过滤
+
+#### budget 兜底策略（三级）
+1. 优先使用 `overallBudget`（非"待估算"）
+2. 其次使用 `budget.medium` → `约 XXX元/人/天`
+3. 最后调用 `calcBudget(city, 3, 'medium')` 基于城市等级计算
+
+#### accommodations 清洗规则
+- 无 name 且无 area → 过滤
+- 有 area 无 name → `name = area + '住宿'`
+
+### 0.3 数据质量检测（isGuideDataValid）
+
+```javascript
+function isGuideDataValid(g, city) {
+    // routes 必须至少有 1 条有效路线（含 → 分隔的景点）
+    const validRoutes = (g.routes || []).filter(r => {
+        const line = (typeof r === 'string') ? r : (r.routeLine || r.route || '');
+        return line && line.includes('→') && !PLACEHOLDER_PATTERNS.test(line.trim());
+    });
+    // foods 必须至少有 1 个有效美食（name 是正常字符串，长度 ≥ 2）
+    const validFoods = (g.foods || []).filter(f => f && f.name && typeof f.name === 'string'
+        && !f.name.startsWith('{') && !f.name.startsWith('[') && f.name.length >= 2);
+    // 至少 routes 或 foods 有一项有效
+    return validRoutes.length > 0 || validFoods.length > 0;
+}
+```
+
+当 AI 数据质量检测不通过时，自动回退到本地智能数据并 toast 提示用户。
+
+### 0.4 测试验证
+
+模拟截图中的垃圾数据测试清洗逻辑：
+
+| 测试项 | 输入 | 输出 | 结果 |
+|--------|------|------|------|
+| routes 占位过滤 | `['精选行程', '主要景点', 'Day1: A→B→C']` | `['Day1: A→B→C']` | ✅ |
+| foods JSON description | `{"description":"{\"tags\":...}"}` | `{"description":""}` | ✅ |
+| foods JSON name | `{"name":"{\"name\":\"垃圾\"}"}` | 移除该项 | ✅ |
+| foods 正常 description | `{"description":"皮薄馅多"}` | 保留 | ✅ |
+| budget 兜底 | `overallBudget='待估算'`, `budget.medium='500'` | `total='约 500元/人/天'` | ✅ |
+| accommodations 空 area | `{"area":""}` | 过滤 | ✅ |
+| 数据质量检测 | routes 全占位 + foods 全垃圾 | `false` → 回退本地 | ✅ |
+
+---
+
+## 〇〇、v8.0 新增功能：攻略链接
 
 ### 0.1 三大链接功能
 
