@@ -1,0 +1,28 @@
+# Render 部署配置（免费 Node.js Web Service）
+# 文档: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: travel-guide
+    env: node
+    region: singapore  # 新加坡区域，国内访问相对较快
+    plan: free         # 免费方案（750 小时/月，15 分钟无访问会休眠）
+    buildCommand: npm install
+    startCommand: node server.js
+    rootDir: backend
+    # 注意：server.js 通过 path.join(__dirname, '..') 托管根目录的前端静态资源
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: AI_PROVIDER
+        value: agnes
+      - key: AGNES_MODEL
+        value: agnes-2.0-flash
+      # 以下敏感变量请在 Render 后台手动设置（Environment 标签页）
+      - key: AGNES_API_KEY
+        sync: false

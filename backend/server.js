@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
 require('dotenv').config();
 
 const storage = require('./services/storage');
@@ -41,6 +42,13 @@ startWeatherSync(10);
 // API路由
 app.use('/api', require('./routes/api'));
 
+// 托管前端静态资源（统一部署：后端同时提供 API 与前端页面）
+const frontendRoot = path.join(__dirname, '..');
+app.use(express.static(frontendRoot, {
+  index: 'index.html',
+  maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0
+}));
+
 // 健康检查接口
 app.get('/health', (req, res) => {
   res.json({
@@ -50,15 +58,20 @@ app.get('/health', (req, res) => {
     cityCount: storage.getCityCount ? storage.getCityCount() : 0,
     services: {
       storage: 'active',
-      ai: process.env.TONGYI_API_KEY || process.env.WENXIN_API_KEY || process.env.OPENAI_API_KEY ? 'configured' : 'local-mode',
+      ai: process.env.AGNES_API_KEY || process.env.TONGYI_API_KEY || process.env.WENXIN_API_KEY || process.env.OPENAI_API_KEY ? 'configured' : 'local-mode',
       auth: process.env.FIREBASE_API_KEY ? 'configured' : 'local-mode',
       social: socialService.getStats().mode
     }
   });
 });
 
-// 根路径
+// 根路径 - 返回前端首页（API 信息可通过 /health 与 /api 查看）
 app.get('/', (req, res) => {
+  res.sendFile(path.join(frontendRoot, 'index.html'));
+});
+
+// API 元信息接口
+app.get('/api-info', (req, res) => {
   res.json({
     name: '旅游攻略生成器 API',
     version: '2.0.0',
@@ -72,7 +85,7 @@ app.get('/', (req, res) => {
       trending: '/api/trending',
       health: '/health'
     },
-    documentation: 'https://github.com/your-repo/travel-guide'
+    documentation: 'https://github.com/w020316/travel-guide'
   });
 });
 
@@ -111,7 +124,7 @@ async function initializeServer() {
       console.log(`  端口: ${PORT}`);
       console.log(`  环境: ${process.env.NODE_ENV || 'development'}`);
       console.log(`  城市数据: ${storage.getCityCount ? storage.getCityCount() : 0} 个`);
-      console.log(`  AI服务: ${process.env.TONGYI_API_KEY || process.env.WENXIN_API_KEY || process.env.OPENAI_API_KEY ? '已配置' : '本地模式'}`);
+      console.log(`  AI服务: ${process.env.AGNES_API_KEY || process.env.TONGYI_API_KEY || process.env.WENXIN_API_KEY || process.env.OPENAI_API_KEY ? '已配置' : '本地模式'}`);
       console.log(`  认证服务: ${process.env.FIREBASE_API_KEY ? '已配置' : '本地模式'}`);
       console.log(`  社交服务: ${socialService.getStats().mode}`);
       console.log('───────────────────────────────────────');

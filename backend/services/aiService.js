@@ -3,6 +3,12 @@ const axios = require('axios');
 class AIService {
   constructor() {
     this.providers = {
+      agnes: {
+        name: 'Agnes AI',
+        baseUrl: 'https://apihub.agnes-ai.com/v1/chat/completions',
+        model: process.env.AGNES_MODEL || 'agnes-2.0-flash',
+        apiKey: process.env.AGNES_API_KEY || ''
+      },
       tongyi: {
         name: '通义千问',
         baseUrl: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
@@ -35,7 +41,7 @@ class AIService {
       }
     };
     
-    this.currentProvider = process.env.AI_PROVIDER || 'tongyi';
+    this.currentProvider = process.env.AI_PROVIDER || 'agnes';
     this.cache = new Map();
     this.cacheExpiry = 30 * 60 * 1000; // 30分钟缓存
   }
@@ -77,6 +83,9 @@ class AIService {
       let response;
 
       switch (this.currentProvider) {
+        case 'agnes':
+          response = await this.callAgnesAPI(prompt, provider);
+          break;
         case 'tongyi':
           response = await this.callTongyiAPI(prompt, provider);
           break;
@@ -133,231 +142,110 @@ class AIService {
   }
 
   buildPrompt(city, preferences) {
-    const days = preferences.days || 3;
-    const travelType = preferences.travelType || 'general';
-    const budgetRange = preferences.budgetRange || 'medium';
-    const companionType = preferences.companionType || 'solo';
-    const interests = preferences.interests || [];
-    const language = preferences.language || 'zh-CN';
+    const days = Math.min(Math.max(preferences.days || 3, 1), 7);
 
-    const travelTypeMap = {
-      general: '综合观光（景点+美食+文化）',
-      foodie: '美食探索（深度挖掘当地特色小吃和老字号）',
-      culture: '文化历史（博物馆、古迹、非遗体验）',
-      nature: '自然风光（山水、公园、生态景观）',
-      adventure: '户外探险（徒步、登山、极限运动）',
-      shopping: '购物休闲（商圈、特产、夜市）',
-      photography: '摄影采风（最佳拍摄点、光线建议、构图指导）'
-    };
+    // 精简版 prompt：要求 AI 输出与本地数据结构兼容的紧凑 JSON
+    // 避免过长 prompt 导致 AI 后端 502 或超时
+    const prompt = `请为【${city}】生成一份${days}日旅游攻略，以严格 JSON 格式输出（不要 markdown 标记、不要额外说明）。
 
-    const budgetMap = {
-      low: '经济实惠（人均<200元/天，主打性价比）',
-      medium: '中等预算（人均200-500元/天，品质与价格平衡）',
-      high: '高端品质（人均>500元/天，追求舒适体验）'
-    };
-
-    const companionMap = {
-      solo: '独自旅行（注重安全+自由度+社交机会）',
-      couple: '情侣/夫妻（浪漫氛围+二人世界+拍照打卡点）',
-      family: '家庭出游（带儿童：亲子互动+教育意义+便利设施）',
-      friends: '朋友结伴（热闹有趣+集体活动+平摊费用）',
-      elderly: '陪伴老人（节奏缓慢+无障碍设施+舒适交通）'
-    };
-
-    let prompt = `你是一位拥有15年经验的资深旅游规划师，曾为超过10万名游客定制行程。请为【${city}】制定一份超详细的${days}日旅游攻略。
-
-## 用户画像分析：
-- **旅行类型**：${travelTypeMap[travelType] || '综合观光'}
-- **预算范围**：${budgetMap[budgetRange] || '中等预算'}
-- **同行人员**：${companionMap[companionType] || '独自旅行'}
-- **兴趣爱好**：${interests.length > 0 ? interests.join('、') : '广泛涉猎'}
-- **语言偏好**：${language === 'en' ? 'English' : language === 'ja' ? '日本語' : language === 'ko' ? '한국어' : '中文'}
-
-## 攻略要求（必须严格遵守）：
-
-### 📍 每日行程规划（Day 1-${days}）
-每天包含3-5个景点，每个景点必须提供：
-- **景点名称**（中文名+英文名）
-- **推荐理由**（50字以内，突出独特性）
-- **建议游玩时长**（精确到小时）
-- **门票参考价**（成人票/学生票/优惠票）
-- **游览贴士**（最佳时间/避坑指南/拍照角度）
-- **交通方式**（如何到达+预计耗时）
-
-### 🍜 美食推荐（5-8道）
-每道菜必须包含：
-- **菜品名称**（本地叫法）
-- **口味描述**（口感+味道层次）
-- **参考价格**（具体到元）
-- **必吃指数**（⭐⭐⭐⭐⭐ 五星制）
-- **推荐店铺**（2-3家老字号或网红店+地址）
-- **用餐建议**（最佳时段/排队技巧）
-
-### 🏨 住宿推荐（3-5家）
-每家酒店必须包含：
-- **酒店名称**
-- **所在区域**（标注距离主要景点的距离）
-- **价格区间**（淡季/旺季价格）
-- **核心优势**（3个卖点）
-- **适合人群**（家庭/情侣/商务/背包客）
-- **预订渠道**（官网/平台优惠码）
-
-### 🚗 交通指南
-- **如何到达${city}**（飞机/高铁/自驾的详细方案）
-- **市内交通**（地铁线路图+公交+出租车起步价）
-- **景点间交通**（最优路线+费用预估）
-- **交通卡/APP推荐**
-
-### 💡 实用贴士（分类整理）
-**行前准备清单**（10项以上）：
-- 必带物品（根据季节和当地气候）
-- 证件要求
-- APP下载建议
-
-**避坑指南**（5条以上）：
-- 当地常见骗局
-- 旅游陷阱预警
-- 省钱妙招
-
-**最佳游览时间**：
-- 一年四季优劣势对比
-- 每月特色活动/节庆
-- 人流高峰期预警
-
-### 💰 费用预算明细
-必须提供：
-- **总预算**（${days}天总计）
-- **分项明细**：
-  - 交通费（往返+市内）：XX元
-  - 住宿费（${days}晚）：XX元  
-  - 餐饮费（${days}天）：XX元
-  - 门票费（所有景点合计）：XX元
-  - 其他杂费（购物/应急）：XX元
-- **省钱攻略**（3-5条实用建议）
-
-### 📱 实用信息
-- **紧急电话**（报警/医疗/旅游投诉）
-- **大使馆/领事馆信息**（如适用）
-- **当地习俗禁忌**（避免冒犯当地人）
-- **网络通讯**（SIM卡/WiFi方案）
-- **货币支付**（支付宝/微信/现金使用情况）
-
-## 输出格式要求：
-请以严格的JSON格式输出，确保所有字段完整：
-
-\`\`\`json
+JSON 结构如下（字段名保持一致，值用中文）：
 {
-  "city": "${city}",
-  "title": "吸引人的标题（体现城市特色）",
-  "subtitle": "副标题（一句话概括行程亮点）",
-  "season": "最佳旅游季节及原因",
-  "duration": "${days}天",
-  "overallBudget": "总预算范围",
-  "difficulty": "行程强度（轻松/适中/较累）",
+  "tags": ["标签1", "标签2", "标签3"],
+  "season": "最佳旅游季节",
+  "atmosphere": "城市氛围一句话描述",
+  "days": "${days}-${days + 1}天",
   "routes": [
-    {
-      "day": 1,
-      "theme": "今日主题",
-      "highlights": ["亮点1", "亮点2"],
-      "spots": [
-        {
-          "name": "景点名",
-          "nameEn": "English Name",
-          "reason": "推荐理由（50字内）",
-          "duration": "X小时",
-          "ticket": {"adult": "XX元", "student": "XX元", "free": "是否免费"},
-          "tips": ["贴士1", "贴士2"],
-          "transportation": "如何到达",
-          "bestTimeToVisit": "最佳游览时间",
-          "photoSpots": ["拍照点1", "拍照点2"],
-          "rating": "⭐⭐⭐⭐⭐"
-        }
-      ],
-      "lunch": {"restaurant": "餐厅名", "dishes": ["菜1", "菜2"], "budget": "XX元"},
-      "dinner": {"restaurant": "餐厅名", "dishes": ["菜1", "菜2"], "budget": "XX元"}
-    }
+    "Day1: 景点A → 景点B → 景点C",
+    "Day2: 景点D → 景点E → 景点F"
   ],
   "foods": [
-    {
-      "name": "菜名",
-      "description": "详细描述（味道+历史+特色）",
-      "price": "XX元",
-      "mustTry": true,
-      "rating": 5,
-      "whereToEat": [
-        {"name": "店名", "address": "地址", "priceRange": "XX-XX元", "specialty": "招牌菜", "hours": "营业时间"}
-      ],
-      "bestTime": "品尝时机"
-    }
+    {"name": "美食名", "desc": "简短描述", "price": "XX-XX元", "mustTry": true}
   ],
   "accommodations": [
-    {
-      "name": "酒店名",
-      "area": "区域",
-      "distance": "距市中心/景区距离",
-      "priceRange": {"lowSeason": "XX元", "peakSeason": "XX元"},
-      "features": ["特色1", "特色2", "特色3"],
-      "suitableFor": ["人群"],
-      "bookingTips": "预订建议",
-      "rating": "⭐⭐⭐⭐⭐"
-    }
+    {"area": "区域名", "pros": "优点", "cons": "缺点"}
   ],
-  "transportation": {
-    "arrival": {
-      "byAir": {"details": "...", "cost": "XX元", "time": "X小时"},
-      "byTrain": {"details": "...", "cost": "XX元", "time": "X小时"},
-      "byCar": {"details": "...", "cost": "XX元", "time": "X小时"}
-    },
-    "localTransport": {
-      "metro": "地铁线路...",
-      "bus": "公交...",
-      "taxi": "出租车...",
-      "recommendedApps": ["APP1", "APP2"]
-    },
-    "interCity": "景点间交通方案"
-  },
+  "transport": [
+    {"type": "内部交通", "info": "简述"},
+    {"type": "外部交通", "info": "简述"}
+  ],
+  "budget": {"low": "XX", "medium": "XX", "high": "XX+"},
   "tips": {
-    "prepare": ["准备事项1", "准备事项2"],
-    "avoid": ["避坑1", "避坑2"],
-    "bestTime": ["时间建议1", "时间建议2"],
-    "emergencyContacts": {"police": "110", "medical": "120", "tourism": "12301"}
+    "prepare": ["必备物品1", "必备物品2", "必备物品3", "必备物品4"],
+    "avoid": ["避坑提示1", "避坑提示2", "避坑提示3"]
   },
-  "budget": {
-    "total": "总金额",
-    "breakdown": {
-      "transportation": "交通费",
-      "accommodation": "住宿费",
-      "food": "餐饮费",
-      "tickets": "门票费",
-      "shopping": "购物费",
-      "other": "其他费用"
-    },
-    "moneySavingTips": ["省钱技巧1", "省钱技巧2"]
+  "poster": {
+    "title": "海报主标题",
+    "subtitle": "海报副标题",
+    "elements": ["元素1", "元素2", "元素3", "元素4"],
+    "layout": "布局描述",
+    "colors": ["#hex1", "#hex2", "#hex3", "#hex4", "#hex5"]
   },
-  "practicalInfo": {
-    "customs": ["习俗1", "习俗2"],
-    "network": "网络方案",
-    "payment": "支付方式",
-    "language": "语言沟通",
-    "weather": "天气特点"
-  },
-  "source": "ai-generated",
-  "generatedAt": "ISO时间戳",
-  "provider": "AI提供商名称"
+  "itineraries": {
+    "1天": {
+      "routes": [
+        {"time": "09:00-12:00", "morning": "行程"},
+        {"time": "12:00-14:00", "afternoon": "午餐"},
+        {"time": "14:00-17:00", "afternoon2": "行程"},
+        {"time": "18:00-21:00", "evening": "晚餐/夜景"}
+      ],
+      "tips": ["提示1", "提示2"],
+      "budget": "XX-XX元"
+    }
+  }
 }
-\`\`\`
 
-⚠️ 重要提示：
-1. 所有价格必须是2024年最新实际价格（可根据经验估算合理范围）
-2. 餐厅和酒店名称必须是真实存在的（如果不确定，标注"推荐类型"即可）
-3. 提供的信息要具体、可操作，不要空洞的建议
-4. 根据用户偏好（${travelType}/${budgetRange}/${companionType}）量身定制内容
-5. 如果是美食之旅，增加美食占比；如果是文化游，增加博物馆和历史遗迹`;
+要求：
+1. routes 数组提供 ${days} 条路线，每条一行
+2. foods 提供 4-6 道当地特色美食
+3. accommodations 提供 2-3 个区域建议
+4. transport 提供内部+外部交通
+5. budget 给出低/中/高三档人均预算（元/天）
+6. tips.prepare 至少 4 项，avoid 至少 3 项
+7. poster.colors 提供 5 个十六进制颜色
+8. itineraries 至少提供 "1天" 的行程，如有空间可提供 "2天1晚"
+9. 所有内容必须真实合理，符合 ${city} 的实际情况`;
 
     return prompt;
   }
 
   // ==================== 各AI提供商调用方法 ====================
+
+  // Agnes AI (OpenAI 兼容接口，支持文本/多模态，免费额度)
+  async callAgnesAPI(prompt, provider) {
+    console.log('📡 调用 Agnes AI API...');
+
+    const response = await axios.post(provider.baseUrl, {
+      model: provider.model,
+      messages: [
+        {
+          role: 'system',
+          content: '你是一位拥有15年经验的资深旅游规划师，擅长根据用户需求制定个性化旅游攻略。你的攻略详细、实用、可操作性强。请始终以标准的JSON格式输出，不要添加任何markdown标记或额外说明。'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      top_p: 0.9,
+      max_tokens: 4000
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${provider.apiKey}`,
+        'Accept': 'application/json',
+        'Accept-Encoding': 'identity',
+        'User-Agent': 'travel-guide/2.0'
+      },
+      timeout: 120000,
+      decompress: false,
+      // 不使用代理
+      proxy: false
+    });
+
+    console.log('✅ Agnes AI 响应成功');
+    return response.data.choices[0].message.content;
+  }
 
   async callTongyiAPI(prompt, provider) {
     console.log('📡 调用通义千问API...');
@@ -520,50 +408,58 @@ class AIService {
   parseAIResponse(responseText, city, preferences) {
     try {
       console.log('🔍 开始解析AI响应...');
-      
+
       let jsonStr = responseText;
-      
+
       // 移除可能的markdown代码块标记
       jsonStr = jsonStr.replace(/```json\n?/g, '').replace(/```\n?/g, '');
       jsonStr = jsonStr.replace(/```\n?/g, '');
-      
+
       // 提取JSON对象
       const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         jsonStr = jsonMatch[0];
       }
-      
+
       const data = JSON.parse(jsonStr);
-      
+
       console.log('✅ JSON解析成功');
-      
-      // 确保必要字段存在并补充默认值
-      return {
+
+      // 兼容 AI 返回的精简格式与完整格式
+      // AI 精简格式: tags/season/atmosphere/days/routes/foods/accommodations/transport/budget/tips/poster/itineraries
+      // 完整格式:   city/title/subtitle/season/duration/routes/foods/accommodations/transportation/tips/budget
+      const normalized = {
         city: data.city || city,
-        title: data.title || `${city}·深度定制之旅`,
-        subtitle: data.subtitle || `发现${city}的独特魅力`,
+        title: data.title || data.poster?.title || `${city}·AI定制之旅`,
+        subtitle: data.subtitle || data.poster?.subtitle || data.atmosphere || `发现${city}的独特魅力`,
         season: data.season || '四季皆宜',
-        duration: data.duration || `${preferences.days || 3}天`,
-        overallBudget: data.overallBudget || '待估算',
+        atmosphere: data.atmosphere || '',
+        duration: data.duration || data.days || `${preferences.days || 3}天`,
+        days: data.days || `${preferences.days || 3}天`,
+        overallBudget: data.overallBudget || (data.budget ? `低${data.budget.low}/中${data.budget.medium}/高${data.budget.high}元` : '待估算'),
         difficulty: data.difficulty || '适中',
         routes: data.routes || [],
         foods: data.foods || [],
         accommodations: data.accommodations || [],
-        transportation: data.transportation || {},
-        tips: data.tips || {},
+        transport: data.transport || data.transportation || [],
+        transportation: data.transportation || data.transport || {},
         budget: data.budget || {},
+        tips: data.tips || {},
         practicalInfo: data.practicalInfo || {},
-        tags: this.extractTags(data),
-        poster: this.generatePosterConfig(data),
+        itineraries: data.itineraries || {},
+        poster: data.poster || this.generatePosterConfig(data),
+        tags: (Array.isArray(data.tags) && data.tags.length > 0) ? data.tags : this.extractTags(data),
         generatedAt: new Date().toISOString(),
         source: 'ai',
         provider: this.providers[this.currentProvider]?.name || 'unknown'
       };
-      
+
+      return normalized;
+
     } catch (error) {
       console.error('❌ JSON解析失败:', error.message);
       console.error('原始响应长度:', responseText.length);
-      
+
       // 如果JSON解析失败，尝试从文本中提取关键信息
       return this.extractFromText(responseText, city, preferences);
     }
@@ -649,13 +545,14 @@ class AIService {
 
   generatePosterConfig(data) {
     const styles = ['fresh', 'vintage', 'minimal'];
-    const styleIndex = Math.abs(this.hashCode(data.city)) % styles.length;
-    
+    const city = data.city || data.title || 'travel';
+    const styleIndex = Math.abs(this.hashCode(city)) % styles.length;
+
     return {
       style: styles[styleIndex],
-      title: data.title || '',
-      subtitle: data.subtitle || '',
-      colorScheme: this.getColorScheme(data.city)
+      title: data.title || data.poster?.title || '',
+      subtitle: data.subtitle || data.poster?.subtitle || '',
+      colorScheme: this.getColorScheme(city)
     };
   }
 

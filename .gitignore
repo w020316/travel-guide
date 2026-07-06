@@ -27,3 +27,14 @@ app_simple.js
 
 # Documentation (if not needed in repo)
 系统提示和使用指南.md
+
+# 临时测试文件
+.tmp-*
+*.tmp
+
+# npm 缓存（项目内）
+.npm-cache/
+backend/.npm-cache/
+
+# TRAE 配置
+.trae/
