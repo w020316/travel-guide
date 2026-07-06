@@ -203,7 +203,9 @@ JSON 结构如下（字段名保持一致，值用中文）：
 6. tips.prepare 至少 4 项，avoid 至少 3 项
 7. poster.colors 提供 5 个十六进制颜色
 8. itineraries 至少提供 "1天" 的行程，如有空间可提供 "2天1晚"
-9. 所有内容必须真实合理，符合 ${city} 的实际情况`;
+9. 所有内容必须真实合理，符合 ${city} 的实际情况
+10. 重要：所有内容必须严格围绕【${city}】生成，transport 中不得出现其他城市的机场/高铁站，foods 必须是 ${city} 的本地美食
+11. 如果不确定 ${city} 的信息，请基于该城市的省份和地理特征合理推测，但绝不能返回其他城市的数据`;
 
     return prompt;
   }
@@ -429,7 +431,7 @@ JSON 结构如下（字段名保持一致，值用中文）：
       // AI 精简格式: tags/season/atmosphere/days/routes/foods/accommodations/transport/budget/tips/poster/itineraries
       // 完整格式:   city/title/subtitle/season/duration/routes/foods/accommodations/transportation/tips/budget
       const normalized = {
-        city: data.city || city,
+        city: city, // 强制使用请求的城市名，不信任 AI 返回的 city 字段（防止 AI 混淆城市）
         title: data.title || data.poster?.title || `${city}·AI定制之旅`,
         subtitle: data.subtitle || data.poster?.subtitle || data.atmosphere || `发现${city}的独特魅力`,
         season: data.season || '四季皆宜',
