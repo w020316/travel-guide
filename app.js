@@ -549,10 +549,12 @@
         const weather = genWeather(city, season); // v9.0 天气
 
         if (!base) {
+            // v10.2: 城市不在数据库中 — 标记为"通用模板"，提示用户数据非精确
             return {
                 city, title: `${city}·发现之旅`, subtitle: `探索${province || ''}${city}的独特魅力`,
                 season, duration: `${days}天`, overallBudget: budget.total,
                 difficulty: '适中', source: 'local-mock',
+                isUnknownCity: true, // v10.2: 标记未知城市
                 routes: buildMockRoutes(city, days),
                 foods: [{ name: `${city}特色菜`, description: `${province || '当地'}招牌美食，体现地方风味`, price: '38-68元', mustTry: true, whereToEat: [{ name: '当地老字号', address: '市中心' }] }],
                 accommodations, tips, budget, transportation, weather,
@@ -923,14 +925,27 @@
             .sort((a, b) => b.score - a.score)
             .slice(0, 8);
 
-        if (!matches.length) { dom.suggestions.hidden = true; return; }
-        dom.suggestions.innerHTML = matches.map(m => `
-            <div class="suggestion-item" data-city="${m.name}">
-                <div>
-                    <div class="s-name">${m.name}</div>
-                    <div class="s-title">${m.d.title || ''}</div>
+        if (!matches.length) {
+            // v10.2: 无结果时给出友好提示
+            dom.suggestions.innerHTML = `
+                <div class="suggestion-empty">
+                    <div class="se-icon">?</div>
+                    <div class="se-text">
+                        <div class="se-title">未找到匹配「${escapeHtml(q)}」的城市</div>
+                        <div class="se-hint">试试输入：北京、成都、厦门、丽江</div>
+                    </div>
                 </div>
-                <div class="s-tags">${(m.d.tags || []).slice(0, 2).join(' · ')}</div>
+            `;
+            dom.suggestions.hidden = false;
+            return;
+        }
+        dom.suggestions.innerHTML = matches.map(m => `
+            <div class="suggestion-item" data-city="${escapeHtml(m.name)}">
+                <div>
+                    <div class="s-name">${escapeHtml(m.name)}</div>
+                    <div class="s-title">${escapeHtml(m.d.title || '')}</div>
+                </div>
+                <div class="s-tags">${(m.d.tags || []).slice(0, 2).map(t => escapeHtml(t)).join(' · ')}</div>
             </div>
         `).join('');
         dom.suggestions.hidden = false;
@@ -1410,6 +1425,19 @@
                 </div>
             </div>
         `);
+
+        // v10.2: 未知城市提示 — 城市不在数据库中时显示友好提醒
+        if (g.isUnknownCity) {
+            sections.push(`
+                <div class="gc-notice gc-notice-warn">
+                    <div class="gn-icon">!</div>
+                    <div class="gn-content">
+                        <div class="gn-title">「${escapeHtml(g.city)}」暂无精确数据</div>
+                        <div class="gn-desc">当前展示的是通用旅行模板。如需精确景点/美食推荐，请尝试搜索热门城市（如北京、成都、厦门、丽江）或确认城市名拼写。</div>
+                    </div>
+                </div>
+            `);
+        }
 
         // v9.0: 天气情况区块（在行程之前展示）
         if (g.weather) {
@@ -2080,15 +2108,22 @@
     let loadingTimer;
     function showLoading(city) {
         dom.loadingCity.textContent = city;
-        dom.loadingSub.textContent = 'AI 正在分析景点、美食与预算…';
+        // v10.2: 根据模式显示不同文案
+        const isLocal = API.mode === 'local';
+        dom.loadingSub.textContent = isLocal ? '正在从本地数据库检索景点…' : 'AI 正在分析景点、美食与预算…';
         dom.loadingBar.style.width = '0%';
         dom.loading.hidden = false;
         let p = 0;
         loadingTimer = setInterval(() => {
             p = Math.min(p + Math.random() * 14, 92);
             dom.loadingBar.style.width = p + '%';
-            if (p > 30) dom.loadingSub.textContent = '正在匹配你的旅行偏好…';
-            if (p > 65) dom.loadingSub.textContent = '排版生成专属海报…';
+            if (isLocal) {
+                if (p > 30) dom.loadingSub.textContent = '正在匹配你的旅行偏好…';
+                if (p > 65) dom.loadingSub.textContent = '排版生成专属海报…';
+            } else {
+                if (p > 30) dom.loadingSub.textContent = '正在匹配你的旅行偏好…';
+                if (p > 65) dom.loadingSub.textContent = '排版生成专属海报…';
+            }
         }, 420);
     }
     function hideLoading() {

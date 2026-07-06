@@ -1156,3 +1156,56 @@ input[type="date"].input-ghost:focus {
     padding: 3px 10px; border-radius: 4px;
     font-weight: 600; font-size: 12px;
 }
+
+/* =========================================================
+   v10.2 用户体验优化样式
+   ========================================================= */
+
+/* 搜索建议 - 空结果提示 */
+.suggestion-empty {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 20px;
+    background: var(--paper-2);
+    border-radius: var(--radius-sm);
+    cursor: default;
+}
+.suggestion-empty .se-icon {
+    flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+    background: var(--line-2); color: var(--paper);
+    display: grid; place-items: center;
+    font-family: var(--serif); font-weight: 700; font-size: 18px;
+}
+.suggestion-empty .se-text { flex: 1; min-width: 0; }
+.suggestion-empty .se-title {
+    font-family: var(--serif); font-size: 14px; font-weight: 600;
+    color: var(--ink); margin-bottom: 4px;
+}
+.suggestion-empty .se-hint {
+    font-size: 12px; color: var(--muted); letter-spacing: .02em;
+}
+
+/* 通用通知横幅（未知城市/警告/信息） */
+.gc-notice {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 18px 22px; margin-bottom: 20px;
+    border-radius: var(--radius);
+    animation: slideUp .3s ease;
+}
+.gc-notice-warn {
+    background: linear-gradient(180deg, #FFF8E7 0%, var(--surface) 100%);
+    border: 1px solid #E8C875;
+}
+.gc-notice .gn-icon {
+    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+    background: #E8C875; color: #5C4400;
+    display: grid; place-items: center;
+    font-family: var(--serif); font-weight: 900; font-size: 18px;
+}
+.gc-notice .gn-content { flex: 1; min-width: 0; }
+.gc-notice .gn-title {
+    font-family: var(--serif); font-size: 15px; font-weight: 700;
+    color: #5C4400; margin-bottom: 6px;
+}
+.gc-notice .gn-desc {
+    font-size: 13px; color: var(--ink-2); line-height: 1.6;
+}

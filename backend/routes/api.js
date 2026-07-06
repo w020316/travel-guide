@@ -20,29 +20,50 @@ router.use(rateLimiter(200, 60000));
 router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
   try {
     const { city, preferences } = req.body;
-    
+
     if (!city || !city.trim()) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '请提供城市名称' 
+      return res.status(400).json({
+        success: false,
+        error: '请提供城市名称'
       });
+    }
+
+    const cityName = city.trim();
+
+    // v10.2: 输入安全校验 — 拒绝 HTML/JS 注入
+    const validPattern = /^[\u4e00-\u9fa5a-zA-Z0-9·\-\s]{1,30}$/;
+    if (!validPattern.test(cityName)) {
+      return res.status(400).json({
+        success: false,
+        error: '城市名称包含非法字符或过长（最多 30 字符）'
+      });
+    }
+
+    // v10.2: 天数边界限制（1-7 天）
+    if (preferences && preferences.days !== undefined) {
+      const d = Number(preferences.days);
+      if (!Number.isFinite(d) || d < 1 || d > 7) {
+        preferences.days = 3;
+      } else {
+        preferences.days = Math.floor(d);
+      }
     }
 
     // 记录浏览统计
     if (req.user) {
-      await socialService.recordView('cities', city.trim(), req.user.uid);
+      await socialService.recordView('cities', cityName, req.user.uid);
     }
 
     // 调用AI服务生成攻略
-    const guideData = await aiService.generateTravelGuide(city.trim(), preferences || {});
-    
+    const guideData = await aiService.generateTravelGuide(cityName, preferences || {});
+
     // 合并实时数据
-    const weather = getCityWeather(city.trim());
+    const weather = getCityWeather(cityName);
     if (weather) {
       guideData.currentWeather = weather;
     }
-    
-    guideData.seasonalTags = getSeasonalTags(city.trim());
+
+    guideData.seasonalTags = getSeasonalTags(cityName);
     guideData.lastUpdated = new Date().toISOString();
 
     res.json({
@@ -55,8 +76,8 @@ router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
 
   } catch (error) {
     console.error('AI生成攻略失败:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: '生成攻略失败，请稍后重试',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });

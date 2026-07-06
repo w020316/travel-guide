@@ -629,9 +629,9 @@ JSON 结构如下（字段名保持一致，值用中文）：
   // 本地数据生成（当AI不可用时的回退方案）
   generateLocalGuide(city, preferences) {
     console.log('📦 使用本地数据生成攻略');
-    
+
     const storage = require('./storage');
-    
+
     // 尝试从本地数据库获取基础数据
     let baseData = null;
     try {
@@ -645,16 +645,22 @@ JSON 结构如下（字段名保持一致，值用中文）：
       return this.adjustLocalGuide(baseData, preferences);
     }
 
-    // 完全生成模拟数据
-    return this.generateMockGuide(city, preferences);
+    // v10.2: 完全生成模拟数据，标记为未知城市
+    const guide = this.generateMockGuide(city, preferences);
+    guide.isUnknownCity = true;
+    return guide;
   }
 
   adjustLocalGuide(baseData, preferences) {
     const adjusted = JSON.parse(JSON.stringify(baseData));
-    
+
+    // v10.2: 天数边界限制
+    const rawDays = Number(preferences.days) || 3;
+    const days = Math.min(Math.max(rawDays, 1), 7);
+
     // 根据天数调整行程
-    if (preferences.days && adjusted.routes) {
-      adjusted.routes = adjusted.routes.slice(0, preferences.days);
+    if (adjusted.routes) {
+      adjusted.routes = adjusted.routes.slice(0, days);
     }
     
     // 根据旅行类型调整内容权重
@@ -691,7 +697,9 @@ JSON 结构如下（字段名保持一致，值用中文）：
   }
 
   generateMockGuide(city, preferences) {
-    const days = preferences.days || 3;
+    // v10.2: 天数边界限制（与前端一致）
+    const rawDays = Number(preferences.days) || 3;
+    const days = Math.min(Math.max(rawDays, 1), 7);
     const routes = [];
     
     for (let i = 1; i <= days; i++) {
