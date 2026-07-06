@@ -117,6 +117,22 @@ router.get('/ai/cache', authService.requireAdmin, async (req, res) => {
   }
 });
 
+// v10.0: AI 修图建议（基于城市+季节+标签提供专业修图建议）
+router.post('/ai/edit-photo', async (req, res) => {
+  try {
+    const { city, photoName, guideContext } = req.body;
+    if (!city) {
+      return res.status(400).json({ success: false, error: '请提供城市名称' });
+    }
+    // 调用 AI 服务获取修图建议
+    const advice = await aiService.getPhotoEditAdvice(city, guideContext || {});
+    res.json({ success: true, advice });
+  } catch (error) {
+    console.error('AI 修图建议失败:', error);
+    res.status(500).json({ success: false, error: '获取修图建议失败' });
+  }
+});
+
 // 清除AI缓存
 router.delete('/ai/cache', authService.requireAdmin, async (req, res) => {
   try {

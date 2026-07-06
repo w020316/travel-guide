@@ -976,6 +976,294 @@
         return `<a class="ext-link" href="${url}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(label || '查看详情')}">${escapeHtml(label || '详情')}<svg class="ext-link-icon" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M6 3h7v7M13 3L6 10M11 13H4V6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>`;
     }
 
+    // v10.0: 票务比价链接生成器
+    // 国内票务平台均需企业认证，无公开免费 API，采用搜索页链接方案让用户自行比价
+    // 平台：12306（火车票/高铁）、携程（机票/火车票）、飞猪（机票）、去哪儿（机票/火车票）
+    function ticketCompareLinks(origin, destination) {
+        if (!destination) return [];
+        const orig = origin || '';
+        const links = [];
+        // 12306 火车票/高铁（官方，无手续费）
+        links.push({
+            platform: '12306',
+            type: '火车票/高铁',
+            url: orig
+                ? `https://www.12306.cn/index/otn/leftTicketDto?leftTicketDTO.train_date=${formatDate()}&leftTicketDTO.from_station=${encodeURIComponent(orig)}&leftTicketDTO.to_station=${encodeURIComponent(destination)}&purpose_codes=ADULT`
+                : `https://www.12306.cn/index/`,
+            badge: '官方',
+            desc: '铁路官方渠道，无手续费'
+        });
+        // 携程火车票
+        links.push({
+            platform: '携程',
+            type: '火车票',
+            url: orig
+                ? `https://trains.ctrip.com/webapp/train/list?ticketType=0&dStation=${encodeURIComponent(orig)}&aStation=${encodeURIComponent(destination)}&dDate=${formatDate()}`
+                : `https://trains.ctrip.com/`,
+            badge: '比价',
+            desc: '可对比多个车次，支持抢票'
+        });
+        // 携程机票
+        links.push({
+            platform: '携程',
+            type: '机票',
+            url: orig
+                ? `https://flights.ctrip.com/online/list/oneway-${encodeURIComponent(orig)}-${encodeURIComponent(destination)}?depdate=${formatDate()}`
+                : `https://flights.ctrip.com/`,
+            badge: '比价',
+            desc: '多航司对比，含特价机票'
+        });
+        // 飞猪机票（阿里系）
+        links.push({
+            platform: '飞猪',
+            type: '机票',
+            url: orig
+                ? `https://sjipiao.fliggy.com/flight-search/flight-search?depCity=${encodeURIComponent(orig)}&arrCity=${encodeURIComponent(destination)}&depDate=${formatDate()}`
+                : `https://www.fliggy.com/`,
+            badge: '比价',
+            desc: '阿里旗下，含会员优惠'
+        });
+        // 去哪儿机票
+        links.push({
+            platform: '去哪儿',
+            type: '机票',
+            url: orig
+                ? `https://flight.qunar.com/site/oneway_list.htm?fromCity=${encodeURIComponent(orig)}&toCity=${encodeURIComponent(destination)}&fromDate=${formatDate()}`
+                : `https://flight.qunar.com/`,
+            badge: '比价',
+            desc: '低价机票搜索，覆盖全航司'
+        });
+        return links;
+    }
+
+    // v10.0: 酒店/民宿比价链接生成器
+    // 平台：携程、去哪儿、美团、Airbnb、小猪短租
+    function hotelCompareLinks(city) {
+        if (!city) return [];
+        const links = [];
+        // 携程酒店
+        links.push({
+            platform: '携程',
+            type: '酒店',
+            url: `https://hotels.ctrip.com/hotels/list?cityName=${encodeURIComponent(city)}`,
+            badge: '综合',
+            desc: '覆盖最全，含用户点评'
+        });
+        // 去哪儿酒店
+        links.push({
+            platform: '去哪儿',
+            type: '酒店',
+            url: `https://hotel.qunar.com/cn/list.php?cityName=${encodeURIComponent(city)}`,
+            badge: '比价',
+            desc: '多平台比价，找最低价'
+        });
+        // 美团酒店
+        links.push({
+            platform: '美团',
+            type: '酒店',
+            url: `https://hotel.meituan.com/search/?cityName=${encodeURIComponent(city)}`,
+            badge: '本地',
+            desc: '本地生活，含钟点房/日租房'
+        });
+        // Airbnb 民宿
+        links.push({
+            platform: 'Airbnb',
+            type: '民宿',
+            url: `https://www.airbnb.cn/s/${encodeURIComponent(city)}/homes`,
+            badge: '民宿',
+            desc: '国际民宿，特色房源'
+        });
+        // 小猪短租
+        links.push({
+            platform: '小猪短租',
+            type: '民宿',
+            url: `https://www.xiaozhu.com/${encodeURIComponent(city)}-duanzufang/`,
+            badge: '民宿',
+            desc: '国内短租，整租/合租'
+        });
+        // 途家民宿
+        links.push({
+            platform: '途家',
+            type: '民宿',
+            url: `https://www.tujia.com/${encodeURIComponent(city)}`,
+            badge: '民宿',
+            desc: '公寓民宿，适合家庭出游'
+        });
+        return links;
+    }
+
+    // v10.0: 需要预约的热门景点数据库
+    // 包含全国主要城市需要提前预约/购票的景点
+    const RESERVATION_REQUIRED_SPOTS = {
+        '北京': [
+            { name: '故宫', url: 'https://gugong.228.com.cn/', advance: '提前7天', note: '每日限8万人，必须预约' },
+            { name: '国家博物馆', url: 'https://www.chnmuseum.cn/zs/', advance: '提前7天', note: '免费但必须预约' },
+            { name: '毛主席纪念堂', url: 'http://cpc.people.com.cn/GB/434423/index.html', advance: '提前1天', note: '免费，需预约' },
+            { name: '八达岭长城', url: 'https://www.mutianyu.com.cn/', advance: '提前3天', note: '建议预约，可现场购票' },
+            { name: '颐和园', url: 'https://www.summerpalace-china.com/', advance: '提前1天', note: '旺季建议预约' },
+            { name: '天坛公园', url: 'https://www.tiantanpark.com/', advance: '提前1天', note: '旺季建议预约' }
+        ],
+        '上海': [
+            { name: '上海迪士尼', url: 'https://www.shanghaidisneyresort.com/', advance: '提前60天', note: '必须预约，每日限流' },
+            { name: '上海博物馆', url: 'https://www.shanghaimuseum.net/', advance: '提前7天', note: '免费但需预约' },
+            { name: '上海科技馆', url: 'https://www.sstm.org.cn/', advance: '提前3天', note: '需购票预约' },
+            { name: '东方明珠', url: 'https://www.orientalpearltower.com/', advance: '提前1天', note: '建议预约' }
+        ],
+        '西安': [
+            { name: '兵马俑', url: 'https://www.bmy.com.cn/', advance: '提前7天', note: '必须预约购票' },
+            { name: '陕西历史博物馆', url: 'https://www.sxhm.com/', advance: '提前14天', note: '免费但极难预约' },
+            { name: '大唐不夜城', url: '', advance: '无需预约', note: '开放街区，免费游览' }
+        ],
+        '成都': [
+            { name: '大熊猫繁育研究基地', url: 'https://www.panda.org.cn/', advance: '提前3天', note: '必须预约，每日限流' },
+            { name: '三星堆博物馆', url: 'https://www.sxd.cn/', advance: '提前5天', note: '必须预约' },
+            { name: '武侯祠', url: 'https://www.wuhouci.net.cn/', advance: '提前1天', note: '建议预约' }
+        ],
+        '杭州': [
+            { name: '西湖', url: '', advance: '无需预约', note: '开放式景区，免费' },
+            { name: '灵隐寺', url: 'https://www.lingyinsi.com/', advance: '提前1天', note: '需购票，建议预约' },
+            { name: '浙江省博物馆', url: 'https://www.zhejiangmuseum.com/', advance: '提前3天', note: '免费但需预约' }
+        ],
+        '南京': [
+            { name: '中山陵', url: 'https://www.zschina.org.cn/', advance: '提前7天', note: '免费但必须预约' },
+            { name: '南京博物院', url: 'https://www.njmuseum.com/', advance: '提前7天', note: '免费但需预约' }
+        ],
+        '重庆': [
+            { name: '洪崖洞', url: '', advance: '无需预约', note: '开放式景区，免费' },
+            { name: '长江索道', url: '', advance: '提前1天', note: '建议预约，旺季排队久' }
+        ],
+        '苏州': [
+            { name: '拙政园', url: 'https://www.szzzy.cn/', advance: '提前3天', note: '必须预约，每日限流' },
+            { name: '苏州博物馆', url: 'https://www.szmuseum.com/', advance: '提前7天', note: '免费但需预约' }
+        ],
+        '厦门': [
+            { name: '鼓浪屿', url: 'https://www.gly.cn/', advance: '提前15天', note: '需购船票，旺季紧张' }
+        ],
+        '广州': [
+            { name: '广州塔', url: 'https://www.cantontower.com/', advance: '提前1天', note: '建议预约' },
+            { name: '陈家祠', url: '', advance: '提前1天', note: '建议预约' }
+        ],
+        '深圳': [
+            { name: '世界之窗', url: 'https://www.szc.com.cn/', advance: '提前1天', note: '建议预约' }
+        ],
+        '三亚': [
+            { name: '蜈支洲岛', url: 'https://www.wzzhidao.com/', advance: '提前3天', note: '需购船票+门票' },
+            { name: '南山文化旅游区', url: 'https://www.nanshan.com/', advance: '提前1天', note: '建议预约' }
+        ],
+        '丽江': [
+            { name: '玉龙雪山', url: '', advance: '提前3天', note: '必须预约，含索道票' },
+            { name: '丽江古城', url: '', advance: '无需预约', note: '开放式景区，需古城维护费' }
+        ],
+        '拉萨': [
+            { name: '布达拉宫', url: 'https://www.potalapalace.cn/', advance: '提前1天', note: '必须预约，每日限流' },
+            { name: '大昭寺', url: '', advance: '提前1天', note: '需购票' }
+        ],
+        '敦煌': [
+            { name: '莫高窟', url: 'https://www.mgk.org.cn/', advance: '提前30天', note: '必须预约，A票极紧张' },
+            { name: '鸣沙山月牙泉', url: '', advance: '提前1天', note: '建议预约' }
+        ]
+    };
+
+    // 检测城市中需要预约的景点
+    function getReservationSpots(city, routes) {
+        const cityReservations = RESERVATION_REQUIRED_SPOTS[city] || [];
+        if (!cityReservations.length) return [];
+        // 从行程中提取所有景点名
+        const allSpots = [];
+        (routes || []).forEach(r => {
+            const spots = r.spots || (typeof r === 'string' ? r.split('→').map(s => s.trim()) : []);
+            spots.forEach(s => {
+                const name = typeof s === 'string' ? s : (s?.name || '');
+                if (name) allSpots.push(name);
+            });
+        });
+        // 匹配需要预约的景点
+        const matched = cityReservations.filter(r => {
+            return allSpots.some(s => s.includes(r.name) || r.name.includes(s));
+        });
+        // 如果行程中没有明确提到，返回该城市所有需预约景点（提示用户）
+        return matched.length ? matched : cityReservations;
+    }
+
+    // v10.0: 打卡机位推荐
+    // 基于城市生成热门拍照机位
+    const PHOTO_SPOTS = {
+        '北京': [
+            { name: '故宫角楼', desc: '经典紫禁城机位，清晨光线最佳', time: '日出后1小时', tip: '带长焦镜头，角楼倒影池边' },
+            { name: '长城日出', desc: '金山岭/箭扣长城壮丽日出', time: '日出前30分钟', tip: '需提前一晚住山下民宿' },
+            { name: '天坛祈年殿', desc: '对称构图，蓝顶白阶红墙', time: '上午9-10点', tip: '正门中轴线对称构图' },
+            { name: '胡同光影', desc: '南锣鼓巷/什刹海胡同', time: '下午3-5点', tip: '捕捉老北京生活气息' }
+        ],
+        '上海': [
+            { name: '外滩夜景', desc: '陆家嘴天际线，万国建筑群', time: '日落后蓝调时刻', tip: '外滩观景台，带广角' },
+            { name: '武康路', desc: '法租界老洋房，文艺街区', time: '上午10-12点', tip: '武康大楼转角必拍' },
+            { name: '田子坊', desc: '弄堂里的艺术气息', time: '下午2-4点', tip: '小巷光影，抓拍人文' },
+            { name: '东方明珠塔', desc: '城市地标，夜景灯光', time: '日落后', tip: '塔下仰拍或外滩远眺' }
+        ],
+        '成都': [
+            { name: '宽窄巷子', desc: '清朝古街道，川西民居', time: '上午9-11点', tip: '巷子深处避开人流' },
+            { name: '太古里', desc: '现代与古刹并存', time: '傍晚5-7点', tip: '大慈寺与太古里交界' },
+            { name: '熊猫基地', desc: '萌宠拍摄，竹林背景', time: '上午8-10点', tip: '熊猫活跃期，带长焦' },
+            { name: '锦里夜景', desc: '红灯笼古街，三国文化', time: '日落后', tip: '雨夜红灯笼倒影' }
+        ],
+        '杭州': [
+            { name: '西湖断桥', desc: '白娘子传说地，湖光山色', time: '日出或日落', tip: '雪后断桥残雪经典' },
+            { name: '雷峰塔夕照', desc: '西湖十景之一', time: '日落前30分钟', tip: '长桥公园是最佳机位' },
+            { name: '灵隐寺竹林', desc: '禅意古寺，幽静竹林', time: '上午8-10点', tip: '雨后竹林光影' },
+            { name: '龙井茶园', desc: '梯田茶园，绿色治愈', time: '上午9-11点', tip: '采茶季4-5月最佳' }
+        ],
+        '西安': [
+            { name: '大雁塔夜景', desc: '音乐喷泉+古塔', time: '日落后', tip: '北广场喷泉表演时' },
+            { name: '城墙骑行', desc: '古城墙日落', time: '日落前1小时', tip: '南门骑行至含光门' },
+            { name: '兵马俑', desc: '世界第八奇迹', time: '上午9-11点', tip: '一号坑前端俯拍' },
+            { name: '大唐不夜城', desc: '盛唐风华夜游', time: '日落后', tip: '不倒翁小姐姐' }
+        ],
+        '重庆': [
+            { name: '洪崖洞夜景', desc: '千与千寻同款', time: '日落后', tip: '千厮门大桥拍全景' },
+            { name: '李子坝轻轨', desc: '轻轨穿楼奇观', time: '上午10-12点', tip: '对面观景平台' },
+            { name: '长江索道', desc: '山城立体交通', time: '日落前', tip: '索道内拍江景' },
+            { name: '解放碑', desc: '城市地标', time: '夜晚灯光', tip: '仰拍建筑群' }
+        ],
+        '厦门': [
+            { name: '鼓浪屿', desc: '万国建筑，海岛风情', time: '上午8-11点', tip: '日光岩俯瞰全岛' },
+            { name: '曾厝垵', desc: '文艺渔村', time: '下午3-5点', tip: '小巷店铺特色招牌' },
+            { name: '环岛路', desc: '海岸线日落', time: '日落前30分钟', tip: '白城沙滩拍海景' }
+        ],
+        '丽江': [
+            { name: '古城夜景', desc: '纳西古韵，红灯笼', time: '日落后', tip: '大水车附近' },
+            { name: '玉龙雪山', desc: '雪山云海', time: '上午9-11点', tip: '蓝月谷前景' },
+            { name: '束河古镇', desc: '比丽江更安静', time: '上午10-12点', tip: '青龙桥拍古镇' }
+        ],
+        '三亚': [
+            { name: '亚龙湾日落', desc: '热带海滩晚霞', time: '日落前30分钟', tip: '沙滩椰树剪影' },
+            { name: '蜈支洲岛', desc: '碧海蓝天', time: '上午9-11点', tip: '观日岩俯瞰' },
+            { name: '天涯海角', desc: '经典地标', time: '上午8-10点', tip: '避开正午强光' }
+        ],
+        '拉萨': [
+            { name: '布达拉宫', desc: '雪域圣殿', time: '日出或日落', tip: '药王山观景台' },
+            { name: '大昭寺转经', desc: '虔诚信仰', time: '清晨或傍晚', tip: '八廓街跟拍人文' },
+            { name: '纳木错', desc: '圣湖星空', time: '夜晚星空', tip: '带三脚架拍银河' }
+        ],
+        '敦煌': [
+            { name: '鸣沙山月牙泉', desc: '沙漠绿洲奇观', time: '日落前1小时', tip: '沙丘顶俯瞰月牙泉' },
+            { name: '莫高窟', desc: '千年壁画', time: '上午9-11点', tip: '窟内禁止拍照，外观可拍' },
+            { name: '雅丹魔鬼城', desc: '风蚀地貌日落', time: '日落前', tip: '西海舰队机位' }
+        ]
+    };
+
+    function getPhotoSpots(city) {
+        return PHOTO_SPOTS[city] || [];
+    }
+
+    // 通用：格式化当前日期为 YYYY-MM-DD
+    function formatDate(d) {
+        d = d || new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
     // v9.0: 按时间段拆分景点（上午/下午/晚上）
     // 将景点列表按 3 个时段分组，每个时段分配 1-2 个景点
     function splitSpotsByTime(spots) {
@@ -1184,11 +1472,37 @@
             `);
         }
 
+        // v10.0: 酒店/民宿比价平台
+        const hotelLinks = hotelCompareLinks(g.city);
+        if (hotelLinks.length) {
+            const hIdx = '03b';
+            sections.push(`
+                <section class="gc-section">
+                    <h2><span class="gc-idx">${hIdx}</span>酒店民宿比价</h2>
+                    <div class="compare-note">
+                        <span class="compare-route">${escapeHtml(g.city)} · 全平台比价</span>
+                    </div>
+                    <div class="compare-grid">
+                        ${hotelLinks.map(t => `
+                            <a class="compare-card" href="${t.url}" target="_blank" rel="noopener noreferrer">
+                                <div class="cc-head">
+                                    <span class="cc-platform">${escapeHtml(t.platform)}</span>
+                                    <span class="cc-badge cc-badge-${t.badge}">${escapeHtml(t.badge)}</span>
+                                </div>
+                                <div class="cc-type">${escapeHtml(t.type)}</div>
+                                <div class="cc-desc">${escapeHtml(t.desc)}</div>
+                            </a>
+                        `).join('')}
+                    </div>
+                    <p class="compare-tip">提示：同一家酒店在不同平台价格可能差 10-30%，建议对比后下单。民宿首选 Airbnb/途家，酒店首选携程/去哪儿。</p>
+                </section>
+            `);
+        }
+
         // 交通
         if (g.transportation) {
             const tr = g.transportation;
             const sectionIdx = g.accommodations && g.accommodations.length ? '04' : '03';
-            const tipsIdx = g.accommodations && g.accommodations.length ? '05' : '04';
             sections.push(`
                 <section class="gc-section">
                     <h2><span class="gc-idx">${sectionIdx}</span>交通指南</h2>
@@ -1200,7 +1514,350 @@
             `);
         }
 
+        // v10.0: 票务比价（火车票/机票/高铁）
+        const ticketLinks = ticketCompareLinks(g.origin, g.destination || g.city);
+        if (ticketLinks.length) {
+            const tIdx = (g.accommodations && g.accommodations.length ? '05' : '04');
+            sections.push(`
+                <section class="gc-section">
+                    <h2><span class="gc-idx">${tIdx}</span>票务比价 · 火车票/机票</h2>
+                    <div class="compare-note">
+                        <span class="compare-route">${escapeHtml(g.origin || '出发地')} → ${escapeHtml(g.destination || g.city)}</span>
+                        <span class="compare-date">${formatDate()}</span>
+                    </div>
+                    <div class="compare-grid">
+                        ${ticketLinks.map(t => `
+                            <a class="compare-card" href="${t.url}" target="_blank" rel="noopener noreferrer">
+                                <div class="cc-head">
+                                    <span class="cc-platform">${escapeHtml(t.platform)}</span>
+                                    <span class="cc-badge cc-badge-${t.badge}">${escapeHtml(t.badge)}</span>
+                                </div>
+                                <div class="cc-type">${escapeHtml(t.type)}</div>
+                                <div class="cc-desc">${escapeHtml(t.desc)}</div>
+                            </a>
+                        `).join('')}
+                    </div>
+                    <p class="compare-tip">提示：各平台价格实时变动，建议多平台对比后下单。12306 为铁路官方渠道，无手续费。</p>
+                </section>
+            `);
+        }
+
+        // v10.0: 景点预约提示（在交通/票务之后）
+        const reservationSpots = getReservationSpots(g.city, g.routes);
+        if (reservationSpots.length) {
+            const rIdx = (g.accommodations && g.accommodations.length ? '06' : '05');
+            sections.push(`
+                <section class="gc-section">
+                    <h2><span class="gc-idx">${rIdx}</span>景点预约提醒</h2>
+                    <div class="reservation-alert">
+                        <div class="ra-icon">!</div>
+                        <div class="ra-content">
+                            <p class="ra-title">以下景点需要提前预约，请务必提前购票以免白跑</p>
+                            <div class="ra-list">
+                                ${reservationSpots.map(r => `
+                                    <div class="ra-item">
+                                        <div class="ra-item-head">
+                                            <span class="ra-name">${escapeHtml(r.name)}</span>
+                                            <span class="ra-advance">${escapeHtml(r.advance)}</span>
+                                        </div>
+                                        <div class="ra-note">${escapeHtml(r.note)}</div>
+                                        ${r.url ? `<a class="ra-link" href="${r.url}" target="_blank" rel="noopener noreferrer">立即预约 →</a>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `);
+        }
+
+        // v10.0: 打卡机位推荐（在景点预约之后）
+        const photoSpots = getPhotoSpots(g.city);
+        if (photoSpots.length) {
+            const pIdx = (g.accommodations && g.accommodations.length ? '07' : '06');
+            sections.push(`
+                <section class="gc-section">
+                    <h2><span class="gc-idx">${pIdx}</span>打卡机位推荐</h2>
+                    <div class="photo-spot-grid">
+                        ${photoSpots.map(p => `
+                            <div class="photo-spot-card">
+                                <div class="ps-name">${escapeHtml(p.name)}</div>
+                                <div class="ps-desc">${escapeHtml(p.desc)}</div>
+                                <div class="ps-meta">
+                                    <span class="ps-time">最佳时间：${escapeHtml(p.time)}</span>
+                                </div>
+                                <div class="ps-tip">拍摄建议：${escapeHtml(p.tip)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+            `);
+        }
+
+        // v10.0: 照片上传 + AI 修图（在最末）
+        const phIdx = (g.accommodations && g.accommodations.length ? '08' : '07');
+        sections.push(`
+            <section class="gc-section">
+                <h2><span class="gc-idx">${phIdx}</span>旅拍相册 · AI 修图</h2>
+                <div class="photo-upload-section" id="photoUploadSection">
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="photoInput" accept="image/*" multiple hidden>
+                        <div class="upload-placeholder">
+                            <svg viewBox="0 0 48 48" width="40" height="40" aria-hidden="true">
+                                <path d="M24 32V12m0 0l-8 8m8-8l8 8M8 36h32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <p>点击或拖拽上传旅行照片</p>
+                            <span class="upload-hint">支持多张，本地存储，AI 提供修图建议</span>
+                        </div>
+                    </div>
+                    <div class="photo-grid" id="photoGrid"></div>
+                    <div class="photo-actions">
+                        <button class="btn-secondary" id="genPhotoPosterBtn">生成旅拍海报</button>
+                        <button class="btn-secondary" id="aiEditBtn">AI 修图建议</button>
+                    </div>
+                    <div class="ai-result" id="aiResult" hidden></div>
+                </div>
+            </section>
+        `);
+
         dom.guideContent.innerHTML = sections.join('') || '<div class="empty-guide">暂无攻略数据</div>';
+
+        // v10.0: 绑定照片上传事件
+        bindPhotoUploadEvents();
+    }
+
+    // v10.0: 照片上传与 AI 修图
+    function bindPhotoUploadEvents() {
+        const uploadArea = document.getElementById('uploadArea');
+        const photoInput = document.getElementById('photoInput');
+        const photoGrid = document.getElementById('photoGrid');
+        const genPosterBtn = document.getElementById('genPhotoPosterBtn');
+        const aiEditBtn = document.getElementById('aiEditBtn');
+        const aiResult = document.getElementById('aiResult');
+        if (!uploadArea || !photoInput) return;
+
+        // 加载已存储的照片
+        renderPhotoGrid();
+
+        // 点击上传区
+        uploadArea.addEventListener('click', () => photoInput.click());
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+        photoInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        // 生成旅拍海报
+        if (genPosterBtn) {
+            genPosterBtn.addEventListener('click', generatePhotoPoster);
+        }
+        // AI 修图建议
+        if (aiEditBtn) {
+            aiEditBtn.addEventListener('click', getAIEditAdvice);
+        }
+    }
+
+    // 处理上传文件
+    function handleFiles(files) {
+        if (!files || !files.length) return;
+        const photos = loadPhotos();
+        const remaining = 8 - photos.length;
+        if (remaining <= 0) {
+            toast('最多存储 8 张照片，请先删除旧照片', 'error');
+            return;
+        }
+        const toProcess = Array.from(files).slice(0, remaining);
+        let processed = 0;
+        toProcess.forEach(file => {
+            if (!file.type.startsWith('image/')) { toast('仅支持图片文件', 'error'); return; }
+            if (file.size > 2 * 1024 * 1024) { toast(`图片 ${file.name} 超过 2MB，已跳过`, 'error'); return; }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                // 压缩图片到 400px 宽度，减少 localStorage 占用
+                compressImage(e.target.result, 400, (compressed) => {
+                    photos.push({
+                        id: Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+                        data: compressed,
+                        name: file.name,
+                        city: state.currentCity || '',
+                        time: new Date().toISOString()
+                    });
+                    processed++;
+                    if (processed === toProcess.length) {
+                        savePhotos(photos);
+                        renderPhotoGrid();
+                        toast(`已上传 ${processed} 张照片`, 'success');
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 压缩图片
+    function compressImage(dataUrl, maxWidth, callback) {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const scale = Math.min(1, maxWidth / img.width);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            callback(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.onerror = () => callback(dataUrl); // 压缩失败返回原图
+        img.src = dataUrl;
+    }
+
+    // 渲染照片网格
+    function renderPhotoGrid() {
+        const photoGrid = document.getElementById('photoGrid');
+        if (!photoGrid) return;
+        const photos = loadPhotos();
+        if (!photos.length) { photoGrid.innerHTML = ''; return; }
+        photoGrid.innerHTML = photos.map(p => `
+            <div class="photo-item">
+                <img src="${p.data}" alt="${escapeHtml(p.name)}" loading="lazy">
+                <button class="photo-delete" data-id="${p.id}" title="删除">×</button>
+            </div>
+        `).join('');
+        // 绑定删除
+        photoGrid.querySelectorAll('.photo-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.dataset.id;
+                const photos = loadPhotos().filter(p => p.id !== id);
+                savePhotos(photos);
+                renderPhotoGrid();
+                toast('已删除', 'success');
+            });
+        });
+    }
+
+    // 照片存储
+    function loadPhotos() {
+        try { return JSON.parse(localStorage.getItem('xj_photos') || '[]'); }
+        catch { return []; }
+    }
+    function savePhotos(photos) {
+        try {
+            localStorage.setItem('xj_photos', JSON.stringify(photos));
+        } catch (e) {
+            toast('存储空间不足，请删除部分照片', 'error');
+        }
+    }
+
+    // 生成旅拍海报
+    function generatePhotoPoster() {
+        const photos = loadPhotos();
+        if (!photos.length) { toast('请先上传照片', 'error'); return; }
+        const g = state.currentGuide;
+        if (!g) { toast('请先生成攻略', 'error'); return; }
+        // 用第一张照片作为背景，叠加攻略信息
+        const photo = photos[0];
+        const poster = window.open('', '_blank');
+        poster.document.write(`
+            <!DOCTYPE html><html><head><title>${g.city}旅拍海报 - 行纪</title>
+            <style>
+                body{margin:0;padding:0;font-family:'Noto Serif SC',serif;background:#1C1A17;display:flex;align-items:center;justify-content:center;min-height:100vh}
+                .poster{position:relative;width:600px;height:900px;overflow:hidden;background:#000}
+                .poster img{width:100%;height:100%;object-fit:cover;opacity:.7}
+                .overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.3) 0%,rgba(0,0,0,.7) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:40px;color:#fff}
+                .city{font-size:64px;font-weight:900;letter-spacing:-.02em;margin:0;line-height:1}
+                .subtitle{font-size:18px;margin:8px 0 24px;opacity:.9}
+                .tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+                .tag{padding:4px 12px;border:1px solid rgba(255,255,255,.5);border-radius:999px;font-size:13px}
+                .routes{font-size:14px;opacity:.8;line-height:1.6;margin-bottom:12px}
+                .budget{font-size:20px;font-weight:700;color:#C8553D}
+                .logo{position:absolute;top:30px;right:30px;font-size:11px;letter-spacing:.3em;opacity:.7}
+            </style></head><body>
+            <div class="poster">
+                <img src="${photo.data}" alt="${g.city}">
+                <div class="overlay">
+                    <div class="logo">XING JI · TRAVEL</div>
+                    <h1 class="city">${g.city}</h1>
+                    <p class="subtitle">${g.subtitle || g.title || ''}</p>
+                    <div class="tags">${(g.tags || []).slice(0,3).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+                    ${g.routes && g.routes.length ? `<div class="routes">${g.routes.slice(0,2).map(r => typeof r === 'string' ? r : (r.routeLine || r.theme || '')).join('<br>')}</div>` : ''}
+                    ${g.budget?.total ? `<div class="budget">${g.budget.total}</div>` : ''}
+                </div>
+            </div>
+            <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script>
+            </body></html>
+        `);
+        poster.document.close();
+    }
+
+    // AI 修图建议
+    async function getAIEditAdvice() {
+        const photos = loadPhotos();
+        if (!photos.length) { toast('请先上传照片', 'error'); return; }
+        const aiResult = document.getElementById('aiResult');
+        if (!aiResult) return;
+        aiResult.hidden = false;
+        aiResult.innerHTML = '<div class="ai-loading">AI 正在分析照片，请稍候...</div>';
+        const g = state.currentGuide;
+        const photo = photos[0];
+        try {
+            // 调用后端 AI 获取修图建议
+            const response = await fetch(`${API.base}/api/ai/edit-photo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    city: g?.city || '',
+                    photoName: photo.name,
+                    guideContext: {
+                        city: g?.city,
+                        season: g?.season,
+                        tags: g?.tags
+                    }
+                })
+            });
+            const data = await response.json();
+            if (data.success && data.advice) {
+                aiResult.innerHTML = `<div class="ai-advice"><h4>AI 修图建议</h4><p>${escapeHtml(data.advice)}</p></div>`;
+            } else {
+                // 后端失败，提供本地建议
+                aiResult.innerHTML = `<div class="ai-advice"><h4>修图建议（本地）</h4>${getLocalEditAdvice(g)}</div>`;
+            }
+        } catch (e) {
+            // 网络失败，提供本地建议
+            aiResult.innerHTML = `<div class="ai-advice"><h4>修图建议（本地）</h4>${getLocalEditAdvice(g)}</div>`;
+        }
+    }
+
+    // 本地修图建议（AI 不可用时的回退）
+    function getLocalEditAdvice(g) {
+        const city = g?.city || '';
+        const season = g?.season || '';
+        const tags = g?.tags || [];
+        const advices = [];
+        // 基于城市风格
+        if (tags.includes('历史文化') || tags.includes('古都')) {
+            advices.push('建议增强暖色调，突出历史厚重感；适当降低饱和度，增加复古胶片感');
+        }
+        if (tags.includes('海滨城市') || tags.includes('热带风情')) {
+            advices.push('建议提升蓝色饱和度，增强海天一色效果；适当增加曝光，画面更通透');
+        }
+        if (tags.includes('高原') || tags.includes('雪山')) {
+            advices.push('建议增加对比度，突出雪山层次；适当降低色温，增强冷峻感');
+        }
+        if (tags.includes('夜景') || tags.includes('网红打卡地')) {
+            advices.push('夜景建议：提升阴影细节，降低高光；增加霓虹灯饱和度，增强氛围感');
+        }
+        // 基于季节
+        if (season.includes('春')) advices.push('春景建议：提升绿色饱和度，增加花卉明度');
+        if (season.includes('秋')) advices.push('秋景建议：增强金黄色调，增加落叶层次感');
+        if (season.includes('冬')) advices.push('冬景建议：提升白色纯净度，增加冷色调');
+        // 通用建议
+        advices.push('通用建议：使用三分法构图裁剪；适当增加清晰度；添加暗角增强主体');
+        advices.push('人像建议：肤色提亮，背景虚化；使用柔光效果');
+        return advices.map(a => `<p>• ${a}</p>`).join('');
     }
 
     // ---------- 海报 ----------

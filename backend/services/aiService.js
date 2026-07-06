@@ -838,6 +838,55 @@ JSON 结构如下（字段名保持一致，值用中文）：
         current: key === this.currentProvider
       }));
   }
+
+  // v10.0: 获取 AI 修图建议
+  async getPhotoEditAdvice(city, guideContext) {
+    const provider = this.providers[this.currentProvider];
+    if (!provider.apiKey) {
+      throw new Error('AI API 未配置');
+    }
+    const season = guideContext.season || '四季皆宜';
+    const tags = (guideContext.tags || []).join('、') || '通用';
+    const prompt = `你是一位专业旅行摄影师，请为【${city}】的旅行照片提供修图建议。
+照片季节：${season}
+城市标签：${tags}
+
+请基于该城市的特色，给出 3-5 条具体的修图建议，包括：
+1. 色调方向（暖色/冷色/复古/清新等）
+2. 曝光与对比度调整
+3. 饱和度建议
+4. 构图裁剪建议
+5. 特殊效果（如暗角、柔光、胶片感等）
+
+请直接输出建议文字，不要 markdown 标记，200 字以内。`;
+
+    try {
+      const response = await axios.post(provider.baseUrl, {
+        model: provider.model,
+        messages: [
+          { role: 'system', content: '你是一位拥有10年经验的专业旅行摄影师，擅长后期修图。' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 800
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${provider.apiKey}`,
+          'Accept': 'application/json',
+          'Accept-Encoding': 'identity',
+          'User-Agent': 'travel-guide/2.0'
+        },
+        timeout: 30000,
+        decompress: false,
+        proxy: false
+      });
+      return response.data.choices[0].message.content.trim();
+    } catch (error) {
+      console.error('AI 修图建议失败:', error.message);
+      throw error;
+    }
+  }
 }
 
 module.exports = new AIService();
