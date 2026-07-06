@@ -76,6 +76,120 @@
         return 'backend';
     }
 
+    // ---------- 数据标准化（AI 返回格式 → 渲染所需格式）----------
+    function normalizeGuideData(g) {
+        if (!g) return g;
+
+        // 1. 标准化 routes：AI 可能返回字符串数组 ["Day1: A→B→C"] 或对象数组
+        if (Array.isArray(g.routes)) {
+            g.routes = g.routes.map((r, i) => {
+                if (typeof r === 'string') {
+                    // 解析 "Day1: 景点A→景点B→景点C" 或 "Day 1: ..."
+                    const m = r.match(/Day\s*(\d+)\s*[:：]\s*(.+)/i);
+                    if (m) {
+                        const day = parseInt(m[1], 10);
+                        const routeLine = m[2].trim();
+                        const spots = routeLine.split('→').map(s => s.trim()).filter(Boolean);
+                        return { day, theme: `Day ${day}`, routeLine, spots };
+                    }
+                    // 无 Day 前缀的纯路线字符串
+                    const spots = r.split('→').map(s => s.trim()).filter(Boolean);
+                    return { day: i + 1, theme: `Day ${i + 1}`, routeLine: r, spots };
+                }
+                // 已是对象，确保 spots 存在
+                if (r && typeof r === 'object') {
+                    if (!r.spots && r.routeLine) {
+                        r.spots = r.routeLine.split('→').map(s => s.trim()).filter(Boolean);
+                    }
+                    if (!r.day) r.day = i + 1;
+                    if (!r.theme) r.theme = `Day ${r.day}`;
+                }
+                return r;
+            });
+        }
+
+        // 2. 标准化 transport → transportation（AI 返回 transport 数组）
+        if (Array.isArray(g.transport) && !g.transportation) {
+            const arrival = g.transport.find(t => t.type === '外部交通' || t.type === '到达');
+            const local = g.transport.find(t => t.type === '内部交通' || t.type === '市内');
+            g.transportation = {
+                arrival: arrival ? arrival.info : '高铁/飞机可达',
+                localTransport: local ? local.info : '地铁、公交便利'
+            };
+        }
+        // 兼容 transportation 也是数组的情况
+        if (Array.isArray(g.transportation)) {
+            const arrival = g.transportation.find(t => t.type === '外部交通' || t.type === '到达');
+            const local = g.transportation.find(t => t.type === '内部交通' || t.type === '市内');
+            g.transportation = {
+                arrival: arrival ? arrival.info : '高铁/飞机可达',
+                localTransport: local ? local.info : '地铁、公交便利'
+            };
+        }
+
+        // 3. 标准化 foods：AI 返回 desc 字段，渲染期望 description
+        if (Array.isArray(g.foods)) {
+            g.foods = g.foods.map(f => {
+                if (f && typeof f === 'object') {
+                    if (!f.description && f.desc) f.description = f.desc;
+                    if (!f.price && f.priceRange) f.price = f.priceRange;
+                    if (!f.whereToEat && f.recommendedRestaurants) {
+                        f.whereToEat = f.recommendedRestaurants.map(r => typeof r === 'string' ? { name: r, address: '' } : r);
+                    }
+                }
+                return f;
+            });
+        }
+
+        // 4. 标准化 accommodations：AI 返回 {area, pros, cons}，渲染期望 {name, area, features}
+        if (Array.isArray(g.accommodations)) {
+            g.accommodations = g.accommodations.map(a => {
+                if (a && typeof a === 'object') {
+                    if (!a.name && a.area) a.name = a.area + '住宿';
+                    if (!a.features) {
+                        a.features = [];
+                        if (a.pros) a.features.push(a.pros);
+                    }
+                }
+                return a;
+            });
+        }
+
+        // 5. 修复 days 字段重复"天"字（如 "1-2天天" → "1-2天"）
+        if (typeof g.days === 'string') {
+            g.days = g.days.replace(/天天/g, '天').replace(/天+$/, '天');
+        }
+        if (typeof g.duration === 'string') {
+            g.duration = g.duration.replace(/天天/g, '天').replace(/天+$/, '天');
+        }
+
+        // 6. 确保 budget 结构完整
+        if (g.budget && typeof g.budget === 'object') {
+            if (!g.budget.breakdown && (g.budget.low || g.budget.medium || g.budget.high)) {
+                g.budget.breakdown = {
+                    '经济档': g.budget.low || '—',
+                    '舒适档': g.budget.medium || '—',
+                    '豪华档': g.budget.high || '—'
+                };
+            }
+            if (!g.budget.total && g.overallBudget) {
+                g.budget.total = g.overallBudget;
+            }
+        }
+
+        // 7. 确保 transportation 存在（本地模式 fallback）
+        if (!g.transportation && Array.isArray(g.transport)) {
+            const arrival = g.transport.find(t => t.type === '外部交通');
+            const local = g.transport.find(t => t.type === '内部交通');
+            g.transportation = {
+                arrival: arrival ? arrival.info : '高铁/飞机可达',
+                localTransport: local ? local.info : '地铁、公交便利'
+            };
+        }
+
+        return g;
+    }
+
     // ---------- 本地攻略生成（基于 627 城数据库）----------
     function buildLocalGuide(city, prefs) {
         const base = CITIES[city];
@@ -204,7 +318,7 @@
                     <div class="rc-tags">${(c.tags || []).slice(0, 3).map(t => `<span class="rc-tag">${t}</span>`).join('')}</div>
                     <div class="rc-meta">
                         <span>季节 <strong>${c.season || '四季皆宜'}</strong></span>
-                        <span>建议 <strong>${c.days || '3'}天</strong></span>
+                        <span>建议 <strong>${(c.days || '3').replace(/天+$/, '')}天</strong></span>
                     </div>
                 </div>
                 <div class="rc-arrow">→</div>
@@ -337,7 +451,7 @@
         showLoading(city);
         const prefs = { days: state.selectedDays, travelType: state.travelType, budgetRange: state.budgetRange };
         try {
-            const guide = await API.generateGuide(city, prefs);
+            const guide = normalizeGuideData(await API.generateGuide(city, prefs));
             state.currentGuide = guide;
             state.currentCity = city;
             addHistory(city);
@@ -448,9 +562,12 @@
         // 贴士
         if (g.tips) {
             const t = g.tips;
+            const hasAccom = g.accommodations && g.accommodations.length;
+            const hasTransport = g.transportation;
+            const tipsIdx = hasAccom && hasTransport ? '05' : (hasAccom || hasTransport ? '04' : '03');
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">04</span>实用贴士</h2>
+                    <h2><span class="gc-idx">${tipsIdx}</span>实用贴士</h2>
                     <div class="tips-grid">
                         ${t.prepare && t.prepare.length ? `<div class="tip-block"><h4>行前准备</h4><ul>${t.prepare.map(x => `<li>${x}</li>`).join('')}</ul></div>` : ''}
                         ${t.avoid && t.avoid.length ? `<div class="tip-block"><h4>避坑指南</h4><ul>${t.avoid.map(x => `<li>${x}</li>`).join('')}</ul></div>` : ''}
@@ -460,12 +577,35 @@
             `);
         }
 
+        // 住宿
+        if (g.accommodations && g.accommodations.length) {
+            sections.push(`
+                <section class="gc-section">
+                    <h2><span class="gc-idx">03</span>住宿推荐</h2>
+                    <div class="accommodation-grid">
+                        ${g.accommodations.map(a => `
+                            <div class="accommodation-card">
+                                <div class="ac-name">${a.name || a.area || '住宿'}</div>
+                                ${a.area ? `<div class="ac-area">${a.area}</div>` : ''}
+                                ${a.priceRange ? `<div class="ac-price">${typeof a.priceRange === 'string' ? a.priceRange : (a.priceRange.lowSeason ? a.priceRange.lowSeason + '~' + a.priceRange.peakSeason : '')}</div>` : ''}
+                                ${a.features && a.features.length ? `<div class="ac-features">${a.features.map(f => `<span>${f}</span>`).join('')}</div>` : ''}
+                                ${a.pros ? `<div class="ac-pros"><strong>优点：</strong>${a.pros}</div>` : ''}
+                                ${a.cons ? `<div class="ac-cons"><strong>不足：</strong>${a.cons}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+            `);
+        }
+
         // 交通
         if (g.transportation) {
             const tr = g.transportation;
+            const sectionIdx = g.accommodations && g.accommodations.length ? '04' : '03';
+            const tipsIdx = g.accommodations && g.accommodations.length ? '05' : '04';
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">05</span>交通指南</h2>
+                    <h2><span class="gc-idx">${sectionIdx}</span>交通指南</h2>
                     <div class="transport-card">
                         ${tr.arrival ? `<h4>如何到达</h4><p>${typeof tr.arrival === 'string' ? tr.arrival : (tr.arrival.byAir?.details || tr.arrival.byTrain?.details || '高铁/飞机可达')}</p>` : ''}
                         ${tr.localTransport ? `<h4>市内交通</h4><p>${typeof tr.localTransport === 'string' ? tr.localTransport : (tr.localTransport.metro || tr.localTransport.bus || '地铁、公交便利')}</p>` : ''}
