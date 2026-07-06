@@ -495,28 +495,8 @@ router.get('/cities/all', async (req, res) => {
   }
 });
 
-// 获取城市详情(含实时信息)
-router.get('/cities/:name', validateCityName, async (req, res) => {
-  try {
-    const city = await storage.getCity(req.params.name);
-    
-    if (city) {
-      const cityWithRealTime = mergeWithWeather(city, req.params.name);
-      
-      // 记录浏览
-      if (req.user) {
-        await socialService.recordView('cities', req.params.name, req.user.uid);
-      }
-      
-      res.json(cityWithRealTime);
-    } else {
-      res.status(404).json({ error: '城市不存在' });
-    }
-  } catch (error) {
-    console.error('获取城市详情失败:', error);
-    res.status(500).json({ error: '获取城市详情失败' });
-  }
-});
+// v10.6: 修复路由顺序 bug — 静态路径必须在 /cities/:name 之前定义
+// 否则 /cities/search 会被 :name 参数匹配为 city="search"
 
 // 根据标签搜索城市
 router.get('/cities/search/tags', async (req, res) => {
@@ -544,6 +524,29 @@ router.get('/cities/search', validateSearchQuery, async (req, res) => {
   } catch (error) {
     console.error('搜索城市失败:', error);
     res.status(500).json({ error: '搜索城市失败' });
+  }
+});
+
+// 获取城市详情(含实时信息)
+router.get('/cities/:name', validateCityName, async (req, res) => {
+  try {
+    const city = await storage.getCity(req.params.name);
+
+    if (city) {
+      const cityWithRealTime = mergeWithWeather(city, req.params.name);
+
+      // 记录浏览
+      if (req.user) {
+        await socialService.recordView('cities', req.params.name, req.user.uid);
+      }
+
+      res.json(cityWithRealTime);
+    } else {
+      res.status(404).json({ error: '城市不存在' });
+    }
+  } catch (error) {
+    console.error('获取城市详情失败:', error);
+    res.status(500).json({ error: '获取城市详情失败' });
   }
 });
 

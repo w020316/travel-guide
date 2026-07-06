@@ -216,10 +216,16 @@
                 <button class="modal-close" id="closeFavoritesModal">×</button>
             </div>
             <div class="modal-body">
+                <div class="fav-search" id="favSearchWrap" hidden>
+                    <input type="text" id="favSearchInput" class="fav-search-input" placeholder="搜索收藏的城市或标题…" autocomplete="off">
+                </div>
                 <div class="favorites-list" id="favoritesList"></div>
                 <div class="empty-state" id="emptyFavorites" hidden>
                     <p>还没有收藏任何城市。</p>
                     <p class="hint">在攻略页点击「收藏」即可保存。</p>
+                </div>
+                <div class="empty-state" id="emptyFavSearch" hidden>
+                    <p>未找到匹配的收藏。</p>
                 </div>
             </div>
             <div class="modal-foot">
@@ -231,6 +237,11 @@
 
     <!-- Toast -->
     <div class="toast-wrap" id="toastWrap"></div>
+
+    <!-- v10.6: 返回顶部按钮 -->
+    <button class="back-to-top" id="backToTop" title="返回顶部" aria-label="返回顶部" hidden>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 4l-8 8h5v8h6v-8h5z" fill="currentColor"/></svg>
+    </button>
 
     <!-- 城市数据库 (527城) -->
     <script src="data/expandedCities.js"></script>

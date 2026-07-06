@@ -239,6 +239,7 @@ input, select { font-family: inherit; }
 }
 .suggestion-item:last-child { border-bottom: none; }
 .suggestion-item:hover { background: var(--paper-2); }
+.suggestion-item.active { background: var(--accent-soft); border-left: 3px solid var(--accent); padding-left: 15px; }
 .suggestion-item .s-name { font-weight: 600; }
 .suggestion-item .s-tags { font-size: 12px; color: var(--muted-2); }
 .suggestion-item .s-title { font-size: 12px; color: var(--muted); }
@@ -661,6 +662,26 @@ input, select { font-family: inherit; }
 .modal-foot { padding: 18px 28px; border-top: 1px solid var(--line); display: flex; gap: 12px; justify-content: flex-end; }
 
 .favorites-list { display: flex; flex-direction: column; gap: 10px; }
+
+/* v10.6: 收藏列表搜索框 */
+.fav-search { margin-bottom: 16px; }
+.fav-search-input {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+    background: var(--paper);
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    transition: all .2s;
+    font-family: inherit;
+}
+.fav-search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
 .fav-item {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
@@ -832,6 +853,41 @@ input, select { font-family: inherit; }
     border-color: var(--accent);
     color: var(--accent);
     background: var(--accent-soft);
+}
+
+/* v10.6: 返回顶部按钮 */
+.back-to-top {
+    position: fixed;
+    right: 28px;
+    bottom: 28px;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(28,26,23,.20);
+    z-index: 40;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all .3s cubic-bezier(.2,.7,.3,1);
+    pointer-events: none;
+}
+.back-to-top:not([hidden]) {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.back-to-top:hover {
+    background: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(200,85,61,.30);
+}
+@media (max-width: 720px) {
+    .back-to-top { right: 16px; bottom: 16px; width: 40px; height: 40px; }
 }
 
 /* 移动端：外链换行优化 */

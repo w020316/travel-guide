@@ -628,8 +628,10 @@
         navFavCount: $('navFavCount'), navFavoritesBtn: $('navFavoritesBtn'),
         favoritesModal: $('favoritesModal'), closeFavoritesModal: $('closeFavoritesModal'),
         favoritesList: $('favoritesList'), emptyFavorites: $('emptyFavorites'),
+        favSearchWrap: $('favSearchWrap'), favSearchInput: $('favSearchInput'), emptyFavSearch: $('emptyFavSearch'),
         clearAllFavorites: $('clearAllFavorites'), exportFavorites: $('exportFavorites'),
-        brandHome: $('brandHome'), toastWrap: $('toastWrap')
+        brandHome: $('brandHome'), toastWrap: $('toastWrap'),
+        backToTop: $('backToTop')
     };
 
     // ---------- 初始化 ----------
@@ -903,6 +905,43 @@
         dom.cityInput.addEventListener('focus', () => {
             if (dom.suggestions.innerHTML) dom.suggestions.hidden = false;
         });
+        // v10.6: 键盘导航 — 上下键选择建议，回车确认，Esc 关闭
+        dom.cityInput.addEventListener('keydown', (e) => {
+            const items = dom.suggestions.querySelectorAll('.suggestion-item');
+            // 建议面板隐藏或无项时，仅处理 Esc
+            if (dom.suggestions.hidden || !items.length) {
+                if (e.key === 'Escape') dom.suggestions.hidden = true;
+                return;
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const cur = dom.suggestions.querySelector('.suggestion-item.active');
+                let idx = cur ? Array.from(items).indexOf(cur) : -1;
+                idx = (idx + 1) % items.length;
+                items.forEach(x => x.classList.remove('active'));
+                items[idx].classList.add('active');
+                items[idx].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const cur = dom.suggestions.querySelector('.suggestion-item.active');
+                let idx = cur ? Array.from(items).indexOf(cur) : 0;
+                idx = (idx - 1 + items.length) % items.length;
+                items.forEach(x => x.classList.remove('active'));
+                items[idx].classList.add('active');
+                items[idx].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter') {
+                const cur = dom.suggestions.querySelector('.suggestion-item.active');
+                if (cur) {
+                    e.preventDefault();
+                    const city = cur.dataset.city;
+                    dom.cityInput.value = city;
+                    dom.suggestions.hidden = true;
+                    submitCity(city);
+                }
+            } else if (e.key === 'Escape') {
+                dom.suggestions.hidden = true;
+            }
+        });
 
         // 结果页
         dom.backBtn.onclick = showHome;
@@ -953,6 +992,12 @@
         dom.favoritesModal.addEventListener('click', (e) => { if (e.target === dom.favoritesModal) closeFavorites(); });
         dom.clearAllFavorites.onclick = clearFavorites;
         dom.exportFavorites.onclick = exportFavorites;
+        // v10.6: 收藏列表搜索过滤
+        if (dom.favSearchInput) {
+            dom.favSearchInput.addEventListener('input', () => {
+                renderFavoritesList(dom.favSearchInput.value);
+            });
+        }
         // v10.5: 清空历史
         if (dom.clearHistoryBtn) {
             dom.clearHistoryBtn.onclick = () => {
@@ -964,6 +1009,20 @@
         }
 
         dom.brandHome.onclick = (e) => { e.preventDefault(); showHome(); };
+
+        // v10.6: 返回顶部按钮
+        if (dom.backToTop) {
+            let scrollTimer;
+            window.addEventListener('scroll', () => {
+                clearTimeout(scrollTimer);
+                scrollTimer = setTimeout(() => {
+                    dom.backToTop.hidden = window.scrollY < 600;
+                }, 100);
+            }, { passive: true });
+            dom.backToTop.onclick = () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+        }
     }
 
     // ---------- 搜索建议 ----------
@@ -2270,16 +2329,35 @@
     function openFavorites() {
         renderFavoritesList();
         dom.favoritesModal.hidden = false;
+        // v10.6: 收藏数 ≥ 3 时显示搜索框
+        dom.favSearchWrap.hidden = state.favorites.length < 3;
+        if (dom.favSearchInput) dom.favSearchInput.value = '';
     }
     function closeFavorites() { dom.favoritesModal.hidden = true; }
-    function renderFavoritesList() {
+    // v10.6: 支持搜索过滤的收藏列表渲染
+    function renderFavoritesList(filter = '') {
         if (!state.favorites.length) {
             dom.favoritesList.innerHTML = '';
             dom.emptyFavorites.hidden = false;
+            dom.emptyFavSearch.hidden = true;
             return;
         }
         dom.emptyFavorites.hidden = true;
-        dom.favoritesList.innerHTML = state.favorites.map(f => `
+        // 应用搜索过滤
+        const q = (filter || '').toLowerCase().trim();
+        const list = q
+            ? state.favorites.filter(f =>
+                (f.city || '').toLowerCase().includes(q) ||
+                (f.title || '').toLowerCase().includes(q))
+            : state.favorites;
+        // 搜索无结果时显示提示
+        if (q && list.length === 0) {
+            dom.favoritesList.innerHTML = '';
+            dom.emptyFavSearch.hidden = false;
+            return;
+        }
+        dom.emptyFavSearch.hidden = true;
+        dom.favoritesList.innerHTML = list.map(f => `
             <div class="fav-item">
                 <div>
                     <div class="fi-name">${escapeHtml(f.city)}</div>
@@ -2297,7 +2375,7 @@
         dom.favoritesList.querySelectorAll('.fi-btn.del').forEach(b => {
             b.onclick = () => {
                 state.favorites = state.favorites.filter(f => f.city !== b.dataset.city);
-                saveFavorites(); updateFavCount(); renderFavoritesList(); updateFavoriteBtn();
+                saveFavorites(); updateFavCount(); renderFavoritesList(dom.favSearchInput?.value || ''); updateFavoriteBtn();
                 toast('已删除');
             };
         });
