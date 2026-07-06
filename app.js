@@ -666,6 +666,11 @@
                 state.travelers = urlState.travelers;
                 if (dom.travelers) dom.travelers.value = urlState.travelers;
             }
+            // v10.4: 恢复出行日期
+            if (urlState.travelDate && dom.travelDateInput) {
+                state.travelDate = urlState.travelDate;
+                dom.travelDateInput.value = urlState.travelDate;
+            }
             dom.cityInput.value = urlState.city;
             // 延迟一帧以等待页面渲染完成
             setTimeout(() => submitCity(urlState.city), 60);
@@ -684,6 +689,8 @@
             // v9.0: 同步出发地/人数
             if (prefs.origin) params.set('origin', prefs.origin);
             if (prefs.travelers) params.set('travelers', prefs.travelers);
+            // v10.4: 同步出行日期
+            if (prefs.travelDate) params.set('date', prefs.travelDate);
             const newUrl = `${location.pathname}?${params.toString()}${location.hash}`;
             history.replaceState(null, '', newUrl);
         } catch (e) {
@@ -703,7 +710,8 @@
                 travelType: params.get('type') || null,
                 budgetRange: params.get('budget') || null,
                 origin: params.get('origin') ? decodeURIComponent(params.get('origin')) : null,     // v9.0
-                travelers: params.get('travelers') || null                                          // v9.0
+                travelers: params.get('travelers') || null,                                         // v9.0
+                travelDate: params.get('date') || null                                              // v10.4
             };
         } catch (e) {
             return null;
@@ -741,6 +749,8 @@
         // v9.0: 同步出发地/人数
         if (state.origin) params.set('origin', state.origin);
         if (state.travelers) params.set('travelers', state.travelers);
+        // v10.4: 同步出行日期
+        if (state.travelDate) params.set('date', state.travelDate);
         return `${location.pathname}?${params.toString()}`;
     }
 
@@ -769,14 +779,14 @@
         if (!list.length) { dom.rankingList.innerHTML = '<p class="empty-guide">城市数据加载中…</p>'; return; }
 
         dom.rankingList.innerHTML = list.map((c, i) => `
-            <article class="rank-card" data-rank="${String(i + 1).padStart(2, '0')}" data-city="${c.name}">
+            <article class="rank-card" data-rank="${String(i + 1).padStart(2, '0')}" data-city="${escapeHtml(c.name)}">
                 <div class="rc-body">
-                    <div class="rc-name">${c.name}</div>
-                    <div class="rc-title">${c.title || ''}</div>
-                    <div class="rc-tags">${(c.tags || []).slice(0, 3).map(t => `<span class="rc-tag">${t}</span>`).join('')}</div>
+                    <div class="rc-name">${escapeHtml(c.name)}</div>
+                    <div class="rc-title">${escapeHtml(c.title || '')}</div>
+                    <div class="rc-tags">${(c.tags || []).slice(0, 3).map(t => `<span class="rc-tag">${escapeHtml(t)}</span>`).join('')}</div>
                     <div class="rc-meta">
-                        <span>季节 <strong>${c.season || '四季皆宜'}</strong></span>
-                        <span>建议 <strong>${(c.days || '3').replace(/天+$/, '')}天</strong></span>
+                        <span>季节 <strong>${escapeHtml(c.season || '四季皆宜')}</strong></span>
+                        <span>建议 <strong>${escapeHtml((c.days || '3').replace(/天+$/, ''))}天</strong></span>
                     </div>
                 </div>
                 <div class="rc-arrow">→</div>
@@ -2277,6 +2287,10 @@
         if (!g) return;
         let text = `《${g.title}》\n${g.subtitle || ''}\n${'─'.repeat(30)}\n`;
         text += `城市：${g.city}\n季节：${g.season || '四季皆宜'}\n行程：${g.duration || '3天'}\n预算：${g.overallBudget || (g.budget && g.budget.total) || '待估'}\n`;
+        // v10.4: 添加出行信息
+        if (g.origin) text += `出发地：${g.origin} → ${g.destination || g.city}\n`;
+        if (g.travelers) text += `出行人数：${g.travelers} 人\n`;
+        if (g.travelDate) text += `出行日期：${g.travelDate}\n`;
         if (g.routes) {
             text += `\n【行程】\n`;
             g.routes.forEach(r => { text += `Day ${r.day} ${r.theme || ''}：${r.routeLine || ''}\n`; });
@@ -2285,6 +2299,19 @@
             text += `\n【美食】\n`;
             g.foods.forEach(f => { text += `· ${f.name} ${f.price || ''} ${f.mustTry ? '(必吃)' : ''}\n`; });
         }
+        // v10.4: 添加景点预约提醒
+        const reservationSpots = getReservationSpots(g.city, g.routes);
+        if (reservationSpots.length) {
+            text += `\n【景点预约提醒】\n`;
+            reservationSpots.forEach(r => { text += `· ${r.name}：${r.advance}（${r.note}）\n`; });
+        }
+        // v10.4: 添加打卡机位
+        const photoSpots = getPhotoSpots(g.city);
+        if (photoSpots.length) {
+            text += `\n【打卡机位】\n`;
+            photoSpots.slice(0, 3).forEach(p => { text += `· ${p.name}：${p.time || ''} ${p.tip || ''}\n`; });
+        }
+        text += `\n${'─'.repeat(30)}\n由「行纪 XING JI」生成`;
         navigator.clipboard.writeText(text).then(
             () => toast('攻略已复制到剪贴板', 'success'),
             () => toast('复制失败，请手动选择', 'error')
@@ -2297,11 +2324,13 @@
         toast('正在生成海报…');
         html2canvas(node, { scale: 2, backgroundColor: null, useCORS: true }).then(canvas => {
             const link = document.createElement('a');
-            link.download = `${state.currentCity || '旅行'}-海报.png`;
+            // v10.4: 文件名带城市+日期，方便用户管理
+            const datePart = state.travelDate ? `-${state.travelDate}` : '';
+            link.download = `${state.currentCity || '旅行'}${datePart}-海报.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
             toast('海报已下载', 'success');
-        }).catch(() => toast('海报生成失败', 'error'));
+        }).catch(() => toast('海报生成失败，请检查网络后重试', 'error'));
     }
 
     function downloadFile(name, content) {
