@@ -19,9 +19,15 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS配置
+// CORS配置（修复：origin: '*' 与 credentials: true 冲突）
+const allowedOrigins = (process.env.CORS_ORIGIN || '*').split(',').filter(Boolean);
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: (origin, cb) => {
+    // 允许无 origin 的请求（服务端调用、Postman）
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -43,10 +49,28 @@ startWeatherSync(10);
 app.use('/api', require('./routes/api'));
 
 // 托管前端静态资源（统一部署：后端同时提供 API 与前端页面）
+// 修复 P0 安全漏洞：原代码暴露整个项目根目录（含 .env、backend/、node_modules/）
 const frontendRoot = path.join(__dirname, '..');
+
+// 安全防护：禁止访问敏感路径
+app.use((req, res, next) => {
+  const sensitivePaths = ['/backend', '/data', '/node_modules', '/.env', '/.git', '/.trae', '/package.json', '/package-lock.json', '/render.yaml'];
+  if (sensitivePaths.some(p => req.path === p || req.path.startsWith(p + '/'))) {
+    return res.status(403).json({ success: false, error: '访问被禁止' });
+  }
+  next();
+});
+
 app.use(express.static(frontendRoot, {
   index: 'index.html',
-  maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0
+  maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0,
+  // 限制可访问的扩展名
+  setHeaders: (res, filePath) => {
+    // 阻止 .env、.js（非前端）等敏感文件被直接访问
+    if (/\.(env|md|log|txt)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-store');
+    }
+  }
 }));
 
 // 健康检查接口
@@ -89,11 +113,8 @@ app.get('/api-info', (req, res) => {
   });
 });
 
-// 错误处理中间件
-const { errorHandler } = require('./middleware/validation');
-app.use(errorHandler);
-
-// 404处理
+// 错误处理中间件顺序修复：业务路由 → 404 → errorHandler
+// 404处理（必须在 errorHandler 之前）
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -102,21 +123,26 @@ app.use((req, res) => {
   });
 });
 
+// 错误处理中间件（最后注册）
+const { errorHandler } = require('./middleware/validation');
+app.use(errorHandler);
+
 // 初始化并启动服务器
+let httpServer;
 async function initializeServer() {
   try {
     console.log('🚀 正在初始化服务器...');
-    
+
     // 初始化存储服务
     await storage.initialize(mongoose);
     console.log('✅ 存储服务初始化完成');
-    
+
     // 初始化社交服务
     await socialService.initialize();
     console.log('✅ 社交服务初始化完成');
-    
-    // 启动服务器
-    app.listen(PORT, () => {
+
+    // 启动服务器（保存实例用于优雅关闭）
+    httpServer = app.listen(PORT, () => {
       console.log('');
       console.log('═══════════════════════════════════════');
       console.log('  旅游攻略生成器 API 服务已启动');
@@ -133,29 +159,38 @@ async function initializeServer() {
       console.log('═══════════════════════════════════════');
       console.log('');
     });
-    
+
   } catch (error) {
     console.error('❌ 服务器初始化失败:', error);
     process.exit(1);
   }
 }
 
-// 优雅关闭
-process.on('SIGTERM', () => {
-  console.log('收到SIGTERM信号，正在关闭服务器...');
-  mongoose.connection.close(false).then(() => {
-    console.log('MongoDB连接已关闭');
+// 优雅关闭（修复：先关闭 HTTP 服务器让现有请求完成，再关闭数据库）
+function gracefulShutdown(signal) {
+  console.log(`收到${signal}信号，正在优雅关闭服务器...`);
+  if (httpServer) {
+    httpServer.close(() => {
+      console.log('HTTP 服务器已关闭');
+      mongoose.connection.close(false).then(() => {
+        console.log('MongoDB 连接已关闭');
+        process.exit(0);
+      }).catch(err => {
+        console.error('关闭 MongoDB 连接失败:', err);
+        process.exit(1);
+      });
+    });
+    // 5秒超时强制退出
+    setTimeout(() => {
+      console.error('优雅关闭超时，强制退出');
+      process.exit(1);
+    }, 5000);
+  } else {
     process.exit(0);
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('收到SIGINT信号，正在关闭服务器...');
-  mongoose.connection.close(false).then(() => {
-    console.log('MongoDB连接已关闭');
-    process.exit(0);
-  });
-});
+  }
+}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // 未捕获异常处理
 process.on('uncaughtException', (error) => {
