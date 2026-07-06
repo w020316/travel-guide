@@ -412,6 +412,7 @@
         resultPage: $('resultPage'), homePage: $('homePage'),
         resultTitle: $('resultTitle'), guideContent: $('guideContent'), poster: $('poster'),
         backBtn: $('backBtn'), favoriteBtn: $('favoriteBtn'), copyTextBtn: $('copyTextBtn'), downloadPosterBtn: $('downloadPosterBtn'),
+        shareLinkBtn: $('shareLinkBtn'),
         posterStyles: $('posterStyles'),
         navFavCount: $('navFavCount'), navFavoritesBtn: $('navFavoritesBtn'),
         favoritesModal: $('favoritesModal'), closeFavoritesModal: $('closeFavoritesModal'),
@@ -427,6 +428,92 @@
         renderHistory();
         updateFavCount();
         bindEvents();
+        // 检测 URL 参数，自动打开攻略（支持分享链接）
+        const urlState = parseUrlState();
+        if (urlState && urlState.city) {
+            // 同步表单状态
+            if (urlState.days) {
+                state.selectedDays = urlState.days;
+                dom.dayPills.querySelectorAll('.pill').forEach(p => {
+                    p.classList.toggle('active', parseInt(p.dataset.days, 10) === urlState.days);
+                });
+            }
+            if (urlState.travelType) {
+                state.travelType = urlState.travelType;
+                dom.travelType.value = urlState.travelType;
+            }
+            if (urlState.budgetRange) {
+                state.budgetRange = urlState.budgetRange;
+                dom.budgetRange.value = urlState.budgetRange;
+            }
+            dom.cityInput.value = urlState.city;
+            // 延迟一帧以等待页面渲染完成
+            setTimeout(() => submitCity(urlState.city), 60);
+        }
+    }
+
+    // ---------- 分享链接：URL 状态管理 ----------
+    // 将城市+天数+偏好编码到 URL query string，支持分享后打开即显示同一攻略
+    function updateShareUrl(city, prefs) {
+        try {
+            const params = new URLSearchParams();
+            params.set('city', city);
+            if (prefs.days) params.set('days', String(prefs.days));
+            if (prefs.travelType) params.set('type', prefs.travelType);
+            if (prefs.budgetRange) params.set('budget', prefs.budgetRange);
+            const newUrl = `${location.pathname}?${params.toString()}${location.hash}`;
+            history.replaceState(null, '', newUrl);
+        } catch (e) {
+            console.warn('更新分享 URL 失败:', e);
+        }
+    }
+
+    // 解析 URL 参数为状态对象
+    function parseUrlState() {
+        try {
+            const params = new URLSearchParams(location.search);
+            const city = params.get('city');
+            if (!city) return null;
+            return {
+                city: decodeURIComponent(city),
+                days: params.get('days') ? parseInt(params.get('days'), 10) : null,
+                travelType: params.get('type') || null,
+                budgetRange: params.get('budget') || null
+            };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // 复制当前攻略的分享链接到剪贴板
+    function copyShareLink(city) {
+        const shareUrl = buildShareUrl(city || state.currentCity);
+        if (!shareUrl) { toast('暂无可分享的攻略', 'error'); return; }
+        const fullUrl = location.origin + shareUrl;
+        navigator.clipboard.writeText(fullUrl).then(
+            () => toast('攻略链接已复制，可粘贴给好友', 'success'),
+            () => {
+                // 降级方案：使用临时 input
+                const tmp = document.createElement('input');
+                tmp.value = fullUrl;
+                document.body.appendChild(tmp);
+                tmp.select();
+                try { document.execCommand('copy'); toast('攻略链接已复制', 'success'); }
+                catch { toast('复制失败，请手动复制地址栏链接', 'error'); }
+                tmp.remove();
+            }
+        );
+    }
+
+    // 根据城市+当前偏好构造分享 URL（相对路径）
+    function buildShareUrl(city) {
+        if (!city) return null;
+        const params = new URLSearchParams();
+        params.set('city', city);
+        params.set('days', String(state.selectedDays));
+        params.set('type', state.travelType);
+        params.set('budget', state.budgetRange);
+        return `${location.pathname}?${params.toString()}`;
     }
 
     // ---------- 热门城市快捷 ----------
@@ -493,12 +580,29 @@
         if (!state.history.length) { dom.historySection.hidden = true; return; }
         dom.historySection.hidden = false;
         dom.historyList.innerHTML = state.history.slice(0, 8).map(h => `
-            <div class="history-chip" data-city="${h.city}">
-                <span>${h.city}</span><span class="hc-time">${timeAgo(h.time)}</span>
+            <div class="history-chip" data-city="${escapeHtml(h.city)}">
+                <span class="hc-name">${escapeHtml(h.city)}</span>
+                <span class="hc-time">${timeAgo(h.time)}</span>
+                <button class="hc-share" data-city="${escapeHtml(h.city)}" title="复制该攻略链接" aria-label="复制 ${escapeHtml(h.city)} 攻略链接">
+                    <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8M5 5l3-3 3 3M3 10v3a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
             </div>
         `).join('');
+        // 点击主体（非分享按钮）重新打开攻略
         dom.historyList.querySelectorAll('.history-chip').forEach(chip => {
-            chip.onclick = () => { const city = chip.dataset.city; dom.cityInput.value = city; submitCity(city); };
+            chip.onclick = (e) => {
+                if (e.target.closest('.hc-share')) return; // 分享按钮单独处理
+                const city = chip.dataset.city;
+                dom.cityInput.value = city;
+                submitCity(city);
+            };
+        });
+        // 分享按钮：复制该城市的攻略链接
+        dom.historyList.querySelectorAll('.hc-share').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                copyShareLink(btn.dataset.city);
+            };
         });
     }
 
@@ -535,6 +639,7 @@
         dom.favoriteBtn.onclick = toggleFavorite;
         dom.copyTextBtn.onclick = copyGuideText;
         dom.downloadPosterBtn.onclick = downloadPoster;
+        dom.shareLinkBtn.onclick = () => copyShareLink(state.currentCity);
 
         // 海报风格
         dom.posterStyles.querySelectorAll('.style-pill').forEach(p => {
@@ -594,10 +699,18 @@
         showLoading(city);
         const prefs = { days: state.selectedDays, travelType: state.travelType, budgetRange: state.budgetRange };
         try {
-            const guide = normalizeGuideData(await API.generateGuide(city, prefs));
+            let guide = normalizeGuideData(await API.generateGuide(city, prefs));
+            // 城市混淆检测：如果 AI 返回的内容明显属于其他城市，回退到本地智能数据
+            if (guide && guide.cityMismatch) {
+                console.warn(`⚠️ AI 城市混淆，回退本地数据：${city}`);
+                toast('AI 数据异常，已切换为本地智能数据', 'info');
+                guide = normalizeGuideData(buildLocalGuide(city, prefs));
+            }
             state.currentGuide = guide;
             state.currentCity = city;
             addHistory(city);
+            // 更新 URL，使当前攻略可通过链接分享
+            updateShareUrl(city, prefs);
             renderResult(guide);
             hideLoading();
             showResult();
@@ -613,6 +726,33 @@
         renderGuide(g);
         renderPoster();
         updateFavoriteBtn();
+    }
+
+    // ---------- 外部资源链接生成器 ----------
+    // 为攻略中的景点/美食/住宿生成可点击的外部资源链接
+    // - 景点 → 高德地图搜索（国内可用，无需 API Key）
+    // - 美食 → 大众点评搜索（餐饮垂类，更精准）
+    // - 住宿 → 高德地图搜索（区域定位）
+    // - 百科 → 百度百科（景点补充资料）
+    function escapeHtml(s) {
+        return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function amapSearchUrl(query) {
+        // 高德地图搜索 URL（在地图上展示该地点）
+        return `https://www.amap.com/search?query=${encodeURIComponent(query)}`;
+    }
+    function dianpingSearchUrl(city, query) {
+        // 大众点评搜索 URL（城市+美食名）
+        return `https://www.dianping.com/search/keyword/0/0_${encodeURIComponent(city + ' ' + query)}`;
+    }
+    function baikeUrl(term) {
+        // 百度百科词条 URL
+        return `https://baike.baidu.com/item/${encodeURIComponent(term)}`;
+    }
+    // 生成一个外链图标（SVG，新窗口打开）
+    function extLinkHtml(url, label) {
+        if (!url) return '';
+        return `<a class="ext-link" href="${url}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(label || '查看详情')}">${escapeHtml(label || '详情')}<svg class="ext-link-icon" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M6 3h7v7M13 3L6 10M11 13H4V6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>`;
     }
 
     function renderGuide(g) {
@@ -649,7 +789,15 @@
                                     <span class="route-day-theme">${r.theme || r.title || `Day ${r.day || 1}`}</span>
                                 </div>
                                 ${routeLine ? `<div class="route-day-route">${routeLine}</div>` : ''}
-                                ${spots.length ? `<ul class="route-list">${spots.map(s => `<li>${s}</li>`).join('')}</ul>` : ''}
+                                ${spots.length ? `<ul class="route-list">${spots.map(s => `
+                                    <li>
+                                        <span class="rl-name">${escapeHtml(s)}</span>
+                                        <span class="rl-links">
+                                            ${extLinkHtml(amapSearchUrl(g.city + ' ' + s), '地图')}
+                                            ${extLinkHtml(baikeUrl(s), '百科')}
+                                        </span>
+                                    </li>
+                                `).join('')}</ul>` : ''}
                             </div>
                         `;
                     }).join('')}
@@ -663,17 +811,24 @@
                 <section class="gc-section">
                     <h2><span class="gc-idx">02</span>必尝美食</h2>
                     <div class="food-grid">
-                        ${g.foods.map(f => `
+                        ${g.foods.map(f => {
+                            const foodName = escapeHtml(f.name || '');
+                            return `
                             <div class="food-card">
                                 ${f.mustTry ? '<span class="fc-must">必吃</span>' : ''}
-                                <div class="fc-name">${f.name}</div>
-                                ${f.description ? `<div class="fc-desc">${f.description}</div>` : ''}
+                                <div class="fc-name">${foodName}</div>
+                                ${f.description ? `<div class="fc-desc">${escapeHtml(f.description)}</div>` : ''}
                                 <div class="fc-meta">
-                                    <span class="fc-price">${f.price || '—'}</span>
-                                    <span class="fc-loc">${(f.whereToEat && f.whereToEat[0] && f.whereToEat[0].name) || f.location || ''}</span>
+                                    <span class="fc-price">${escapeHtml(f.price || '—')}</span>
+                                    <span class="fc-loc">${escapeHtml((f.whereToEat && f.whereToEat[0] && f.whereToEat[0].name) || f.location || '')}</span>
+                                </div>
+                                <div class="fc-links">
+                                    ${extLinkHtml(dianpingSearchUrl(g.city, f.name), '大众点评')}
+                                    ${extLinkHtml(amapSearchUrl(g.city + ' ' + f.name), '附近餐厅')}
                                 </div>
                             </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </section>
             `);
@@ -726,16 +881,24 @@
                 <section class="gc-section">
                     <h2><span class="gc-idx">03</span>住宿推荐</h2>
                     <div class="accommodation-grid">
-                        ${g.accommodations.map(a => `
+                        ${g.accommodations.map(a => {
+                            const acName = a.name || a.area || '住宿';
+                            const searchQuery = g.city + ' ' + (a.area || acName);
+                            return `
                             <div class="accommodation-card">
-                                <div class="ac-name">${a.name || a.area || '住宿'}</div>
-                                ${a.area ? `<div class="ac-area">${a.area}</div>` : ''}
-                                ${a.priceRange ? `<div class="ac-price">${typeof a.priceRange === 'string' ? a.priceRange : (a.priceRange.lowSeason ? a.priceRange.lowSeason + '~' + a.priceRange.peakSeason : '')}</div>` : ''}
-                                ${a.features && a.features.length ? `<div class="ac-features">${a.features.map(f => `<span>${f}</span>`).join('')}</div>` : ''}
-                                ${a.pros ? `<div class="ac-pros"><strong>优点：</strong>${a.pros}</div>` : ''}
-                                ${a.cons ? `<div class="ac-cons"><strong>不足：</strong>${a.cons}</div>` : ''}
+                                <div class="ac-name">${escapeHtml(acName)}</div>
+                                ${a.area ? `<div class="ac-area">${escapeHtml(a.area)}</div>` : ''}
+                                ${a.priceRange ? `<div class="ac-price">${typeof a.priceRange === 'string' ? escapeHtml(a.priceRange) : (a.priceRange.lowSeason ? escapeHtml(a.priceRange.lowSeason) + '~' + escapeHtml(a.priceRange.peakSeason) : '')}</div>` : ''}
+                                ${a.features && a.features.length ? `<div class="ac-features">${a.features.map(f => `<span>${escapeHtml(f)}</span>`).join('')}</div>` : ''}
+                                ${a.pros ? `<div class="ac-pros"><strong>优点：</strong>${escapeHtml(a.pros)}</div>` : ''}
+                                ${a.cons ? `<div class="ac-cons"><strong>不足：</strong>${escapeHtml(a.cons)}</div>` : ''}
+                                <div class="ac-links">
+                                    ${extLinkHtml(amapSearchUrl(searchQuery), '地图查看')}
+                                    ${extLinkHtml(`https://hotel.qunar.com/cn/list.php?cityName=${encodeURIComponent(g.city)}&fromDate=&toDate=&q=${encodeURIComponent(a.area || acName)}`, '比价订房')}
+                                </div>
                             </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </section>
             `);
@@ -808,6 +971,10 @@
     function showHome() {
         dom.resultPage.hidden = true;
         dom.homePage.hidden = false;
+        // 清除 URL 中的攻略参数，避免刷新后再次自动打开
+        try {
+            if (location.search) history.replaceState(null, '', location.pathname + location.hash);
+        } catch (e) { /* 忽略 */ }
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 

@@ -690,6 +690,69 @@ input, select { font-family: inherit; }
     box-shadow: 0 0 0 4px var(--accent-soft), inset 0 1px 0 rgba(255,255,255,.8);
 }
 
+/* ---------- 攻略外链（v8.0 新增）---------- */
+/* 外链通用样式：低调、杂志感，避免廉价蓝色 */
+.ext-link {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 12px; color: var(--muted);
+    text-decoration: none; padding: 3px 8px;
+    border: 1px solid var(--line); border-radius: 4px;
+    background: var(--surface);
+    transition: all .18s ease;
+    line-height: 1.4;
+}
+.ext-link:hover {
+    color: var(--accent); border-color: var(--accent);
+    background: var(--accent-soft);
+}
+.ext-link-icon {
+    display: inline-block; vertical-align: middle;
+    margin-top: -1px; opacity: .7;
+}
+.ext-link:hover .ext-link-icon { opacity: 1; }
+
+/* 行程列表项：景点名 + 链接组 */
+.route-list li {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+}
+.route-list .rl-name { flex: 1; min-width: 0; }
+.route-list .rl-links { display: inline-flex; gap: 6px; flex-shrink: 0; }
+
+/* 美食卡片底部链接 */
+.food-card .fc-links {
+    display: flex; gap: 8px; margin-top: 12px;
+    padding-top: 12px; border-top: 1px dashed var(--line);
+}
+
+/* 住宿卡片底部链接 */
+.accommodation-card .ac-links {
+    display: flex; gap: 8px; margin-top: 12px;
+    padding-top: 12px; border-top: 1px dashed var(--line);
+}
+
+/* 历史记录分享按钮 */
+.history-chip .hc-name { font-weight: 500; }
+.history-chip .hc-share {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; padding: 0;
+    border: none; background: transparent;
+    color: var(--muted-2); cursor: pointer;
+    border-radius: 4px; transition: all .18s ease;
+    margin-left: 4px;
+}
+.history-chip .hc-share:hover {
+    color: var(--accent); background: var(--accent-soft);
+}
+.history-chip .hc-share svg { display: block; }
+
+/* 移动端：外链换行优化 */
+@media (max-width: 720px) {
+    .route-list li { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .route-list .rl-links { width: 100%; }
+    .food-card .fc-links, .accommodation-card .ac-links { flex-wrap: wrap; }
+}
+
 /* ---------- 响应式 ---------- */
 @media (max-width: 960px) {
     .result-grid { grid-template-columns: 1fr; gap: 32px; }
