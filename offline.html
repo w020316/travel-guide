@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离线 · 行纪</title>
+    <meta name="theme-color" content="#C8553D">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #FAF7F2;
+            color: #1C1A17;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            line-height: 1.7;
+        }
+        .card {
+            max-width: 480px;
+            text-align: center;
+            background: #FEFDFB;
+            border: 1px solid #E4DDD1;
+            border-radius: 16px;
+            padding: 56px 40px;
+            box-shadow: 0 1px 2px rgba(28,26,23,.04), 0 12px 32px rgba(28,26,23,.05);
+        }
+        .brand-mark {
+            width: 64px; height: 64px;
+            display: inline-grid; place-items: center;
+            background: #1C1A17; color: #FAF7F2;
+            font-family: 'Noto Serif SC', serif; font-weight: 700; font-size: 36px;
+            border-radius: 12px;
+            transform: rotate(-3deg);
+            margin-bottom: 28px;
+        }
+        h1 {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 700;
+            font-size: 32px;
+            margin-bottom: 16px;
+            letter-spacing: -.01em;
+        }
+        .eyebrow {
+            font-size: 12px;
+            letter-spacing: .32em;
+            text-transform: uppercase;
+            color: #C8553D;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        p {
+            color: #6B655C;
+            font-size: 15px;
+            margin-bottom: 32px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: #1C1A17;
+            color: #FAF7F2;
+            border-radius: 999px;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 15px;
+            letter-spacing: .04em;
+            transition: all .25s ease;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn:hover { background: #C8553D; transform: translateY(-1px); }
+        .features {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px dashed #E4DDD1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            font-size: 12px;
+            color: #9A9388;
+        }
+        .feature {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .feature-icon {
+            font-size: 20px;
+            color: #C8553D;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="brand-mark">行</div>
+        <p class="eyebrow">Offline Mode</p>
+        <h1>当前处于离线状态</h1>
+        <p>别担心，已生成的攻略、收藏与照片仍可在本地访问。<br>恢复网络后即可继续生成新的攻略。</p>
+        <button class="btn" onclick="location.reload()">重新连接</button>
+        <div class="features">
+            <div class="feature">
+                <span class="feature-icon">✓</span>
+                <span>历史攻略</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">✓</span>
+                <span>本地收藏</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">✓</span>
+                <span>照片存储</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 监听网络恢复
+        window.addEventListener('online', () => location.reload());
+    </script>
+</body>
+</html>

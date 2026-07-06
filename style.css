@@ -399,7 +399,8 @@ input, select { font-family: inherit; }
 .back-btn { font-size: 15px; color: var(--ink-2); transition: color .2s; }
 .back-btn:hover { color: var(--accent); }
 .result-title { font-family: var(--serif); font-weight: 700; font-size: clamp(22px, 3vw, 32px); }
-.result-actions { display: flex; gap: 8px; }
+.result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.result-actions .icon-btn { white-space: nowrap; }
 
 .result-grid { display: grid; grid-template-columns: 360px 1fr; gap: 48px; align-items: start; }
 
@@ -803,6 +804,36 @@ input, select { font-family: inherit; }
 }
 .history-chip .hc-share svg { display: block; }
 
+/* v10.5: 历史记录单条删除按钮 */
+.history-chip .hc-del {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; padding: 0;
+    border: none; background: transparent;
+    color: var(--muted-2); cursor: pointer;
+    border-radius: 4px; transition: all .18s ease;
+    margin-left: 2px;
+}
+.history-chip .hc-del:hover {
+    color: #B23A30; background: rgba(178,58,48,.10);
+}
+.history-chip .hc-del svg { display: block; }
+.history-chip:hover .hc-del { color: var(--muted); }
+
+/* v10.5: 小尺寸幽灵按钮（用于清空历史等次要操作） */
+.btn-ghost.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    transition: all .2s;
+}
+.btn-ghost.btn-sm:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
 /* 移动端：外链换行优化 */
 @media (max-width: 720px) {
     .route-list li { flex-direction: column; align-items: flex-start; gap: 6px; }
@@ -828,6 +859,7 @@ input, select { font-family: inherit; }
     .ranking-grid { grid-template-columns: 1fr; }
     .result-topbar { flex-wrap: wrap; }
     .result-actions { width: 100%; }
+    .result-actions .icon-btn { flex: 1; min-width: 64px; text-align: center; }
     .food-grid { grid-template-columns: 1fr; }
     .modal-foot { flex-direction: column; }
     .modal-foot .btn-ghost { width: 100%; }

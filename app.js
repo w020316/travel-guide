@@ -618,12 +618,12 @@
         originInput: $('originInput'), destinationInput: $('destinationInput'), travelers: $('travelers'),
         travelDateInput: $('travelDateInput'),
         quickCities: $('quickCities'), rankingList: $('rankingList'),
-        historySection: $('historySection'), historyList: $('recentHistoryList'),
+        historySection: $('historySection'), historyList: $('recentHistoryList'), clearHistoryBtn: $('clearHistoryBtn'),
         loading: $('loading'), loadingCity: $('loadingCity'), loadingSub: $('loadingSub'), loadingBar: $('loadingBar'),
         resultPage: $('resultPage'), homePage: $('homePage'),
         resultTitle: $('resultTitle'), guideContent: $('guideContent'), poster: $('poster'),
         backBtn: $('backBtn'), favoriteBtn: $('favoriteBtn'), copyTextBtn: $('copyTextBtn'), downloadPosterBtn: $('downloadPosterBtn'),
-        shareLinkBtn: $('shareLinkBtn'),
+        shareLinkBtn: $('shareLinkBtn'), weatherBtn: $('weatherBtn'), regenerateBtn: $('regenerateBtn'),
         posterStyles: $('posterStyles'),
         navFavCount: $('navFavCount'), navFavoritesBtn: $('navFavoritesBtn'),
         favoritesModal: $('favoritesModal'), closeFavoritesModal: $('closeFavoritesModal'),
@@ -818,18 +818,21 @@
         if (!state.history.length) { dom.historySection.hidden = true; return; }
         dom.historySection.hidden = false;
         dom.historyList.innerHTML = state.history.slice(0, 8).map(h => `
-            <div class="history-chip" data-city="${escapeHtml(h.city)}">
+            <div class="history-chip" data-city="${escapeHtml(h.city)}" data-time="${h.time}">
                 <span class="hc-name">${escapeHtml(h.city)}</span>
                 <span class="hc-time">${timeAgo(h.time)}</span>
                 <button class="hc-share" data-city="${escapeHtml(h.city)}" title="复制该攻略链接" aria-label="复制 ${escapeHtml(h.city)} 攻略链接">
                     <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M8 2v8M5 5l3-3 3 3M3 10v3a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
+                <button class="hc-del" data-city="${escapeHtml(h.city)}" title="删除此条记录" aria-label="删除 ${escapeHtml(h.city)} 历史">
+                    <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3 4h10M6 4V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1M5 4l1 9a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1l1-9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
             </div>
         `).join('');
-        // 点击主体（非分享按钮）重新打开攻略
+        // 点击主体（非按钮）重新打开攻略
         dom.historyList.querySelectorAll('.history-chip').forEach(chip => {
             chip.onclick = (e) => {
-                if (e.target.closest('.hc-share')) return; // 分享按钮单独处理
+                if (e.target.closest('.hc-share, .hc-del')) return;
                 const city = chip.dataset.city;
                 dom.cityInput.value = city;
                 submitCity(city);
@@ -840,6 +843,15 @@
             btn.onclick = (e) => {
                 e.stopPropagation();
                 copyShareLink(btn.dataset.city);
+            };
+        });
+        // v10.5: 单条删除按钮
+        dom.historyList.querySelectorAll('.hc-del').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const city = btn.dataset.city;
+                removeHistory(city);
+                toast(`已删除「${city}」历史记录`);
             };
         });
     }
@@ -898,6 +910,32 @@
         dom.copyTextBtn.onclick = copyGuideText;
         dom.downloadPosterBtn.onclick = downloadPoster;
         dom.shareLinkBtn.onclick = () => copyShareLink(state.currentCity);
+        // v10.5: 查天气（链接到中国天气网官方搜索页）
+        if (dom.weatherBtn) {
+            dom.weatherBtn.onclick = () => {
+                const city = state.currentGuide?.city || state.currentCity;
+                if (!city) { toast('请先生成攻略'); return; }
+                // 中国天气网官方搜索：http://www.weather.com.cn/search101/?cityname=成都
+                const url = `http://www.weather.com.cn/search101/?cityname=${encodeURIComponent(city)}`;
+                window.open(url, '_blank', 'noopener,noreferrer');
+                toast(`已打开「${city}」天气查询`);
+            };
+        }
+        // v10.5: 再次生成（保留城市，返回首页调整参数）
+        if (dom.regenerateBtn) {
+            dom.regenerateBtn.onclick = () => {
+                const city = state.currentGuide?.city || state.currentCity;
+                if (!city) { toast('请先生成攻略'); return; }
+                dom.cityInput.value = city;
+                showHome();
+                // 滚动到搜索区
+                setTimeout(() => {
+                    dom.cityInput.focus();
+                    dom.cityInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+                toast(`已填入「${city}」，调整参数后重新生成`);
+            };
+        }
 
         // 海报风格
         dom.posterStyles.querySelectorAll('.style-pill').forEach(p => {
@@ -915,6 +953,15 @@
         dom.favoritesModal.addEventListener('click', (e) => { if (e.target === dom.favoritesModal) closeFavorites(); });
         dom.clearAllFavorites.onclick = clearFavorites;
         dom.exportFavorites.onclick = exportFavorites;
+        // v10.5: 清空历史
+        if (dom.clearHistoryBtn) {
+            dom.clearHistoryBtn.onclick = () => {
+                if (state.history.length === 0) { toast('暂无历史记录'); return; }
+                if (confirm(`确定清空全部 ${state.history.length} 条浏览历史？此操作不可撤销。`)) {
+                    clearAllHistory();
+                }
+            };
+        }
 
         dom.brandHome.onclick = (e) => { e.preventDefault(); showHome(); };
     }
@@ -2280,6 +2327,19 @@
         localStorage.setItem('xj_history', JSON.stringify(state.history));
         renderHistory();
     }
+    // v10.5: 删除单条历史
+    function removeHistory(city) {
+        state.history = state.history.filter(h => h.city !== city);
+        localStorage.setItem('xj_history', JSON.stringify(state.history));
+        renderHistory();
+    }
+    // v10.5: 清空全部历史
+    function clearAllHistory() {
+        state.history = [];
+        localStorage.removeItem('xj_history');
+        renderHistory();
+        toast('已清空全部浏览历史');
+    }
 
     // ---------- 复制 / 下载 ----------
     function copyGuideText() {
@@ -2357,7 +2417,16 @@
         if (s < 60) return '刚刚';
         if (s < 3600) return Math.floor(s / 60) + '分钟前';
         if (s < 86400) return Math.floor(s / 3600) + '小时前';
-        return Math.floor(s / 86400) + '天前';
+        if (s < 86400 * 7) return Math.floor(s / 86400) + '天前';
+        // v10.5: 超过 7 天显示日期格式
+        const d = new Date(ts);
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        // 同年省略年份，跨年显示完整日期
+        if (d.getFullYear() === now.getFullYear()) {
+            return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        }
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     }
 
     // 启动

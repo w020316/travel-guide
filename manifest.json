@@ -1,1 +1,38 @@
-{"name": "旅游攻略海报生成器", "short_name": "旅游攻略", "description": "一键生成中国任意城市旅游攻略与精美海报", "start_url": "/", "display": "standalone", "background_color": "#FAFAF9", "theme_color": "#FF6B6B", "orientation": "portrait-primary", "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"}, {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}], "categories": ["travel", "lifestyle"], "lang": "zh-CN", "dir": "ltr", "scope": "/", "screenshots": [], "prefer_related_applications": false}
+{
+    "name": "行纪 · 中国城市旅行攻略生成器",
+    "short_name": "行纪",
+    "description": "输入任意中国城市，AI 为你生成一份可执行的深度旅行攻略与精美海报。527 座城市数据库，个性化行程定制。",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#FAF7F2",
+    "theme_color": "#C8553D",
+    "lang": "zh-CN",
+    "dir": "ltr",
+    "categories": ["travel", "lifestyle", "productivity"],
+    "icons": [
+        {
+            "src": "/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [],
+    "prefer_related_applications": false,
+    "shortcuts": [
+        {
+            "name": "生成攻略",
+            "short_name": "攻略",
+            "description": "输入城市名，立即生成攻略",
+            "url": "/#search"
+        },
+        {
+            "name": "热门榜单",
+            "short_name": "榜单",
+            "description": "查看本周值得一去的地方",
+            "url": "/#ranking"
+        }
+    ]
+}
