@@ -1,4 +1,12 @@
-const citiesData = require('../data/cities');
+// 优先加载 627 城扩展数据库，回退到内置 25 城
+let citiesData = {};
+try {
+    citiesData = require('../../data/expandedCities.js');
+    console.log(`📂 已加载扩展城市数据库: ${Object.keys(citiesData).length} 个城市`);
+} catch (e) {
+    console.warn('⚠️ 扩展城市数据库加载失败，回退到内置数据:', e.message);
+    citiesData = require('../data/cities');
+}
 
 class StorageService {
   constructor() {

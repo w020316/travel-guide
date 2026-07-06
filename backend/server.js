@@ -52,9 +52,16 @@ app.use('/api', require('./routes/api'));
 // 修复 P0 安全漏洞：原代码暴露整个项目根目录（含 .env、backend/、node_modules/）
 const frontendRoot = path.join(__dirname, '..');
 
-// 安全防护：禁止访问敏感路径
+// 安全防护：禁止访问敏感路径（放行前端所需的 data/expandedCities.js）
 app.use((req, res, next) => {
-  const sensitivePaths = ['/backend', '/data', '/node_modules', '/.env', '/.git', '/.trae', '/package.json', '/package-lock.json', '/render.yaml'];
+  const sensitivePaths = ['/backend', '/node_modules', '/.env', '/.git', '/.trae', '/package.json', '/package-lock.json', '/render.yaml'];
+  // /data 目录只允许访问 expandedCities.js（前端城市数据库）
+  if (req.path === '/data' || req.path.startsWith('/data/')) {
+    if (req.path !== '/data/expandedCities.js') {
+      return res.status(403).json({ success: false, error: '访问被禁止' });
+    }
+    return next();
+  }
   if (sensitivePaths.some(p => req.path === p || req.path.startsWith(p + '/'))) {
     return res.status(403).json({ success: false, error: '访问被禁止' });
   }

@@ -38,3 +38,6 @@ backend/.npm-cache/
 
 # TRAE 配置
 .trae/
+
+# 临时 git 提交消息文件
+.git-commit-msg.txt
