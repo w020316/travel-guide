@@ -1651,13 +1651,15 @@
         const ticketLinks = ticketCompareLinks(g.origin, g.destination || g.city);
         if (ticketLinks.length) {
             const tIdx = (g.accommodations && g.accommodations.length ? '05' : '04');
+            const hasOrigin = !!g.origin;
             sections.push(`
                 <section class="gc-section">
                     <h2><span class="gc-idx">${tIdx}</span>票务比价 · 火车票/机票</h2>
                     <div class="compare-note">
-                        <span class="compare-route">${escapeHtml(g.origin || '出发地')} → ${escapeHtml(g.destination || g.city)}</span>
+                        <span class="compare-route">${hasOrigin ? `${escapeHtml(g.origin)} → ${escapeHtml(g.destination || g.city)}` : `目的地：${escapeHtml(g.destination || g.city)}`}</span>
                         <span class="compare-date">${formatDate()}</span>
                     </div>
+                    ${hasOrigin ? '' : '<p class="compare-tip" style="background:#FFF8E7;border-left:3px solid #E8C875;">未填写出发地，以下链接直达各平台首页，请手动输入出发地与日期后搜索。</p>'}
                     <div class="compare-grid">
                         ${ticketLinks.map(t => `
                             <a class="compare-card" href="${t.url}" target="_blank" rel="noopener noreferrer">
@@ -1904,11 +1906,35 @@
         try { return JSON.parse(localStorage.getItem('xj_photos') || '[]'); }
         catch { return []; }
     }
+    // v10.3: 存储前检测容量，避免 QuotaExceededError 导致数据丢失
     function savePhotos(photos) {
         try {
-            localStorage.setItem('xj_photos', JSON.stringify(photos));
+            const data = JSON.stringify(photos);
+            // 检测存储容量（localStorage 通常限制 5MB）
+            const sizeMB = (data.length / 1024 / 1024).toFixed(2);
+            if (data.length > 4 * 1024 * 1024) {
+                // 超过 4MB 时强制只保留最新的 6 张
+                const trimmed = photos.slice(-6);
+                localStorage.setItem('xj_photos', JSON.stringify(trimmed));
+                toast(`照片存储已满（${sizeMB}MB），仅保留最新 6 张`, 'info');
+                return;
+            }
+            localStorage.setItem('xj_photos', data);
         } catch (e) {
-            toast('存储空间不足，请删除部分照片', 'error');
+            // 容量超限时，逐步删除旧照片重试
+            let list = photos.slice();
+            while (list.length > 0) {
+                try {
+                    localStorage.setItem('xj_photos', JSON.stringify(list));
+                    if (list.length < photos.length) {
+                        toast(`存储空间不足，已自动删除 ${photos.length - list.length} 张旧照片`, 'info');
+                    }
+                    return;
+                } catch {
+                    list.shift();
+                }
+            }
+            toast('存储空间不足，请清理浏览器数据后重试', 'error');
         }
     }
 
@@ -1920,9 +1946,20 @@
         if (!g) { toast('请先生成攻略', 'error'); return; }
         // 用第一张照片作为背景，叠加攻略信息
         const photo = photos[0];
+        // v10.3: 检测弹窗是否被拦截
         const poster = window.open('', '_blank');
+        if (!poster || poster.closed || typeof poster.closed === 'undefined') {
+            toast('弹窗被浏览器拦截，请允许本站弹窗后重试', 'error');
+            return;
+        }
+        // v10.3: 所有用户数据通过 textContent 注入，避免 XSS
+        const city = g.city || '';
+        const subtitle = g.subtitle || g.title || '';
+        const tags = (g.tags || []).slice(0, 3);
+        const routes = (g.routes || []).slice(0, 2).map(r => typeof r === 'string' ? r : (r.routeLine || r.theme || ''));
+        const budget = g.budget?.total || '';
         poster.document.write(`
-            <!DOCTYPE html><html><head><title>${g.city}旅拍海报 - 行纪</title>
+            <!DOCTYPE html><html><head><title>旅拍海报 - 行纪</title>
             <style>
                 body{margin:0;padding:0;font-family:'Noto Serif SC',serif;background:#1C1A17;display:flex;align-items:center;justify-content:center;min-height:100vh}
                 .poster{position:relative;width:600px;height:900px;overflow:hidden;background:#000}
@@ -1937,17 +1974,30 @@
                 .logo{position:absolute;top:30px;right:30px;font-size:11px;letter-spacing:.3em;opacity:.7}
             </style></head><body>
             <div class="poster">
-                <img src="${photo.data}" alt="${g.city}">
+                <img id="posterImg" alt="旅拍照片">
                 <div class="overlay">
                     <div class="logo">XING JI · TRAVEL</div>
-                    <h1 class="city">${g.city}</h1>
-                    <p class="subtitle">${g.subtitle || g.title || ''}</p>
-                    <div class="tags">${(g.tags || []).slice(0,3).map(t => `<span class="tag">${t}</span>`).join('')}</div>
-                    ${g.routes && g.routes.length ? `<div class="routes">${g.routes.slice(0,2).map(r => typeof r === 'string' ? r : (r.routeLine || r.theme || '')).join('<br>')}</div>` : ''}
-                    ${g.budget?.total ? `<div class="budget">${g.budget.total}</div>` : ''}
+                    <h1 class="city" id="posterCity"></h1>
+                    <p class="subtitle" id="posterSubtitle"></p>
+                    <div class="tags" id="posterTags"></div>
+                    <div class="routes" id="posterRoutes"></div>
+                    <div class="budget" id="posterBudget"></div>
                 </div>
             </div>
-            <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script>
+            <script>
+                (function(){
+                    var img = document.getElementById('posterImg');
+                    img.src = ${JSON.stringify(photo.data)};
+                    document.getElementById('posterCity').textContent = ${JSON.stringify(city)};
+                    document.getElementById('posterSubtitle').textContent = ${JSON.stringify(subtitle)};
+                    var tagsEl = document.getElementById('posterTags');
+                    ${JSON.stringify(tags)}.forEach(function(t){ var s=document.createElement('span'); s.className='tag'; s.textContent=t; tagsEl.appendChild(s); });
+                    var routesEl = document.getElementById('posterRoutes');
+                    ${JSON.stringify(routes)}.forEach(function(r,i){ if(i>0) routesEl.appendChild(document.createElement('br')); routesEl.appendChild(document.createTextNode(r)); });
+                    if (${JSON.stringify(budget)}) { document.getElementById('posterBudget').textContent = ${JSON.stringify(budget)}; }
+                    window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };
+                })();
+            <\/script>
             </body></html>
         `);
         poster.document.close();
@@ -2175,12 +2225,12 @@
         dom.favoritesList.innerHTML = state.favorites.map(f => `
             <div class="fav-item">
                 <div>
-                    <div class="fi-name">${f.city}</div>
-                    <div class="fi-title">${f.title || ''}</div>
+                    <div class="fi-name">${escapeHtml(f.city)}</div>
+                    <div class="fi-title">${escapeHtml(f.title || '')}</div>
                 </div>
                 <div class="fi-actions">
-                    <button class="fi-btn view" data-city="${f.city}">查看</button>
-                    <button class="fi-btn del" data-city="${f.city}">删除</button>
+                    <button class="fi-btn view" data-city="${escapeHtml(f.city)}">查看</button>
+                    <button class="fi-btn del" data-city="${escapeHtml(f.city)}">删除</button>
                 </div>
             </div>
         `).join('');

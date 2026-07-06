@@ -831,6 +831,18 @@ input, select { font-family: inherit; }
     .food-grid { grid-template-columns: 1fr; }
     .modal-foot { flex-direction: column; }
     .modal-foot .btn-ghost { width: 100%; }
+    /* v10.3: 搜索元数据在窄屏下每行 2 个字段 */
+    .search-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 18px;
+    }
+    .search-meta .meta-group { width: 100%; }
+    .search-meta .meta-label { font-size: 11px; }
+    .search-meta .input-ghost,
+    .search-meta .select-ghost { flex: 1; min-width: 0; max-width: none; }
+    /* 出行日期在窄屏下占满整行 */
+    .search-meta .meta-group:has(#travelDateInput) { grid-column: 1 / -1; }
 }
 
 /* 隐藏工具类 */
