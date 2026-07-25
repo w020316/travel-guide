@@ -45,6 +45,16 @@
                 <a href="#search" class="nav-link">生成攻略</a>
                 <button class="nav-link ghost-btn" id="navFavoritesBtn">我的收藏 <span class="badge" id="navFavCount">0</span></button>
             </nav>
+            <!-- P1-5: 移动端汉堡菜单（≤720px 显示），桌面隐藏 -->
+            <button class="nav-menu-btn" id="navMenuBtn" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="navMenu" aria-haspopup="menu">
+                <svg class="nm-icon-open" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <svg class="nm-icon-close" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+            <div class="nav-menu" id="navMenu" role="menu" aria-label="主导航菜单" hidden>
+                <a href="#ranking" class="nav-menu-item" role="menuitem" data-nav-menu>热门榜单</a>
+                <a href="#search" class="nav-menu-item" role="menuitem" data-nav-menu>生成攻略</a>
+                <button class="nav-menu-item" id="navMenuFavBtn" role="menuitem" data-nav-menu>我的收藏 <span class="badge" id="navMenuFavCount">0</span></button>
+            </div>
         </div>
     </header>
 
@@ -184,12 +194,12 @@
                 <button class="back-btn" id="backBtn">← 返回</button>
                 <h2 class="result-title" id="resultTitle">攻略</h2>
                 <div class="result-actions">
-                    <button class="icon-btn" id="favoriteBtn" title="收藏">收藏</button>
-                    <button class="icon-btn" id="copyTextBtn" title="复制文本">复制</button>
-                    <button class="icon-btn" id="shareLinkBtn" title="复制攻略链接">分享链接</button>
-                    <button class="icon-btn" id="downloadPosterBtn" title="下载海报">下载海报</button>
-                    <button class="icon-btn" id="weatherBtn" title="查看目的地天气">查天气</button>
-                    <button class="icon-btn" id="regenerateBtn" title="用相同城市换参数重新生成">再次生成</button>
+                    <button class="icon-btn" id="favoriteBtn" title="收藏" aria-label="收藏当前攻略" aria-pressed="false">收藏</button>
+                    <button class="icon-btn" id="copyTextBtn" title="复制文本" aria-label="复制攻略文本到剪贴板">复制</button>
+                    <button class="icon-btn" id="shareLinkBtn" title="复制攻略链接" aria-label="复制攻略分享链接">分享链接</button>
+                    <button class="icon-btn" id="downloadPosterBtn" title="下载海报" aria-label="下载旅行海报图片">下载海报</button>
+                    <button class="icon-btn" id="weatherBtn" title="查看目的地天气" aria-label="查看目的地天气预报">查天气</button>
+                    <button class="icon-btn" id="regenerateBtn" title="用相同城市换参数重新生成" aria-label="使用相同城市重新生成攻略">再次生成</button>
                 </div>
             </div>
 

@@ -631,7 +631,10 @@
         favSearchWrap: $('favSearchWrap'), favSearchInput: $('favSearchInput'), emptyFavSearch: $('emptyFavSearch'),
         clearAllFavorites: $('clearAllFavorites'), exportFavorites: $('exportFavorites'),
         brandHome: $('brandHome'), toastWrap: $('toastWrap'),
-        backToTop: $('backToTop')
+        backToTop: $('backToTop'),
+        // P1-5: 移动端汉堡菜单
+        navMenuBtn: $('navMenuBtn'), navMenu: $('navMenu'),
+        navMenuFavBtn: $('navMenuFavBtn'), navMenuFavCount: $('navMenuFavCount')
     };
 
     // ---------- 初始化 ----------
@@ -852,13 +855,28 @@
                 copyShareLink(btn.dataset.city);
             };
         });
-        // v10.5: 单条删除按钮
+        // v10.5: 单条删除按钮（P2-8: 改为撤销 toast 模式——立即删除，5 秒内可撤销）
         dom.historyList.querySelectorAll('.hc-del').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
                 const city = btn.dataset.city;
+                // 暂存被删除记录（含原 time，以便恢复后 timeAgo 不重置）
+                const removed = state.history.find(h => h.city === city) || null;
                 removeHistory(city);
-                toast(`已删除「${city}」历史记录`);
+                toast(`已删除「${city}」历史记录`, '', {
+                    action: '撤销',
+                    duration: 5000,
+                    onAction: () => {
+                        if (!removed) return;
+                        // 恢复到列表顶部，保留原 time
+                        state.history = state.history.filter(h => h.city !== city);
+                        state.history.unshift(removed);
+                        state.history = state.history.slice(0, 12);
+                        localStorage.setItem('xj_history', JSON.stringify(state.history));
+                        renderHistory();
+                        toast('已恢复');
+                    }
+                });
             };
         });
     }
@@ -1005,6 +1023,45 @@
         if (dom.favSearchInput) {
             dom.favSearchInput.addEventListener('input', () => {
                 renderFavoritesList(dom.favSearchInput.value);
+            });
+        }
+        // P1-5: 移动端汉堡菜单——点击展开/收起、点击外部关闭、ESC 关闭、菜单项点击后关闭
+        if (dom.navMenuBtn && dom.navMenu) {
+            const openNavMenu = () => {
+                dom.navMenu.hidden = false;
+                dom.navMenuBtn.setAttribute('aria-expanded', 'true');
+                dom.navMenuBtn.setAttribute('aria-label', '关闭导航菜单');
+            };
+            const closeNavMenu = () => {
+                dom.navMenu.hidden = true;
+                dom.navMenuBtn.setAttribute('aria-expanded', 'false');
+                dom.navMenuBtn.setAttribute('aria-label', '打开导航菜单');
+            };
+            const toggleNavMenu = () => { dom.navMenu.hidden ? openNavMenu() : closeNavMenu(); };
+            dom.navMenuBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleNavMenu(); });
+            // 点击菜单外部关闭
+            document.addEventListener('click', (e) => {
+                if (dom.navMenu.hidden) return;
+                if (!dom.navMenu.contains(e.target) && !dom.navMenuBtn.contains(e.target)) closeNavMenu();
+            });
+            // ESC 关闭并把焦点还给触发按钮
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !dom.navMenu.hidden) { closeNavMenu(); dom.navMenuBtn.focus(); }
+            });
+            // 菜单项点击后自动收起，并把焦点还给汉堡按钮（便于键盘流连续操作）
+            dom.navMenu.querySelectorAll('[data-nav-menu]').forEach(item => {
+                item.addEventListener('click', () => {
+                    closeNavMenu();
+                    dom.navMenuBtn.focus();
+                });
+            });
+            // 汉堡菜单内的「我的收藏」入口 → 打开收藏弹层
+            if (dom.navMenuFavBtn) {
+                dom.navMenuFavBtn.addEventListener('click', () => { openFavorites(); });
+            }
+            // 切回桌面端（>720px）时关闭菜单，避免遗留展开态
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 720 && !dom.navMenu.hidden) closeNavMenu();
             });
         }
         // v10.5: 清空历史
@@ -2230,11 +2287,17 @@
         // 防御：如果关键数据全空，显示提示而非空白
         if (!city && !routes.length && !foods.length) {
             dom.poster.className = `poster style-${style}`;
+            // P2-9: 海报作为整张图片语义，添加 role="img" 与 aria-label
+            dom.poster.setAttribute('role', 'img');
+            dom.poster.setAttribute('aria-label', '攻略生成中 旅行攻略海报');
             dom.poster.innerHTML = `<div class="p-top"><div class="p-eyebrow">XING JI · TRAVEL POSTER</div><div class="p-city">攻略生成中</div></div>`;
             return;
         }
 
         dom.poster.className = `poster style-${style}`;
+        // P2-9: 海报作为整张图片语义，aria-label 描述「城市名 + 旅游攻略海报」
+        dom.poster.setAttribute('role', 'img');
+        dom.poster.setAttribute('aria-label', `${city} 旅游攻略海报`);
         dom.poster.innerHTML = `
             <div class="p-top">
                 <div class="p-eyebrow">XING JI · TRAVEL POSTER</div>
@@ -2308,12 +2371,62 @@
         setTimeout(() => { dom.loading.hidden = true; }, 320);
     }
 
+    // ---------- 焦点陷阱（P1-8）----------
+    // 通用工具：打开模态框时记录触发元素、焦点移入首个可聚焦元素、Tab/Shift+Tab 在容器内循环、ESC 关闭并恢复焦点
+    let favFocusTrap = null;
+    function trapFocus(container, onClose) {
+        const trigger = document.activeElement;
+        const selector = 'a[href]:not([disabled]), button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        const getFocusable = () => Array.from(container.querySelectorAll(selector)).filter(el => {
+            // 过滤自身或祖先带 [hidden] 的元素
+            if (el.hidden || el.closest('[hidden]')) return false;
+            // offsetParent 为 null 通常意味着不可见（display:none）
+            return el.offsetParent !== null;
+        });
+        // 等一帧让显隐动画就绪后再聚焦
+        requestAnimationFrame(() => {
+            const f = getFocusable();
+            if (f.length) f[0].focus();
+        });
+        const onKeydown = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (typeof onClose === 'function') onClose();
+                return;
+            }
+            if (e.key !== 'Tab') return;
+            const f = getFocusable();
+            if (!f.length) { e.preventDefault(); return; }
+            const first = f[0], last = f[f.length - 1];
+            const active = document.activeElement;
+            if (e.shiftKey) {
+                if (active === first || !container.contains(active)) { e.preventDefault(); last.focus(); }
+            } else {
+                if (active === last || !container.contains(active)) { e.preventDefault(); first.focus(); }
+            }
+        };
+        container.addEventListener('keydown', onKeydown);
+        return {
+            release() {
+                container.removeEventListener('keydown', onKeydown);
+                if (trigger && typeof trigger.focus === 'function') {
+                    try { trigger.focus({ preventScroll: true }); } catch (e) { /* 忽略 */ }
+                }
+            }
+        };
+    }
+
     // ---------- 收藏 ----------
     function loadFavorites() {
         try { return JSON.parse(localStorage.getItem('xj_favorites') || '[]'); } catch { return []; }
     }
     function saveFavorites() { localStorage.setItem('xj_favorites', JSON.stringify(state.favorites)); }
-    function updateFavCount() { dom.navFavCount.textContent = state.favorites.length; }
+    function updateFavCount() {
+        const n = state.favorites.length;
+        dom.navFavCount.textContent = n;
+        // P1-5: 同步移动端汉堡菜单内的收藏数 badge
+        if (dom.navMenuFavCount) dom.navMenuFavCount.textContent = n;
+    }
 
     function toggleFavorite() {
         if (!state.currentGuide) return;
@@ -2334,6 +2447,8 @@
         const fav = state.favorites.some(f => f.city === state.currentCity);
         dom.favoriteBtn.classList.toggle('active', fav);
         dom.favoriteBtn.textContent = fav ? '已收藏' : '收藏';
+        // P1-9: 同步 aria-pressed，让屏幕阅读器感知收藏开关状态
+        dom.favoriteBtn.setAttribute('aria-pressed', fav ? 'true' : 'false');
     }
 
     function openFavorites() {
@@ -2342,8 +2457,15 @@
         // v10.6: 收藏数 ≥ 3 时显示搜索框
         dom.favSearchWrap.hidden = state.favorites.length < 3;
         if (dom.favSearchInput) dom.favSearchInput.value = '';
+        // P1-8: 启用焦点陷阱——记录触发元素、焦点移入模态框、Tab 循环、ESC 关闭并恢复焦点
+        if (favFocusTrap) favFocusTrap.release();
+        favFocusTrap = trapFocus(dom.favoritesModal, closeFavorites);
     }
-    function closeFavorites() { dom.favoritesModal.hidden = true; }
+    function closeFavorites() {
+        dom.favoritesModal.hidden = true;
+        // P1-8: 释放焦点陷阱，把焦点还给触发按钮
+        if (favFocusTrap) { favFocusTrap.release(); favFocusTrap = null; }
+    }
     // v10.6: 支持搜索过滤的收藏列表渲染
     function renderFavoritesList(filter = '') {
         if (!state.favorites.length) {
@@ -2491,13 +2613,36 @@
     }
 
     // ---------- Toast ----------
-    function toast(msg, type) {
+    // P2-8: 扩展 toast 支持 action 按钮 + onAction 回调，用于「删除后撤销」等场景
+    // 签名：toast(msg, type?, options?) 或 toast(msg, options)（兼容 PWA 中 window.__toast(msg, { action, onAction }) 调用）
+    function toast(msg, type, options) {
+        if (typeof type === 'object' && type !== null) { options = type; type = ''; }
+        options = options || {};
         const t = document.createElement('div');
         t.className = 'toast' + (type ? ' ' + type : '');
         t.textContent = msg;
+        if (options.action && typeof options.onAction === 'function') {
+            const btn = document.createElement('button');
+            btn.className = 'toast-action';
+            btn.type = 'button';
+            btn.textContent = options.action;
+            btn.onclick = () => { dismiss(); options.onAction(); };
+            t.appendChild(btn);
+        }
         dom.toastWrap.appendChild(t);
-        setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(8px)'; setTimeout(() => t.remove(), 300); }, 2400);
+        let timer = null;
+        const duration = options.duration || 2400;
+        function dismiss() {
+            if (timer) { clearTimeout(timer); timer = null; }
+            if (!t.parentNode) return;
+            t.style.opacity = '0';
+            t.style.transform = 'translateY(8px)';
+            setTimeout(() => t.remove(), 300);
+        }
+        timer = setTimeout(dismiss, duration);
     }
+    // P2-8: 暴露给 PWA / Service Worker 更新提示使用（index.html 内联脚本已调用 window.__toast）
+    window.__toast = toast;
 
     // ---------- 工具 ----------
     function timeAgo(ts) {

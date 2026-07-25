@@ -100,7 +100,7 @@ input, select { font-family: inherit; }
     -webkit-backdrop-filter: saturate(180%) blur(14px);
     border-bottom: 1px solid var(--line);
 }
-.nav-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+.nav-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; position: relative; }
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark {
     width: 38px; height: 38px;
@@ -117,6 +117,51 @@ input, select { font-family: inherit; }
 .nav-link:hover { color: var(--accent); }
 .ghost-btn { padding: 8px 14px; border: 1px solid var(--line-2); border-radius: 999px; }
 .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; background: var(--accent); color: var(--paper); border-radius: 9px; font-size: 11px; font-weight: 700; }
+
+/* P1-5: 移动端汉堡菜单（桌面隐藏，≤720px 显示）——沿用暖米纸/赭红/衬线风格 */
+.nav-menu-btn {
+    display: none; /* 移动端由 media query 显示 */
+    align-items: center; justify-content: center;
+    width: 40px; height: 40px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius-sm);
+    color: var(--ink-2);
+    background: var(--surface);
+    transition: border-color .2s, color .2s;
+}
+.nav-menu-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav-menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nav-menu-btn .nm-icon-close { display: none; }
+.nav-menu-btn[aria-expanded="true"] .nm-icon-open { display: none; }
+.nav-menu-btn[aria-expanded="true"] .nm-icon-close { display: block; }
+
+.nav-menu {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    min-width: 180px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 6px;
+    z-index: 60;
+    animation: navMenuIn .18s ease;
+}
+@keyframes navMenuIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.nav-menu[hidden] { display: none; }
+.nav-menu-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    width: 100%;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: var(--ink-2);
+    border-radius: var(--radius-sm);
+    transition: background .15s, color .15s;
+}
+.nav-menu-item:hover, .nav-menu-item:focus-visible {
+    background: var(--paper-2);
+    color: var(--accent);
+    outline: none;
+}
 
 /* ---------- Hero ---------- */
 .hero { position: relative; padding: 96px 0 72px; overflow: hidden; }
@@ -420,7 +465,8 @@ input, select { font-family: inherit; }
 .poster {
     aspect-ratio: 9 / 16; border-radius: var(--radius-sm); overflow: hidden;
     position: relative; display: flex; flex-direction: column;
-    transition: all .4s;
+    /* P2-6: 海报风格切换动效——显式过渡 background/color/border-color，避免 all 触发不必要的 transform/opacity 过渡 */
+    transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease;
 }
 .poster-styles { display: flex; align-items: center; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
 .ps-label { font-size: 12px; color: var(--muted-2); letter-spacing: .12em; margin-right: 4px; }
@@ -710,6 +756,28 @@ input, select { font-family: inherit; }
 .toast.success { background: #2D6A4F; }
 .toast.error { background: #9E3F2C; }
 @keyframes toastIn { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+/* P2-8: toast 内动作按钮（撤销等）——半透明白边描边，hover 反色为暖米纸 */
+.toast-action {
+    background: transparent;
+    color: inherit;
+    border: 1px solid rgba(255,255,255,.45);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    transition: all .2s;
+    margin-left: 4px;
+}
+.toast-action:hover {
+    background: var(--paper);
+    color: var(--ink);
+    border-color: var(--paper);
+}
+.toast-action:focus-visible {
+    outline: 2px solid var(--paper);
+    outline-offset: 2px;
+}
 
 /* ---------- 组件变体（破除模板化） ---------- */
 /* 高亮卡片变体：顶部微光高光边 */
@@ -907,8 +975,8 @@ input, select { font-family: inherit; }
 @media (max-width: 720px) {
     .wrap { padding: 0 18px; }
     .hero { padding: 56px 0 40px; }
-    .nav-links { gap: 14px; }
-    .nav-link:not(.ghost-btn) { display: none; }
+    .nav-links { display: none; } /* P1-5: 移动端整体隐藏桌面导航，由汉堡菜单替代 */
+    .nav-menu-btn { display: flex; } /* P1-5: 移动端显示汉堡按钮 */
     .search-row { flex-direction: column; }
     .search-meta { gap: 18px; }
     .section-head { flex-direction: column; align-items: flex-start; gap: 12px; }
