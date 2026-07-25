@@ -7,6 +7,10 @@
     <meta name="description" content="行纪 — 输入任意中国城市，AI 为你生成一份可执行的深度旅行攻略与精美海报。527 座城市数据库，个性化行程定制。">
     <meta name="theme-color" content="#C8553D">
 
+    <!-- 安全修复 P1：CSP meta 兜底（即使部署时漏配服务器头也有浏览器层防护） -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; script-src 'self' https://html2canvas.hertzen.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -20,8 +24,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;600;700;900&display=swap" rel="stylesheet">
 
-    <!-- 海报导出 -->
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js" defer></script>
+    <!-- 海报导出（安全修复 P0：添加 SRI 完整性校验，CDN 被劫持时浏览器拒绝执行） -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"
+            integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H"
+            crossorigin="anonymous"
+            defer></script>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -51,30 +58,31 @@
                 <h1 class="hero-title">为每一座城，<br>写一份<em>值得出发</em>的攻略。</h1>
                 <p class="hero-lede">输入城市名，AI 即刻生成行程、美食、住宿、预算与避坑指南，并附一张可下载的旅行海报。</p>
 
-                <form class="search-card" id="searchForm" autocomplete="off">
+                <form class="search-card" id="searchForm" autocomplete="off" aria-label="旅行攻略生成表单">
                     <div class="search-row">
                         <div class="search-input-wrap">
-                            <input type="text" id="cityInput" placeholder="输入城市名，如 成都、丽江、敦煌…" autocomplete="off">
-                            <div id="searchSuggestions" class="search-suggestions" hidden></div>
+                            <label for="cityInput" class="sr-only">城市名称</label>
+                            <input type="text" id="cityInput" placeholder="输入城市名，如 成都、丽江、敦煌…" autocomplete="off" aria-label="城市名称" aria-describedby="searchSuggestions">
+                            <div id="searchSuggestions" class="search-suggestions" hidden role="listbox" aria-label="城市建议"></div>
                         </div>
-                        <button type="submit" class="btn-primary" id="generateBtn">生成攻略</button>
+                        <button type="submit" class="btn-primary" id="generateBtn" aria-label="生成旅行攻略">生成攻略</button>
                     </div>
 
                     <div class="search-meta">
                         <div class="meta-group">
-                            <span class="meta-label">出发地</span>
+                            <label class="meta-label" for="originInput">出发地</label>
                             <input type="text" id="originInput" class="input-ghost" placeholder="如 北京" autocomplete="off">
                         </div>
                         <div class="meta-group">
-                            <span class="meta-label">目的地</span>
+                            <label class="meta-label" for="destinationInput">目的地</label>
                             <input type="text" id="destinationInput" class="input-ghost" placeholder="如 成都" autocomplete="off">
                         </div>
                         <div class="meta-group">
-                            <span class="meta-label">出行日期</span>
+                            <label class="meta-label" for="travelDateInput">出行日期</label>
                             <input type="date" id="travelDateInput" class="input-ghost" placeholder="选择日期">
                         </div>
                         <div class="meta-group">
-                            <span class="meta-label">人数</span>
+                            <label class="meta-label" for="travelers">人数</label>
                             <select id="travelers" class="select-ghost">
                                 <option value="1">1 人</option>
                                 <option value="2" selected>2 人</option>
@@ -86,17 +94,17 @@
                         </div>
                         <div class="meta-group">
                             <span class="meta-label">天数</span>
-                            <div class="day-pills" id="dayPills">
-                                <button type="button" class="pill" data-days="1">1</button>
-                                <button type="button" class="pill" data-days="2">2</button>
-                                <button type="button" class="pill active" data-days="3">3</button>
-                                <button type="button" class="pill" data-days="4">4</button>
-                                <button type="button" class="pill" data-days="5">5</button>
-                                <button type="button" class="pill" data-days="7">7</button>
+                            <div class="day-pills" id="dayPills" role="group" aria-label="选择旅行天数">
+                                <button type="button" class="pill" data-days="1" aria-label="1 天">1</button>
+                                <button type="button" class="pill" data-days="2" aria-label="2 天">2</button>
+                                <button type="button" class="pill active" data-days="3" aria-label="3 天" aria-pressed="true">3</button>
+                                <button type="button" class="pill" data-days="4" aria-label="4 天">4</button>
+                                <button type="button" class="pill" data-days="5" aria-label="5 天">5</button>
+                                <button type="button" class="pill" data-days="7" aria-label="7 天">7</button>
                             </div>
                         </div>
                         <div class="meta-group">
-                            <span class="meta-label">偏好</span>
+                            <label class="meta-label" for="travelType">偏好</label>
                             <select id="travelType" class="select-ghost">
                                 <option value="balanced">均衡观光</option>
                                 <option value="culture">文化深度</option>
@@ -107,7 +115,7 @@
                             </select>
                         </div>
                         <div class="meta-group">
-                            <span class="meta-label">预算</span>
+                            <label class="meta-label" for="budgetRange">预算</label>
                             <select id="budgetRange" class="select-ghost">
                                 <option value="low">经济</option>
                                 <option value="medium" selected>舒适</option>
@@ -128,11 +136,11 @@
             <div class="wrap">
                 <div class="section-head">
                     <div>
-                        <p class="eyebrow">编辑精选 · 实时热度</p>
+                        <p class="eyebrow">编辑精选 · 季节热度</p>
                         <h2 class="section-title">本周值得一去的地方</h2>
                     </div>
                     <div class="section-aside">
-                        <span class="live-dot"></span><span class="live-text">实时更新</span>
+                        <span class="live-dot"></span><span class="live-text">按季节智能排序</span>
                     </div>
                 </div>
                 <div class="ranking-grid" id="rankingList"></div>
@@ -235,18 +243,18 @@
         </div>
     </div>
 
-    <!-- Toast -->
-    <div class="toast-wrap" id="toastWrap"></div>
+    <!-- Toast（修复 P2：加 aria-live 让屏幕阅读器播报） -->
+    <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="false"></div>
 
     <!-- v10.6: 返回顶部按钮 -->
     <button class="back-to-top" id="backToTop" title="返回顶部" aria-label="返回顶部" hidden>
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 4l-8 8h5v8h6v-8h5z" fill="currentColor"/></svg>
     </button>
 
-    <!-- 城市数据库 (527城) -->
-    <script src="data/expandedCities.js"></script>
+    <!-- 城市数据库 (527城) 修复 P2：加 defer 避免阻塞首屏解析 -->
+    <script src="data/expandedCities.js" defer></script>
     <!-- 主应用 -->
-    <script src="app.js"></script>
+    <script src="app.js" defer></script>
 
     <!-- PWA: Service Worker 注册（生产环境启用） -->
     <script>

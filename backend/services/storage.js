@@ -15,6 +15,9 @@ class StorageService {
     this.citiesCache = new Map();
     this.lastCacheTime = 0;
     this.cacheTTL = 10 * 60 * 1000; // 10分钟缓存
+    // 修复 P2：刷新缓存的 in-flight Promise，避免惊群效应
+    // 多个并发请求触发 refreshCache 时，复用同一个 Promise，避免重复扫描数据库
+    this._refreshPromise = null;
   }
 
   async initialize(mongooseInstance) {
@@ -120,17 +123,39 @@ class StorageService {
   }
 
   async addCity(name, data) {
+    // P1 修复 7.4：service 层内置原型污染防御，不依赖路由中间件
+    this._assertSafePayload(data);
     this.citiesCache.set(name, { ...data, lastUpdated: new Date().toISOString() });
     return this.citiesCache.get(name);
   }
 
   async updateCity(name, updates) {
+    // P1 修复 7.1：service 层内置原型污染防御，不依赖路由中间件
+    this._assertSafePayload(updates);
     const existing = this.citiesCache.get(name);
     if (!existing) return null;
-    
+
     const updated = { ...existing, ...updates, lastUpdated: new Date().toISOString() };
     this.citiesCache.set(name, updated);
     return updated;
+  }
+
+  /**
+   * 原型污染防御：拒绝 __proto__ / constructor / prototype 字段
+   * 即使路由层中间件被绕过，service 层仍能自我保护
+   * @param {Object} payload - 待校验的对象
+   * @throws {Error} 当检测到危险字段时
+   */
+  _assertSafePayload(payload) {
+    if (!payload || typeof payload !== 'object') return;
+    const dangerous = ['__proto__', 'constructor', 'prototype'];
+    for (const key of Object.keys(payload)) {
+      if (dangerous.includes(key)) {
+        const err = new Error(`非法字段: ${key}`);
+        err.name = 'ValidationError';
+        throw err;
+      }
+    }
   }
 
   async deleteCity(name) {
@@ -180,8 +205,34 @@ class StorageService {
     return Date.now() - this.lastCacheTime > this.cacheTTL;
   }
 
+  /**
+   * 刷新缓存（修复 P2：惊群效应）
+   * - 多个并发请求触发 refreshCache 时，复用同一个 in-flight Promise
+   * - 避免对数据库执行 N 次相同的全表扫描
+   * - 失败时清空 _refreshPromise，允许下次请求重试
+   */
   async refreshCache() {
-    await this.syncAllCitiesFromDatabase();
+    // 内存存储模式无需刷新（数据来自本地 expandedCities.js）
+    if (this.useMemoryStorage) {
+      this.lastCacheTime = Date.now();
+      return;
+    }
+
+    // 已有进行中的刷新，复用其 Promise
+    if (this._refreshPromise) {
+      return this._refreshPromise;
+    }
+
+    this._refreshPromise = (async () => {
+      try {
+        await this.syncAllCitiesFromDatabase();
+      } finally {
+        // 无论成功失败都清空，下次请求可重新触发
+        this._refreshPromise = null;
+      }
+    })();
+
+    return this._refreshPromise;
   }
 
   getCityCount() {

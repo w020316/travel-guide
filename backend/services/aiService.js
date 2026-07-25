@@ -1,130 +1,112 @@
-const axios = require('axios');
+// 修复 P1-13：引入 LRU 缓存，避免 Map 无限增长导致内存泄漏
+const LRUCache = require('../utils/lruCache');
+// v10.8：抽取 AI provider 基类，减少 6 个 provider 重复代码
+const { createProvider } = require('./aiProviders');
 
 class AIService {
   constructor() {
+    // v10.8：providers 改为 BaseAIProvider 子类实例（统一接口 chat(prompt, systemPrompt)）
     this.providers = {
-      agnes: {
+      agnes: createProvider('agnes', {
         name: 'Agnes AI',
         baseUrl: 'https://apihub.agnes-ai.com/v1/chat/completions',
         model: process.env.AGNES_MODEL || 'agnes-2.0-flash',
         apiKey: process.env.AGNES_API_KEY || ''
-      },
-      tongyi: {
+      }),
+      tongyi: createProvider('tongyi', {
         name: '通义千问',
         baseUrl: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
         model: 'qwen-plus',
         apiKey: process.env.TONGYI_API_KEY || ''
-      },
-      zhipu: {
+      }),
+      zhipu: createProvider('zhipu', {
         name: '智谱AI (GLM-4)',
         baseUrl: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
         model: 'glm-4-plus',
         apiKey: process.env.ZHIPU_API_KEY || ''
-      },
-      deepseek: {
+      }),
+      deepseek: createProvider('deepseek', {
         name: 'DeepSeek',
         baseUrl: 'https://api.deepseek.com/v1/chat/completions',
         model: 'deepseek-chat',
         apiKey: process.env.DEEPSEEK_API_KEY || ''
-      },
-      wenxin: {
+      }),
+      wenxin: createProvider('wenxin', {
         name: '文心一言',
         baseUrl: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions',
         model: 'ernie-bot-4',
         apiKey: process.env.WENXIN_API_KEY || ''
-      },
-      openai: {
+      }),
+      openai: createProvider('openai', {
         name: 'OpenAI GPT-4',
         baseUrl: 'https://api.openai.com/v1/chat/completions',
         model: 'gpt-4-turbo-preview',
         apiKey: process.env.OPENAI_API_KEY || ''
-      }
+      })
     };
-    
+
     this.currentProvider = process.env.AI_PROVIDER || 'agnes';
-    this.cache = new Map();
-    this.cacheExpiry = 30 * 60 * 1000; // 30分钟缓存
+    // 修复 P1-13：LRU 缓存，max=500 防止无限增长，TTL=30min 自动过期
+    this.cache = new LRUCache({ max: 500, ttl: 30 * 60 * 1000 });
+    this.cacheExpiry = 30 * 60 * 1000; // 30分钟缓存（保留兼容）
   }
 
   async generateTravelGuide(city, preferences = {}) {
     const cacheKey = `${city}-${JSON.stringify(preferences)}`;
-    
-    // 检查缓存
-    if (this.cache.has(cacheKey)) {
-      const cached = this.cache.get(cacheKey);
-      if (Date.now() - cached.timestamp < this.cacheExpiry) {
-        console.log(`✅ 命中缓存: ${city}`);
-        return cached.data;
-      }
+
+    // 检查缓存（LRU 内部处理 TTL）
+    const cached = this.cache.get(cacheKey);
+    if (cached !== undefined) {
+      console.log(`✅ 命中缓存: ${city}`);
+      return cached;
     }
 
     try {
       const provider = this.providers[this.currentProvider];
-      
-      if (!provider.apiKey) {
+
+      if (!provider.isAvailable) {
         console.warn(`⚠️ ${provider.name} API Key未配置，尝试其他可用API`);
-        
+
         // 尝试查找可用的API Key
         for (const [key, value] of Object.entries(this.providers)) {
-          if (value.apiKey && key !== this.currentProvider) {
+          if (value.isAvailable && key !== this.currentProvider) {
             console.log(`🔄 切换到备用AI: ${value.name}`);
             this.currentProvider = key;
             return this.generateTravelGuide(city, preferences);
           }
         }
-        
+
         console.warn('❌ 所有AI API均未配置，使用本地数据生成');
         return this.generateLocalGuide(city, preferences);
       }
 
       console.log(`🤖 使用${provider.name}生成${city}攻略...`);
-      
-      const prompt = this.buildPrompt(city, preferences);
-      let response;
 
-      switch (this.currentProvider) {
-        case 'agnes':
-          response = await this.callAgnesAPI(prompt, provider);
-          break;
-        case 'tongyi':
-          response = await this.callTongyiAPI(prompt, provider);
-          break;
-        case 'zhipu':
-          response = await this.callZhipuAPI(prompt, provider);
-          break;
-        case 'deepseek':
-          response = await this.callDeepSeekAPI(prompt, provider);
-          break;
-        case 'wenxin':
-          response = await this.callWenxinAPI(prompt, provider);
-          break;
-        case 'openai':
-          response = await this.callOpenAIAPI(prompt, provider);
-          break;
-        default:
-          throw new Error(`不支持的AI提供商: ${this.currentProvider}`);
-      }
+      const prompt = this.buildPrompt(city, preferences);
+
+      // v10.8：统一调用 provider.chat()，移除 6 个 callXxxAPI 方法
+      const response = await provider.chat(prompt);
 
       console.log(`✅ ${provider.name}响应成功`);
-      
+
       // 解析AI响应为结构化攻略数据
       const guideData = this.parseAIResponse(response, city, preferences);
-      
-      // 缓存结果
-      this.cache.set(cacheKey, { data: guideData, timestamp: Date.now() });
-      
+
+      // 缓存结果（LRU 自动管理上限与过期）
+      this.cache.set(cacheKey, guideData);
+
       return guideData;
 
     } catch (error) {
       console.error('❌ AI生成失败:', error.message);
-      
+
       // 尝试切换到下一个可用的API
       const providers = Object.keys(this.providers);
       const currentIndex = providers.indexOf(this.currentProvider);
-      
+
       for (let i = currentIndex + 1; i < providers.length; i++) {
         const nextProvider = providers[i];
-        if (this.providers[nextProvider].apiKey) {
+        if (this.providers[nextProvider].isAvailable) {
           console.log(`🔄 切换到备选API: ${this.providers[nextProvider].name}`);
           this.currentProvider = nextProvider;
           try {
@@ -134,7 +116,7 @@ class AIService {
           }
         }
       }
-      
+
       // 最终回退到本地数据
       console.log('⚠️ 所有AI API失败，使用本地数据');
       return this.generateLocalGuide(city, preferences);
@@ -218,202 +200,8 @@ JSON 结构如下（字段名保持一致，值用中文）：
     return prompt;
   }
 
-  // ==================== 各AI提供商调用方法 ====================
-
-  // Agnes AI (OpenAI 兼容接口，支持文本/多模态，免费额度)
-  async callAgnesAPI(prompt, provider) {
-    console.log('📡 调用 Agnes AI API...');
-
-    const response = await axios.post(provider.baseUrl, {
-      model: provider.model,
-      messages: [
-        {
-          role: 'system',
-          content: '你是一位拥有15年经验的资深旅游规划师，擅长根据用户需求制定个性化旅游攻略。你的攻略详细、实用、可操作性强。请始终以标准的JSON格式输出，不要添加任何markdown标记或额外说明。'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      top_p: 0.9,
-      max_tokens: 4000
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${provider.apiKey}`,
-        'Accept': 'application/json',
-        'Accept-Encoding': 'identity',
-        'User-Agent': 'travel-guide/2.0'
-      },
-      timeout: 120000,
-      decompress: false,
-      // 不使用代理
-      proxy: false
-    });
-
-    console.log('✅ Agnes AI 响应成功');
-    return response.data.choices[0].message.content;
-  }
-
-  async callTongyiAPI(prompt, provider) {
-    console.log('📡 调用通义千问API...');
-    
-    const response = await axios.post(provider.baseUrl, {
-      model: provider.model,
-      input: {
-        messages: [
-          {
-            role: 'system',
-            content: '你是一位拥有15年经验的资深旅游规划师，擅长根据用户需求制定个性化旅游攻略。你的攻略详细、实用、可操作性强。请始终以标准的JSON格式输出，不要添加任何markdown标记或额外说明。'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]
-      },
-      parameters: {
-        temperature: 0.7,
-        top_p: 0.8,
-        max_tokens: 8000,
-        result_format: 'message'
-      }
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${provider.apiKey}`,
-        'X-DashScope-SSE': 'disable'
-      },
-      timeout: 60000
-    });
-
-    console.log('✅ 通义千问响应成功');
-    return response.data.output.choices[0].message.content;
-  }
-
-  async callZhipuAPI(prompt, provider) {
-    console.log('📡 调用智谱GLM-4 API...');
-    
-    const response = await axios.post(provider.baseUrl, {
-      model: provider.model,
-      messages: [
-        {
-          role: 'system',
-          content: '你是一位拥有15年经验的资深旅游规划师，擅长根据用户需求制定个性化旅游攻略。你的攻略详细、实用、可操作性强。请始终以标准的JSON格式输出，不要添加任何markdown标记或额外说明。'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      top_p: 0.9,
-      max_tokens: 8000
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${provider.apiKey}`
-      },
-      timeout: 60000
-    });
-
-    console.log('✅ 智谱GLM-4响应成功');
-    return response.data.choices[0].message.content;
-  }
-
-  async callDeepSeekAPI(prompt, provider) {
-    console.log('📡 调用DeepSeek API...');
-    
-    const response = await axios.post(provider.baseUrl, {
-      model: provider.model,
-      messages: [
-        {
-          role: 'system',
-          content: '你是一位拥有15年经验的资深旅游规划师，擅长根据用户需求制定个性化旅游攻略。你的攻略详细、实用、可操作性强。请始终以标准的JSON格式输出，不要添加任何markdown标记或额外说明。'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 8000
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${provider.apiKey}`
-      },
-      timeout: 60000
-    });
-
-    console.log('✅ DeepSeek响应成功');
-    return response.data.choices[0].message.content;
-  }
-
-  async callWenxinAPI(prompt, provider) {
-    console.log('📡 调用文心一言API...');
-    
-    const tokenResponse = await axios.post(
-      `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${process.env.WENXIN_CLIENT_ID}&client_secret=${process.env.WENXIN_CLIENT_SECRET}`
-    );
-    
-    const accessToken = tokenResponse.data.access_token;
-    
-    const response = await axios.post(
-      `${provider.baseUrl}?access_token=${accessToken}`,
-      {
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        top_p: 0.8,
-        penalty_score: 1.0
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        timeout: 60000
-      }
-    );
-
-    console.log('✅ 文心一言响应成功');
-    return response.data.result;
-  }
-
-  async callOpenAIAPI(prompt, provider) {
-    console.log('📡 调用OpenAI GPT-4 API...');
-    
-    const response = await axios.post(provider.baseUrl, {
-      model: provider.model,
-      messages: [
-        {
-          role: 'system',
-          content: '你是一位拥有15年经验的资深旅游规划师，擅长根据用户需求制定个性化旅游攻略。你的攻略详细、实用、可操作性强。请始终以标准的JSON格式输出，不要添加任何markdown标记或额外说明。'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 8000
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${provider.apiKey}`
-      },
-      timeout: 60000
-    });
-
-    console.log('✅ OpenAI GPT-4响应成功');
-    return response.data.choices[0].message.content;
-  }
+  // v10.8：6 个 callXxxAPI 方法已迁移至 backend/services/aiProviders.js
+  // 统一通过 provider.chat(prompt) 调用，减少约 200 行重复代码
 
   parseAIResponse(responseText, city, preferences) {
     try {
@@ -817,10 +605,11 @@ JSON 结构如下（字段名保持一致，值用中文）：
   getCacheStats() {
     return {
       size: this.cache.size,
-      keys: Array.from(this.cache.keys()),
+      keys: this.cache.keys(),
       currentProvider: this.currentProvider,
-      availableProviders: Object.keys(this.providers).filter(key => 
-        this.providers[key].apiKey
+      // v10.8：使用 provider.isAvailable 替代直接访问 apiKey
+      availableProviders: Object.keys(this.providers).filter(key =>
+        this.providers[key].isAvailable
       )
     };
   }
@@ -838,7 +627,7 @@ JSON 结构如下（字段名保持一致，值用中文）：
   // 获取所有可用提供商列表
   getAvailableProviders() {
     return Object.entries(this.providers)
-      .filter(([key, value]) => value.apiKey)
+      .filter(([key, value]) => value.isAvailable)
       .map(([key, value]) => ({
         id: key,
         name: value.name,
@@ -848,9 +637,10 @@ JSON 结构如下（字段名保持一致，值用中文）：
   }
 
   // v10.0: 获取 AI 修图建议
+  // v10.8: 改用统一的 provider.chat() 接口，移除内联 axios 调用
   async getPhotoEditAdvice(city, guideContext) {
     const provider = this.providers[this.currentProvider];
-    if (!provider.apiKey) {
+    if (!provider.isAvailable) {
       throw new Error('AI API 未配置');
     }
     const season = guideContext.season || '四季皆宜';
@@ -868,28 +658,10 @@ JSON 结构如下（字段名保持一致，值用中文）：
 
 请直接输出建议文字，不要 markdown 标记，200 字以内。`;
 
+    const systemPrompt = '你是一位拥有10年经验的专业旅行摄影师，擅长后期修图。';
     try {
-      const response = await axios.post(provider.baseUrl, {
-        model: provider.model,
-        messages: [
-          { role: 'system', content: '你是一位拥有10年经验的专业旅行摄影师，擅长后期修图。' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 800
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${provider.apiKey}`,
-          'Accept': 'application/json',
-          'Accept-Encoding': 'identity',
-          'User-Agent': 'travel-guide/2.0'
-        },
-        timeout: 30000,
-        decompress: false,
-        proxy: false
-      });
-      return response.data.choices[0].message.content.trim();
+      const text = await provider.chat(prompt, systemPrompt);
+      return text.trim();
     } catch (error) {
       console.error('AI 修图建议失败:', error.message);
       throw error;

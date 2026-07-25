@@ -6,13 +6,16 @@ const socialService = require('../services/socialService');
 const storage = require('../services/storage');
 const { getCityWeather, getRealWeather, startWeatherSync, clearWeatherCache } = require('../services/weatherSync');
 const { getTrendingCities, getSeasonalTags } = require('../services/realTimeSync');
-const { validateCityName, validateSearchQuery, validatePagination, rateLimiter } = require('../middleware/validation');
+const { validateCityName, validateCityPayload, validateSearchQuery, validatePagination, rateLimiter,
+  // v10.9 新增校验中间件
+  validateIdParam, validateCommentPayload, validateTargetType, validateIdToken, validateProfilePayload, validateCitiesArray, validateCityBody
+} = require('../middleware/validation');
 
 // 加载扩展城市数据库（627个城市）
 const expandedCitiesLoader = require('../data/expandedCitiesLoader');
 
-// 应用限流中间件
-router.use(rateLimiter(200, 60000));
+// 应用限流中间件（修复 P1-1：收紧为 100 次/分钟）
+router.use(rateLimiter(100, 60000));
 
 // ==================== AI攻略生成接口 ====================
 
@@ -85,23 +88,11 @@ router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
 });
 
 // 批量生成多个城市的攻略
-router.post('/ai/generate-batch', authService.verifyCustomToken, async (req, res) => {
+router.post('/ai/generate-batch', authService.verifyCustomToken, validateCitiesArray, async (req, res) => {
   try {
     const { cities, preferences } = req.body;
-    
-    if (!Array.isArray(cities) || cities.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '请提供城市列表' 
-      });
-    }
 
-    if (cities.length > 5) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '单次最多生成5个城市的攻略' 
-      });
-    }
+    // validateCitiesArray 已校验 cities 数组与每个城市名，这里直接使用
 
     // 并行生成所有城市的攻略
     const results = await Promise.all(
@@ -139,12 +130,10 @@ router.get('/ai/cache', authService.requireAdmin, async (req, res) => {
 });
 
 // v10.0: AI 修图建议（基于城市+季节+标签提供专业修图建议）
-router.post('/ai/edit-photo', async (req, res) => {
+router.post('/ai/edit-photo', validateCityBody, async (req, res) => {
   try {
     const { city, photoName, guideContext } = req.body;
-    if (!city) {
-      return res.status(400).json({ success: false, error: '请提供城市名称' });
-    }
+    // validateCityBody 已校验 city 字段
     // 调用 AI 服务获取修图建议
     const advice = await aiService.getPhotoEditAdvice(city, guideContext || {});
     res.json({ success: true, advice });
@@ -167,26 +156,20 @@ router.delete('/ai/cache', authService.requireAdmin, async (req, res) => {
 // ==================== 用户认证接口 ====================
 
 // Firebase登录/注册（获取自定义JWT）
-router.post('/auth/login', async (req, res) => {
+router.post('/auth/login', validateIdToken, async (req, res) => {
   try {
     const { idToken } = req.body;
-    
-    if (!idToken) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '请提供Firebase ID Token' 
-      });
-    }
+    // validateIdToken 已校验 idToken 格式
 
     const result = await authService.verifyAndCreateToken(idToken);
-    
+
     res.json(result);
 
   } catch (error) {
     console.error('登录失败:', error);
-    res.status(401).json({ 
-      success: false, 
-      error: error.message || '认证失败' 
+    res.status(401).json({
+      success: false,
+      error: error.message || '认证失败'
     });
   }
 });
@@ -202,7 +185,7 @@ router.get('/auth/me', authService.verifyCustomToken, async (req, res) => {
 });
 
 // 更新用户资料
-router.put('/auth/profile', authService.verifyCustomToken, async (req, res) => {
+router.put('/auth/profile', authService.verifyCustomToken, validateProfilePayload, async (req, res) => {
   try {
     const result = await authService.updateProfile(req.user.uid, req.body);
     res.json(result);
@@ -214,56 +197,55 @@ router.put('/auth/profile', authService.verifyCustomToken, async (req, res) => {
 // 测试token（仅开发环境）
 if (process.env.NODE_ENV === 'development') {
   router.post('/auth/test-token', (req, res) => {
-    const testUser = {
-      uid: 'test_user_123',
-      email: 'test@example.com',
-      name: '测试用户',
-      role: 'admin'
-    };
-    
-    const token = authService.createTestToken(testUser);
-    res.json({ success: true, token, user: testUser });
+    try {
+      const testUser = {
+        uid: 'test_user_123',
+        email: 'test@example.com',
+        name: '测试用户',
+        role: 'admin'
+      };
+
+      const token = authService.createTestToken(testUser);
+      res.json({ success: true, token, user: testUser });
+    } catch (error) {
+      // 安全修复 P0-5：createTestToken 在生产环境会抛错，这里兜底
+      res.status(403).json({ success: false, error: error.message || '测试 token 不可用' });
+    }
   });
 }
 
 // ==================== 社交互动接口 ====================
 
 // 添加评论
-router.post('/comments', authService.verifyCustomToken, async (req, res) => {
+router.post('/comments', authService.verifyCustomToken, validateCommentPayload, async (req, res) => {
   try {
     const { cityId, content, parentId } = req.body;
-    
-    if (!cityId || !content || !content.trim()) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '请提供城市ID和评论内容' 
-      });
-    }
+    // validateCommentPayload 已校验 cityId/content/parentId
 
     const result = await socialService.addComment(
-      cityId, 
-      req.user.uid, 
-      content.trim(), 
+      cityId,
+      req.user.uid,
+      content,
       parentId
     );
-    
+
     res.json(result);
 
   } catch (error) {
     console.error('添加评论失败:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message || '添加评论失败' 
+    res.status(500).json({
+      success: false,
+      error: error.message || '添加评论失败'
     });
   }
 });
 
 // 获取评论列表
-router.get('/comments/:cityId', authService.optionalAuth, async (req, res) => {
+router.get('/comments/:cityId', authService.optionalAuth, validateIdParam('cityId'), async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+
     const result = await socialService.getComments(req.params.cityId, page, limit);
     res.json(result);
 
@@ -274,7 +256,7 @@ router.get('/comments/:cityId', authService.optionalAuth, async (req, res) => {
 });
 
 // 删除评论
-router.delete('/comments/:commentId', authService.verifyCustomToken, async (req, res) => {
+router.delete('/comments/:commentId', authService.verifyCustomToken, validateIdParam('commentId'), async (req, res) => {
   try {
     const result = await socialService.deleteComment(
       req.params.commentId, 
@@ -292,17 +274,10 @@ router.delete('/comments/:commentId', authService.verifyCustomToken, async (req,
 });
 
 // 点赞/取消点赞
-router.post('/likes/:type/:targetId', authService.verifyCustomToken, async (req, res) => {
+router.post('/likes/:type/:targetId', authService.verifyCustomToken, validateTargetType, validateIdParam('targetId'), async (req, res) => {
   try {
     const { type, targetId } = req.params;
-    const validTypes = ['cities', 'comments', 'guides'];
-    
-    if (!validTypes.includes(type)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '无效的目标类型' 
-      });
-    }
+    // validateTargetType + validateIdParam 已校验
 
     const result = await socialService.toggleLike(type, targetId, req.user.uid);
     res.json(result);
@@ -329,7 +304,7 @@ router.get('/likes/user', authService.verifyCustomToken, async (req, res) => {
 });
 
 // 关注/取消关注用户
-router.post('/follow/:userId', authService.verifyCustomToken, async (req, res) => {
+router.post('/follow/:userId', authService.verifyCustomToken, validateIdParam('userId'), async (req, res) => {
   try {
     const result = await socialService.followUser(req.user.uid, req.params.userId);
     res.json(result);
@@ -366,9 +341,10 @@ router.get('/following', authService.verifyCustomToken, async (req, res) => {
 });
 
 // 记录浏览
-router.post('/views/:type/:targetId', authService.optionalAuth, async (req, res) => {
+router.post('/views/:type/:targetId', authService.optionalAuth, validateTargetType, validateIdParam('targetId'), async (req, res) => {
   try {
     const { type, targetId } = req.params;
+    // validateTargetType + validateIdParam 已校验
     const result = await socialService.recordView(type, targetId, req.user?.uid);
     res.json(result);
 
@@ -378,12 +354,12 @@ router.post('/views/:type/:targetId', authService.optionalAuth, async (req, res)
 });
 
 // 获取浏览统计
-router.get('/stats/views/:type/:targetId', async (req, res) => {
+router.get('/stats/views/:type/:targetId', validateTargetType, validateIdParam('targetId'), async (req, res) => {
   try {
     const timeRange = req.query.range || '7d';
     const result = await socialService.getViewStats(
-      req.params.type, 
-      req.params.targetId, 
+      req.params.type,
+      req.params.targetId,
       timeRange
     );
     res.json(result);
@@ -396,7 +372,8 @@ router.get('/stats/views/:type/:targetId', async (req, res) => {
 // 获取用户活动时间线
 router.get('/activity/timeline', authService.verifyCustomToken, async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 20;
+    // P2 修复 4.13：限制 limit 上限，避免恶意请求拖垮内存
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     const result = await socialService.getUserActivityTimeline(req.user.uid, limit);
     res.json(result);
 
@@ -409,7 +386,12 @@ router.get('/activity/timeline', authService.verifyCustomToken, async (req, res)
 router.get('/trending/social', async (req, res) => {
   try {
     const type = req.query.type || 'cities';
-    const limit = parseInt(req.query.limit) || 10;
+    // P1 修复 4.14：白名单校验 type，防止注入 Firestore 集合名
+    if (!['cities', 'comments', 'guides'].includes(type)) {
+      return res.status(400).json({ success: false, error: '无效的 type 参数' });
+    }
+    // P2 修复：限制 limit 上限
+    const limit = Math.min(parseInt(req.query.limit) || 10, 100);
     const result = await socialService.getTrendingContent(type, limit);
     res.json(result);
 
@@ -481,14 +463,44 @@ router.get('/cities', validatePagination, async (req, res) => {
 });
 
 // 获取所有城市详细数据(含实时信息)
+// v10.8: 增加可选分页（?page=1&limit=20），避免一次返回 527 城全量数据导致带宽/内存压力
+// - 不传分页参数时：返回 legacy 扁平对象 {城市名: 数据}（向后兼容）
+// - 传任意 page 或 limit 参数时：返回分页信封 {total, page, limit, data}
 router.get('/cities/all', async (req, res) => {
   try {
     const cities = await storage.getAllCities();
+    const allEntries = Object.entries(cities);
+
+    // 检测是否为 opt-in 分页模式
+    const hasPaginationParam = 'page' in req.query || 'limit' in req.query;
+    if (!hasPaginationParam) {
+      // 向后兼容：返回扁平对象
+      const cityMap = {};
+      for (const [name, data] of allEntries) {
+        cityMap[name] = mergeWithWeather(data, name);
+      }
+      return res.json(cityMap);
+    }
+
+    // 分页模式
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    if (page < 1 || limit < 1 || limit > 100) {
+      return res.status(400).json({ error: '分页参数无效（page>=1, 1<=limit<=100）' });
+    }
+
+    const start = (page - 1) * limit;
+    const paginatedEntries = allEntries.slice(start, start + limit);
     const cityMap = {};
-    for (const [name, data] of Object.entries(cities)) {
+    for (const [name, data] of paginatedEntries) {
       cityMap[name] = mergeWithWeather(data, name);
     }
-    res.json(cityMap);
+    res.json({
+      total: allEntries.length,
+      page,
+      limit,
+      data: cityMap
+    });
   } catch (error) {
     console.error('获取所有城市数据失败:', error);
     res.status(500).json({ error: '获取所有城市数据失败' });
@@ -662,7 +674,7 @@ router.post('/expanded/cache/clear', (req, res) => {
 // ==================== 天气相关接口 ====================
 
 // 获取城市天气信息
-router.get('/weather/:city', async (req, res) => {
+router.get('/weather/:city', validateCityName, async (req, res) => {
   try {
     const cityData = await storage.getCity(req.params.city);
     const weather = getCityWeather(req.params.city);
@@ -757,61 +769,57 @@ router.post('/weather/clear-cache', async (req, res) => {
 
 // ==================== 城市管理接口 ====================
 
-// 添加新城市
-router.post('/cities', authService.verifyCustomToken, async (req, res) => {
+// 添加新城市（安全修复 P0-4：仅管理员可新增 + 字段白名单校验）
+router.post('/cities', authService.verifyCustomToken, authService.requireAdmin, validateCityPayload, async (req, res) => {
   try {
     const { name, ...data } = req.body;
     if (!name) {
-      return res.status(400).json({ error: '城市名称不能为空' });
+      return res.status(400).json({ success: false, error: '城市名称不能为空' });
     }
-    
-    if (name.length > 50) {
-      return res.status(400).json({ error: '城市名称过长' });
-    }
-    
+
     const existing = await storage.getCity(name);
     if (existing) {
-      return res.status(409).json({ error: '城市已存在' });
+      return res.status(409).json({ success: false, error: '城市已存在' });
     }
-    
+
     const city = await storage.addCity(name.trim(), data);
     res.status(201).json({ success: true, city });
   } catch (error) {
     console.error('添加城市失败:', error);
-    res.status(500).json({ error: '添加城市失败' });
+    res.status(500).json({ success: false, error: '添加城市失败' });
   }
 });
 
-// 更新城市信息
-router.put('/cities/:name', validateCityName, authService.verifyCustomToken, async (req, res) => {
+// 更新城市信息（安全修复 P0-4：先认证 → 后校验参数 → 白名单清洗 → 处理）
+router.put('/cities/:name', authService.verifyCustomToken, authService.requireAdmin, validateCityName, validateCityPayload, async (req, res) => {
   try {
     const updates = req.body;
     const city = await storage.updateCity(req.params.name, updates);
-    
+
     if (city) {
       res.json({ success: true, city });
     } else {
-      res.status(404).json({ error: '城市不存在' });
+      res.status(404).json({ success: false, error: '城市不存在' });
     }
   } catch (error) {
     console.error('更新城市信息失败:', error);
-    res.status(500).json({ error: '更新城市信息失败' });
+    res.status(500).json({ success: false, error: '更新城市信息失败' });
   }
 });
 
 // 删除城市
-router.delete('/cities/:name', validateCityName, authService.requireAdmin, async (req, res) => {
+router.delete('/cities/:name', authService.verifyCustomToken, authService.requireAdmin, validateCityName, async (req, res) => {
   try {
     const city = await storage.deleteCity(req.params.name);
-    
+
     if (city) {
       res.json({ success: true, message: '城市已删除' });
     } else {
-      res.status(404).json({ error: '城市不存在' });
+      res.status(404).json({ success: false, error: '城市不存在' });
     }
   } catch (error) {
     console.error('删除城市失败:', error);
-    res.status(500).json({ error: '删除城市失败' });
+    res.status(500).json({ success: false, error: '删除城市失败' });
   }
 });
 

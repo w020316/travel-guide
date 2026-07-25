@@ -1,28 +1,49 @@
 const firebase = require('firebase/compat/app');
 require('firebase/compat/auth');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { logError } = require('../utils/safeLog');
 
-// Firebase配置（从环境变量读取）
+// P1 修复 5.1：移除所有 Firebase 默认占位配置，避免泄露项目命名约定
+// 必须通过环境变量配置；未配置时初始化会失败但不会崩溃（auth 操作会走 catch 分支）
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || "YOUR_API_KEY",
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN || "travel-guide-app.firebaseapp.com",
-  projectId: process.env.FIREBASE_PROJECT_ID || "travel-guide-app",
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "travel-guide-app.appspot.com",
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "123456789012",
-  appId: process.env.FIREBASE_APP_ID || "1:123456789012:web:abcdef1234567890"
+  apiKey: process.env.FIREBASE_API_KEY || '',
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
+  projectId: process.env.FIREBASE_PROJECT_ID || '',
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: process.env.FIREBASE_APP_ID || ''
 };
 
 // 初始化Firebase
 if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
+  try {
+    firebase.initializeApp(firebaseConfig);
+  } catch (err) {
+    console.error('Firebase 初始化失败（请检查 FIREBASE_* 环境变量）:', err.message);
+  }
 }
 
 const auth = firebase.auth();
 
 class AuthService {
   constructor() {
-    this.jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-    this.tokenExpiry = '7d';
+    // 安全修复 P0-1：生产环境强制要求显式配置 JWT_SECRET
+    const secret = process.env.JWT_SECRET;
+    if (!secret || secret.length < 32) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('❌ JWT_SECRET 未配置或长度不足 32 字符，拒绝在生产环境启动');
+        process.exit(1);
+      } else {
+        // P1 修复 5.2：开发环境用随机密钥（每次重启变化），避免固定字符串被复用至生产
+        // 随机密钥无法跨进程复用，但开发环境单进程可接受
+        this.jwtSecret = crypto.randomBytes(32).toString('hex');
+        console.warn('⚠️ JWT_SECRET 未配置，使用本次启动随机密钥。生产环境必须显式配置！');
+      }
+    } else {
+      this.jwtSecret = secret;
+    }
+    this.tokenExpiry = process.env.JWT_TOKEN_EXPIRY || '7d';
   }
 
   // 验证Firebase ID Token并生成自定义JWT
@@ -59,7 +80,8 @@ class AuthService {
       };
 
     } catch (error) {
-      console.error('Token验证失败:', error);
+      // P1 修复 8.1：日志脱敏，避免打印 Firebase Admin 完整错误对象
+      logError('AuthService.verifyAndCreateToken', error);
       throw new Error('无效的认证令牌');
     }
   }
@@ -139,7 +161,8 @@ class AuthService {
         createdAt: userRecord.metadata.creationTime
       }))
       .catch(error => {
-        console.error('获取用户信息失败:', error);
+        // P1 修复 8.2：日志脱敏
+        logError('AuthService.getUserInfo', error, { userId: uid });
         throw error;
       });
   }
@@ -154,13 +177,18 @@ class AuthService {
       
       return { success: true, message: '用户资料更新成功' };
     } catch (error) {
-      console.error('更新用户资料失败:', error);
+      // P1 修复 8.3：日志脱敏
+      logError('AuthService.updateProfile', error, { userId: uid });
       throw error;
     }
   }
 
-  // 创建自定义JWT（用于测试或特殊场景）
+  // 创建自定义JWT（仅限开发/测试场景，生产环境禁用）
   createTestToken(userData) {
+    // 安全修复 P0-5：纵深防御，即便误配 NODE_ENV 也拒绝在生产生成测试 token
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('测试 token 在生产环境被禁用');
+    }
     return jwt.sign(
       {
         ...userData,

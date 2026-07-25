@@ -801,6 +801,8 @@
     }
 
     // 简单的城市热度评分（按季节 + 标签）
+    // 修复 P1：移除 Math.random() 抖动，避免排行榜每次刷新顺序变化
+    // 改用基于日期的稳定种子，保证当日一致、隔日有轻微变化
     function scoreCity(c) {
         let s = 50;
         const month = new Date().getMonth() + 1;
@@ -812,7 +814,10 @@
         if ((c.tags || []).includes('美食')) s += 8;
         if (c.foods && c.foods.length > 3) s += 6;
         if (c.routes && c.routes.length > 3) s += 6;
-        return s + Math.random() * 4;
+        // 基于城市名 hash + 当日日期的稳定种子，避免随机抖动
+        const nameHash = (c.name || '').split('').reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) | 0, 0);
+        const daySeed = new Date().getDate();
+        return s + (Math.abs(nameHash ^ daySeed) % 4);
     }
 
     // ---------- 历史 ----------
@@ -897,6 +902,10 @@
         let suggestTimer;
         dom.cityInput.addEventListener('input', () => {
             clearTimeout(suggestTimer);
+            // 修复 P1：用户在主搜索框输入新城市时清空目的地状态，
+            // 否则 state.destination 会持续覆盖 cityInput、快捷城市、排行榜、历史记录的提交
+            state.destination = '';
+            if (dom.destinationInput) dom.destinationInput.value = '';
             const q = dom.cityInput.value.trim();
             if (!q) { dom.suggestions.hidden = true; return; }
             suggestTimer = setTimeout(() => showSuggestions(q), 160);
@@ -954,8 +963,8 @@
             dom.weatherBtn.onclick = () => {
                 const city = state.currentGuide?.city || state.currentCity;
                 if (!city) { toast('请先生成攻略'); return; }
-                // 中国天气网官方搜索：http://www.weather.com.cn/search101/?cityname=成都
-                const url = `http://www.weather.com.cn/search101/?cityname=${encodeURIComponent(city)}`;
+                // 修复 P1：HTTP 混合内容，HTTPS 部署下会被拦截，改为 HTTPS
+                const url = `https://www.weather.com.cn/search101/?cityname=${encodeURIComponent(city)}`;
                 window.open(url, '_blank', 'noopener,noreferrer');
                 toast(`已打开「${city}」天气查询`);
             };
@@ -1595,7 +1604,7 @@
                                     <span class="route-day-num">${String(r.day || 1).padStart(2, '0')}</span>
                                     <span class="route-day-theme">${r.theme || r.title || `Day ${r.day || 1}`}</span>
                                 </div>
-                                ${routeLine ? `<div class="route-day-route">${routeLine}</div>` : ''}
+                                ${routeLine ? `<div class="route-day-route">${escapeHtml(routeLine)}</div>` : ''}
                                 ${timeSlots.map(slot => `
                                     <div class="route-timeslot">
                                         <div class="ts-label">
@@ -1663,11 +1672,11 @@
                         <div class="budget-label">预估总费用（参考）</div>
                         <div class="budget-items">
                             ${Object.entries(items).map(([k, v]) => `
-                                <div class="budget-item"><div class="bi-label">${k}</div><div class="bi-val">${v}</div></div>
+                                <div class="budget-item"><div class="bi-label">${escapeHtml(k)}</div><div class="bi-val">${escapeHtml(v)}</div></div>
                             `).join('')}
                         </div>
                         ${b.moneySavingTips && b.moneySavingTips.length ? `
-                            <div style="margin-top:18px;font-size:14px;color:var(--muted);">省钱建议：${b.moneySavingTips.join('；')}</div>
+                            <div style="margin-top:18px;font-size:14px;color:var(--muted);">省钱建议：${b.moneySavingTips.map(escapeHtml).join('；')}</div>
                         ` : ''}
                     </div>
                 </section>
@@ -1684,9 +1693,9 @@
                 <section class="gc-section">
                     <h2><span class="gc-idx">${tipsIdx}</span>实用贴士</h2>
                     <div class="tips-grid">
-                        ${t.prepare && t.prepare.length ? `<div class="tip-block"><h4>行前准备</h4><ul>${t.prepare.map(x => `<li>${x}</li>`).join('')}</ul></div>` : ''}
-                        ${t.avoid && t.avoid.length ? `<div class="tip-block"><h4>避坑指南</h4><ul>${t.avoid.map(x => `<li>${x}</li>`).join('')}</ul></div>` : ''}
-                        ${t.bestTime && t.bestTime.length ? `<div class="tip-block"><h4>最佳时间</h4><ul>${t.bestTime.map(x => `<li>${x}</li>`).join('')}</ul></div>` : ''}
+                        ${t.prepare && t.prepare.length ? `<div class="tip-block"><h4>行前准备</h4><ul>${t.prepare.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
+                        ${t.avoid && t.avoid.length ? `<div class="tip-block"><h4>避坑指南</h4><ul>${t.avoid.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
+                        ${t.bestTime && t.bestTime.length ? `<div class="tip-block"><h4>最佳时间</h4><ul>${t.bestTime.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
                     </div>
                 </section>
             `);
@@ -1756,8 +1765,8 @@
                 <section class="gc-section">
                     <h2><span class="gc-idx">${sectionIdx}</span>交通指南</h2>
                     <div class="transport-card">
-                        ${tr.arrival ? `<h4>如何到达</h4><p>${typeof tr.arrival === 'string' ? tr.arrival : (tr.arrival.byAir?.details || tr.arrival.byTrain?.details || '高铁/飞机可达')}</p>` : ''}
-                        ${tr.localTransport ? `<h4>市内交通</h4><p>${typeof tr.localTransport === 'string' ? tr.localTransport : (tr.localTransport.metro || tr.localTransport.bus || '地铁、公交便利')}</p>` : ''}
+                        ${tr.arrival ? `<h4>如何到达</h4><p>${typeof tr.arrival === 'string' ? escapeHtml(tr.arrival) : escapeHtml(tr.arrival.byAir?.details || tr.arrival.byTrain?.details || '高铁/飞机可达')}</p>` : ''}
+                        ${tr.localTransport ? `<h4>市内交通</h4><p>${typeof tr.localTransport === 'string' ? escapeHtml(tr.localTransport) : escapeHtml(tr.localTransport.metro || tr.localTransport.bus || '地铁、公交便利')}</p>` : ''}
                     </div>
                 </section>
             `);
@@ -2274,6 +2283,11 @@
     let loadingTimer;
     function showLoading(city) {
         dom.loadingCity.textContent = city;
+        // 修复 P2：进入 showLoading 前先清理上一个定时器，避免快速连续触发导致 setInterval 泄漏
+        if (loadingTimer) {
+            clearInterval(loadingTimer);
+            loadingTimer = null;
+        }
         // v10.2: 根据模式显示不同文案
         const isLocal = API.mode === 'local';
         dom.loadingSub.textContent = isLocal ? '正在从本地数据库检索景点…' : 'AI 正在分析景点、美食与预算…';
@@ -2283,13 +2297,9 @@
         loadingTimer = setInterval(() => {
             p = Math.min(p + Math.random() * 14, 92);
             dom.loadingBar.style.width = p + '%';
-            if (isLocal) {
-                if (p > 30) dom.loadingSub.textContent = '正在匹配你的旅行偏好…';
-                if (p > 65) dom.loadingSub.textContent = '排版生成专属海报…';
-            } else {
-                if (p > 30) dom.loadingSub.textContent = '正在匹配你的旅行偏好…';
-                if (p > 65) dom.loadingSub.textContent = '排版生成专属海报…';
-            }
+            // 修复 P3：本地模式与 AI 模式文案完全一致，合并分支
+            if (p > 30) dom.loadingSub.textContent = '正在匹配你的旅行偏好…';
+            if (p > 65) dom.loadingSub.textContent = '排版生成专属海报…';
         }, 420);
     }
     function hideLoading() {

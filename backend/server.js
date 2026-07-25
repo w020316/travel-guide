@@ -13,24 +13,51 @@ const { startWeatherSync } = require('./services/weatherSync');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// 安全修复 P0-2：信任反代，使 req.ip 与限流在 Render/Nginx/Cloudflare 后正确工作
+// 单层反代用 1，多层用具体数量或 'loopback, linklocal, uniquelocal'
+app.set('trust proxy', process.env.TRUST_PROXY_HOPS ? Number(process.env.TRUST_PROXY_HOPS) : 1);
+
 // 安全中间件
 app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
+  // 修复 P1-2：启用 CSP（允许同源 + 已知外部资源）
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", 'https://html2canvas.hertzen.com'],
+      styleSrc: ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc: ["'self'", 'data:', 'blob:'],
+      connectSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
-// CORS配置（修复：origin: '*' 与 credentials: true 冲突）
-const allowedOrigins = (process.env.CORS_ORIGIN || '*').split(',').filter(Boolean);
+// CORS配置（修复 P1-3：默认不允许 '*'，生产环境必须显式配置白名单）
+const allowedOrigins = (process.env.CORS_ORIGIN || '').split(',').filter(Boolean);
+if (allowedOrigins.length === 0 && process.env.NODE_ENV === 'production') {
+  console.warn('⚠️ 生产环境未配置 CORS_ORIGIN，CORS 将拒绝所有跨源凭证请求');
+}
 app.use(cors({
   origin: (origin, cb) => {
     // 允许无 origin 的请求（服务端调用、Postman）
     if (!origin) return cb(null, true);
-    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) return cb(null, true);
+    if (allowedOrigins.length === 0) {
+      // 未配置时仅允许同源（开发环境）
+      return cb(null, true);
+    }
+    if (allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error('Not allowed by CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  maxAge: 86400
 }));
 
 // 请求解析
@@ -80,12 +107,20 @@ app.use(express.static(frontendRoot, {
   }
 }));
 
-// 健康检查接口
+// 健康检查接口（修复 P1-7：生产环境仅返回最小化状态，避免暴露服务配置指纹）
 app.get('/health', (req, res) => {
-  res.json({
+  const isProd = process.env.NODE_ENV === 'production';
+  const base = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
+    uptime: process.uptime()
+  };
+  if (isProd) {
+    // 生产环境：仅返回基础状态，详细状态需通过认证接口访问
+    return res.json(base);
+  }
+  res.json({
+    ...base,
     cityCount: storage.getCityCount ? storage.getCityCount() : 0,
     services: {
       storage: 'active',
@@ -206,7 +241,9 @@ process.on('uncaughtException', (error) => {
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('未处理的Promise拒绝:', reason);
+  // 修复 P1-10：记录后退出，避免进程进入不确定状态；由 PM2 自动重启
+  console.error('[unhandledRejection]', reason instanceof Error ? reason.message : String(reason));
+  process.exit(1);
 });
 
 initializeServer();

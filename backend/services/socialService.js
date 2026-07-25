@@ -1,17 +1,36 @@
 const { Firestore } = require('@google-cloud/firestore');
+// 安全修复 P0-3：admin 提升至模块顶层，避免 addComment/toggleLike/recordView 引用未定义
+const admin = require('firebase-admin');
+// 修复 P1-13：引入 LRU 缓存，避免内存 Map 无上限增长导致内存泄漏
+const LRUCache = require('../utils/lruCache');
 
 class SocialService {
   constructor() {
     // 使用Firebase Admin SDK初始化Firestore
     this.db = null;
     this.initialized = false;
+    // 修复 P1-13：提前初始化 LRU 实例，避免未调用 initialize() 前调用方法导致 ReferenceError
+    this._initLRUStorage();
+  }
+
+  /**
+   * 初始化 LRU 内存存储（默认回退方案）
+   * - comments: 最多 10000 条（每条带 ID，按 LRU 淘汰最久未访问）
+   * - likes: 最多 10000 条
+   * - follows: 最多 5000 条
+   * - views: 最多 10000 条（views 增长最快，TTL 1 小时自动过期）
+   */
+  _initLRUStorage() {
+    this.comments = new LRUCache({ max: 10000 });
+    this.likes = new LRUCache({ max: 10000 });
+    this.follows = new LRUCache({ max: 5000 });
+    this.views = new LRUCache({ max: 10000, ttl: 60 * 60 * 1000 });
+    this.counters = { comments: 0, likes: 0, follows: 0, views: 0 };
   }
 
   async initialize() {
     try {
       if (process.env.FIREBASE_PROJECT_ID && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-        const admin = require('firebase-admin');
-        
         if (!admin.apps.length) {
           admin.initializeApp({
             credential: admin.credential.applicationDefault(),
@@ -24,21 +43,19 @@ class SocialService {
         console.log('Firestore数据库连接成功');
       } else {
         console.warn('Firebase配置不完整，使用内存存储模式');
-        this.initializeInMemoryStorage();
+        this._initLRUStorage();
+        this.initialized = false;
       }
     } catch (error) {
       console.error('Firestore初始化失败:', error);
-      this.initializeInMemoryStorage();
+      this._initLRUStorage();
+      this.initialized = false;
     }
   }
 
   initializeInMemoryStorage() {
-    // 内存存储回退方案
-    this.comments = new Map();
-    this.likes = new Map();
-    this.follows = new Map();
-    this.views = new Map();
-    this.counters = { comments: 0, likes: 0, follows: 0, views: 0 };
+    // 修复 P1-13：兼容旧 API 名称，统一走 LRU 实现
+    this._initLRUStorage();
     this.initialized = false;
   }
 

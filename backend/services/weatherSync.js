@@ -1,22 +1,35 @@
 // 和风天气API服务
-const axios = require('axios');
+// 用一个可被测试替换的引用包装 axios，便于单元测试注入 mock
+let axios = require('axios');
+
+/**
+ * 仅供单元测试使用：替换内部 axios 引用
+ */
+function __setAxiosForTest(mockAxios) {
+  axios = mockAxios;
+}
+
+// 修复 P1-13：引入 LRU 缓存，避免对象/Map 无限增长导致内存泄漏
+const LRUCache = require('../utils/lruCache');
 
 // 和风天气API配置 - 使用免费开发版自定义域名
 // kp3h2rh7ab.re.qweatherapi.com 是专属API端点，不需要额外的key参数
 const QWEATHER_FREE_API_URL = 'https://kp3h2rh7ab.re.qweatherapi.com/v7';
 const QWEATHER_GEO_URL = 'https://kp3h2rh7ab.re.qweatherapi.com/v2';
 
-// 天气数据缓存
-let weatherCache = {};
-let weatherCacheTime = {};
+// 修复 P1-13：天气数据缓存改为 LRU（最多 200 城市，单条 TTL 10 分钟）
+// 原实现使用无上限 plain object，长期运行下 weatherCacheTime / weatherCache 会无限增长
+const weatherCache = new LRUCache({ max: 200, ttl: 10 * 60 * 1000 });
 
-// 城市ID缓存(用于将城市名转换为和风天气Location ID)
-let cityIdCache = {};
+// 城市 ID 缓存（城市名 → 和风 Location ID），最多 500 条
+// Location ID 永不变，但仍需限制上限避免恶意输入耗尽内存
+const cityIdCache = new LRUCache({ max: 500 });
 
 // 获取城市Location ID
 async function getCityLocationId(cityName) {
-  if (cityIdCache[cityName]) {
-    return cityIdCache[cityName];
+  const cached = cityIdCache.get(cityName);
+  if (cached !== undefined) {
+    return cached;
   }
 
   try {
@@ -29,10 +42,10 @@ async function getCityLocationId(cityName) {
 
     if (response.data.code === '200' && response.data.location && response.data.location.length > 0) {
       const locationId = response.data.location[0].id;
-      cityIdCache[cityName] = locationId;
+      cityIdCache.set(cityName, locationId);
       return locationId;
     }
-    
+
     return null;
   } catch (error) {
     console.error(`获取${cityName}城市ID失败:`, error.message);
@@ -97,27 +110,24 @@ async function getRealWeather(cityName) {
 
 // 获取天气数据(带缓存)
 async function getCityWeather(cityName) {
-  const now = Date.now();
-  
-  // 如果缓存存在且未过期(10分钟)
-  if (weatherCache[cityName] && (now - weatherCacheTime[cityName]) < 10 * 60 * 1000) {
-    return weatherCache[cityName];
+  // LRU 内部处理 TTL（10 分钟）
+  const cached = weatherCache.get(cityName);
+  if (cached !== undefined) {
+    return cached;
   }
 
   // 尝试获取真实天气
   const realWeather = await getRealWeather(cityName);
-  
+
   if (realWeather) {
-    weatherCache[cityName] = realWeather;
-    weatherCacheTime[cityName] = now;
+    weatherCache.set(cityName, realWeather);
     return realWeather;
   }
 
   // 如果真实天气获取失败,使用模拟数据
   const mockWeather = generateMockWeatherData(cityName);
-  weatherCache[cityName] = mockWeather;
-  weatherCacheTime[cityName] = now;
-  
+  weatherCache.set(cityName, mockWeather);
+
   return mockWeather;
 }
 
@@ -126,9 +136,9 @@ function generateMockWeatherData(cityName) {
   const now = new Date();
   const month = now.getMonth() + 1;
   const hour = now.getHours();
-  
+
   const weatherData = {
-    '北京': { 
+    '北京': {
       tempRange: [[-5, 5], [0, 10], [5, 18], [12, 25], [18, 30], [22, 33], [24, 32], [22, 30], [15, 25], [8, 18], [0, 10], [-3, 5]],
       condition: ['晴', '多云', '晴转多云', '多云转晴', '晴', '雷阵雨', '晴', '晴', '多云', '晴', '多云', '晴']
     },
@@ -205,39 +215,47 @@ function generateMockWeatherData(cityName) {
 // 定时刷新天气数据
 function startWeatherSync(intervalMinutes = 10) {
   console.log(`启动天气定时同步服务, 间隔: ${intervalMinutes}分钟`);
-  
-  setInterval(async () => {
-    console.log('开始同步天气数据...');
-    const cities = Object.keys(weatherCache);
-    
-    for (const city of cities) {
-      const realWeather = await getRealWeather(city);
-      if (realWeather) {
-        weatherCache[city] = realWeather;
-        weatherCacheTime[city] = Date.now();
-        console.log(`已更新${city}天气数据`);
+
+  // P0 修复：async 回调最外层包 try/catch，避免 unhandledRejection；
+  // 并调用 .unref() 使定时器不阻止进程优雅退出（与 middleware/validation.js 一致）
+  const timer = setInterval(async () => {
+    try {
+      console.log('开始同步天气数据...');
+      // LRU 的 keys() 返回当前所有缓存的城市名快照
+      const cities = weatherCache.keys();
+
+      for (const city of cities) {
+        const realWeather = await getRealWeather(city);
+        if (realWeather) {
+          weatherCache.set(city, realWeather);
+          console.log(`已更新${city}天气数据`);
+        }
       }
-    }
-    
-    // 清除过期缓存(超过1小时未访问的)
-    const now = Date.now();
-    for (const city of Object.keys(weatherCacheTime)) {
-      if (now - weatherCacheTime[city] > 60 * 60 * 1000) {
-        delete weatherCache[city];
-        delete weatherCacheTime[city];
+
+      // 清理过期条目（LRU 内部在 get 时也会清理，这里显式调用一次）
+      const purged = weatherCache.purgeExpired();
+      if (purged > 0) {
+        console.log(`已清理 ${purged} 个过期天气缓存`);
       }
+    } catch (err) {
+      // 定时任务出错不应崩溃进程，仅记录
+      console.error('[weatherSync] 定时同步失败:', err && err.message ? err.message : String(err));
     }
   }, intervalMinutes * 60 * 1000);
+
+  // P0 修复：unref 避免定时器持有事件循环引用，允许 gracefulShutdown 正常退出
+  timer.unref();
+  return timer;
 }
 
 // 清除缓存
 function clearWeatherCache(cityName) {
   if (cityName) {
-    delete weatherCache[cityName];
-    delete weatherCacheTime[cityName];
+    weatherCache.delete(cityName);
+    cityIdCache.delete(cityName);
   } else {
-    weatherCache = {};
-    weatherCacheTime = {};
+    weatherCache.clear();
+    cityIdCache.clear();
   }
 }
 
@@ -246,6 +264,8 @@ module.exports = {
   getRealWeather,
   startWeatherSync,
   clearWeatherCache,
+  // 暴露缓存实例以便监控/测试（只读访问）
   weatherCache,
-  weatherCacheTime
+  cityIdCache,
+  __setAxiosForTest
 };
