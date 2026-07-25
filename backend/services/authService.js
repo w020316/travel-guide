@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const { logError } = require('../utils/safeLog');
 
 // P1 修复 5.1：移除所有 Firebase 默认占位配置，避免泄露项目命名约定
-// 必须通过环境变量配置；未配置时初始化会失败但不会崩溃（auth 操作会走 catch 分支）
+// 必须通过环境变量配置；未配置时不初始化 Firebase，auth 操作会走 catch 分支返回错误
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY || '',
   authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
@@ -15,16 +15,21 @@ const firebaseConfig = {
   appId: process.env.FIREBASE_APP_ID || ''
 };
 
-// 初始化Firebase
-if (!firebase.apps.length) {
+// P1 修复 5.1（续）：仅当 apiKey 配置完整时才初始化 Firebase
+// 空字符串会导致 Firebase 抛出 auth/invalid-api-key 错误，阻止进程启动
+let auth = null;
+let firebaseInitialized = false;
+if (!firebase.apps.length && firebaseConfig.apiKey) {
   try {
     firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    firebaseInitialized = true;
   } catch (err) {
     console.error('Firebase 初始化失败（请检查 FIREBASE_* 环境变量）:', err.message);
   }
+} else if (!firebaseConfig.apiKey) {
+  console.warn('⚠️ FIREBASE_API_KEY 未配置，认证功能将不可用（其他功能正常）');
 }
-
-const auth = firebase.auth();
 
 class AuthService {
   constructor() {
@@ -49,6 +54,10 @@ class AuthService {
   // 验证Firebase ID Token并生成自定义JWT
   async verifyAndCreateToken(idToken) {
     try {
+      // P1 修复 5.1：Firebase 未配置时直接返回错误，不崩溃
+      if (!auth) {
+        throw new Error('认证服务未配置（FIREBASE_API_KEY 缺失）');
+      }
       // 验证Firebase token
       const decodedToken = await auth.verifyIdToken(idToken);
       
@@ -151,6 +160,10 @@ class AuthService {
 
   // 获取用户信息
   getUserInfo(uid) {
+    // P1 修复 5.1：Firebase 未配置时返回错误
+    if (!auth) {
+      return Promise.reject(new Error('认证服务未配置（FIREBASE_API_KEY 缺失）'));
+    }
     return auth.getUser(uid)
       .then(userRecord => ({
         uid: userRecord.uid,
@@ -170,11 +183,15 @@ class AuthService {
   // 更新用户资料
   async updateProfile(uid, updates) {
     try {
+      // P1 修复 5.1：Firebase 未配置时返回错误
+      if (!auth) {
+        throw new Error('认证服务未配置（FIREBASE_API_KEY 缺失）');
+      }
       await auth.updateUser(uid, {
         displayName: updates.displayName || undefined,
         photoURL: updates.photoURL || undefined
       });
-      
+
       return { success: true, message: '用户资料更新成功' };
     } catch (error) {
       // P1 修复 8.3：日志脱敏
