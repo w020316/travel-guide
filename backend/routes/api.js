@@ -8,7 +8,9 @@ const { getCityWeather, getRealWeather, startWeatherSync, clearWeatherCache } = 
 const { getTrendingCities, getSeasonalTags } = require('../services/realTimeSync');
 const { validateCityName, validateCityPayload, validateSearchQuery, validatePagination, rateLimiter,
   // v10.9 新增校验中间件
-  validateIdParam, validateCommentPayload, validateTargetType, validateIdToken, validateProfilePayload, validateCitiesArray, validateCityBody
+  validateIdParam, validateCommentPayload, validateTargetType, validateIdToken, validateProfilePayload, validateCitiesArray, validateCityBody,
+  // v10.9.3 新增：支持中文城市名的校验中间件（修复 P1-3）
+  validateCityIdParam, validateTargetIdByType
 } = require('../middleware/validation');
 
 // 加载扩展城市数据库（627个城市）
@@ -130,7 +132,8 @@ router.get('/ai/cache', authService.requireAdmin, async (req, res) => {
 });
 
 // v10.0: AI 修图建议（基于城市+季节+标签提供专业修图建议）
-router.post('/ai/edit-photo', validateCityBody, async (req, res) => {
+// v10.9.3 修复 P0-3：加管理员认证，防止匿名消耗 AI 付费配额
+router.post('/ai/edit-photo', authService.verifyCustomToken, authService.requireAdmin, validateCityBody, async (req, res) => {
   try {
     const { city, photoName, guideContext } = req.body;
     // validateCityBody 已校验 city 字段
@@ -241,7 +244,8 @@ router.post('/comments', authService.verifyCustomToken, validateCommentPayload, 
 });
 
 // 获取评论列表
-router.get('/comments/:cityId', authService.optionalAuth, validateIdParam('cityId'), async (req, res) => {
+// v10.9.3 修复 P1-3：cityId 改用 validateCityIdParam，支持中文城市名
+router.get('/comments/:cityId', authService.optionalAuth, validateCityIdParam('cityId'), async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
@@ -274,7 +278,8 @@ router.delete('/comments/:commentId', authService.verifyCustomToken, validateIdP
 });
 
 // 点赞/取消点赞
-router.post('/likes/:type/:targetId', authService.verifyCustomToken, validateTargetType, validateIdParam('targetId'), async (req, res) => {
+// v10.9.3 修复 P1-3：targetId 改用 validateTargetIdByType，cities 类型支持中文城市名
+router.post('/likes/:type/:targetId', authService.verifyCustomToken, validateTargetType, validateTargetIdByType('targetId'), async (req, res) => {
   try {
     const { type, targetId } = req.params;
     // validateTargetType + validateIdParam 已校验
@@ -341,7 +346,8 @@ router.get('/following', authService.verifyCustomToken, async (req, res) => {
 });
 
 // 记录浏览
-router.post('/views/:type/:targetId', authService.optionalAuth, validateTargetType, validateIdParam('targetId'), async (req, res) => {
+// v10.9.3 修复 P1-3：targetId 改用 validateTargetIdByType，cities 类型支持中文城市名
+router.post('/views/:type/:targetId', authService.optionalAuth, validateTargetType, validateTargetIdByType('targetId'), async (req, res) => {
   try {
     const { type, targetId } = req.params;
     // validateTargetType + validateIdParam 已校验
@@ -354,7 +360,8 @@ router.post('/views/:type/:targetId', authService.optionalAuth, validateTargetTy
 });
 
 // 获取浏览统计
-router.get('/stats/views/:type/:targetId', validateTargetType, validateIdParam('targetId'), async (req, res) => {
+// v10.9.3 修复 P1-3：targetId 改用 validateTargetIdByType，cities 类型支持中文城市名
+router.get('/stats/views/:type/:targetId', validateTargetType, validateTargetIdByType('targetId'), async (req, res) => {
   try {
     const timeRange = req.query.range || '7d';
     const result = await socialService.getViewStats(
@@ -657,8 +664,8 @@ router.get('/expanded/provinces/:province?', (req, res) => {
   }
 });
 
-// 清除缓存
-router.post('/expanded/cache/clear', (req, res) => {
+// 清除缓存（v10.9.3 修复 P0-3：加管理员认证）
+router.post('/expanded/cache/clear', authService.verifyCustomToken, authService.requireAdmin, (req, res) => {
   try {
     expandedCitiesLoader.clearCache();
     res.json({
@@ -710,11 +717,11 @@ router.get('/trending', async (req, res) => {
 
 // ==================== 数据同步接口 ====================
 
-// 同步单个城市数据
-router.post('/cities/sync/:name', validateCityName, async (req, res) => {
+// 同步单个城市数据（v10.9.3 修复 P0-3：加管理员认证，防止匿名触发数据同步）
+router.post('/cities/sync/:name', authService.verifyCustomToken, authService.requireAdmin, validateCityName, async (req, res) => {
   try {
     const updatedCity = await storage.syncCityFromDatabase(req.params.name);
-    
+
     if (updatedCity) {
       const cityWithRealTime = mergeWithWeather(updatedCity, req.params.name);
       res.json({ success: true, city: cityWithRealTime });
@@ -727,8 +734,8 @@ router.post('/cities/sync/:name', validateCityName, async (req, res) => {
   }
 });
 
-// 同步所有城市数据
-router.post('/cities/sync', async (req, res) => {
+// 同步所有城市数据（v10.9.3 修复 P0-3：加管理员认证）
+router.post('/cities/sync', authService.verifyCustomToken, authService.requireAdmin, async (req, res) => {
   try {
     const cities = await storage.syncAllCitiesFromDatabase();
     const syncCount = cities.length;
@@ -741,12 +748,13 @@ router.post('/cities/sync', async (req, res) => {
 
 // ==================== 天气服务控制接口 ====================
 
-// 立即同步天气数据
-router.post('/weather/sync', async (req, res) => {
+// 立即同步天气数据（v10.9.3 修复 P0-3：加管理员认证 + 城市名校验，防止匿名消耗和风 API 配额）
+router.post('/weather/sync', authService.verifyCustomToken, authService.requireAdmin, validateCityBody, async (req, res) => {
   try {
-    const weatherData = await getRealWeather(req.body.city || '北京');
+    const city = req.body.city || '北京';
+    const weatherData = await getRealWeather(city);
     if (weatherData) {
-      res.json({ success: true, city: req.body.city || '北京', data: weatherData });
+      res.json({ success: true, city, data: weatherData });
     } else {
       res.status(500).json({ error: '天气数据获取失败' });
     }
@@ -756,8 +764,8 @@ router.post('/weather/sync', async (req, res) => {
   }
 });
 
-// 清除天气缓存
-router.post('/weather/clear-cache', async (req, res) => {
+// 清除天气缓存（v10.9.3 修复 P0-3：加管理员认证）
+router.post('/weather/clear-cache', authService.verifyCustomToken, authService.requireAdmin, async (req, res) => {
   try {
     clearWeatherCache();
     res.json({ success: true, message: '天气缓存已清除' });

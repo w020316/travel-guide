@@ -232,7 +232,7 @@ describe('AI Providers', () => {
   describe('WenxinProvider 特殊流程', () => {
     it('chat 应先换 access_token 再调用补全接口', async () => {
       // Mock OAuth token 接口
-      mockPost.mockResolvedValueOnce({ data: { access_token: 'fake-token' } });
+      mockPost.mockResolvedValueOnce({ data: { access_token: 'fake-token', expires_in: 2592000 } });
       // Mock 补全接口
       mockPost.mockResolvedValueOnce({ data: { result: '文心响应' } });
 
@@ -248,11 +248,19 @@ describe('AI Providers', () => {
       const result = await provider.chat('你好');
       expect(result).toBe('文心响应');
 
-      // 验证第一次调用是 OAuth 接口
+      // v10.9.3 修复 P0-4：client_secret 不再出现在 URL，改用 POST body 传递
       const oauthCall = mockPost.mock.calls[0];
       expect(oauthCall[0]).toContain('oauth/2.0/token');
-      expect(oauthCall[0]).toContain('client_id=cid');
-      expect(oauthCall[0]).toContain('client_secret=csecret');
+      // URL 不应包含凭证
+      expect(oauthCall[0]).not.toContain('client_secret');
+      expect(oauthCall[0]).not.toContain('client_id');
+      // body 中应包含凭证（URLSearchParams 序列化后的字符串）
+      const oauthBody = oauthCall[1]; // 第二参数是 body
+      expect(oauthBody).toContain('client_id=cid');
+      expect(oauthBody).toContain('client_secret=csecret');
+      // Content-Type 应为 form-urlencoded
+      const oauthHeaders = oauthCall[2].headers;
+      expect(oauthHeaders['Content-Type']).toBe('application/x-www-form-urlencoded');
 
       // 验证第二次调用是补全接口
       const completionCall = mockPost.mock.calls[1];
@@ -260,7 +268,7 @@ describe('AI Providers', () => {
     });
 
     it('chat 应将 system prompt 合并到 user prompt（文心不支持 system role）', async () => {
-      mockPost.mockResolvedValueOnce({ data: { access_token: 't' } });
+      mockPost.mockResolvedValueOnce({ data: { access_token: 't', expires_in: 2592000 } });
       mockPost.mockResolvedValueOnce({ data: { result: 'r' } });
 
       process.env.WENXIN_CLIENT_ID = 'cid';
@@ -283,6 +291,29 @@ describe('AI Providers', () => {
       const provider = new aiProviders.WenxinProvider({ name: 'W', baseUrl: 'x', model: 'm', apiKey: '' });
 
       await expect(provider.chat('hi')).rejects.toThrow('OAuth failed');
+    });
+
+    it('v10.9.3：access_token 应缓存复用，避免每次 chat 都重新 OAuth', async () => {
+      // 第一次 chat 的 OAuth mock
+      mockPost.mockResolvedValueOnce({ data: { access_token: 'cached-token', expires_in: 2592000 } });
+      mockPost.mockResolvedValueOnce({ data: { result: '第一次响应' } });
+
+      process.env.WENXIN_CLIENT_ID = 'cid';
+      process.env.WENXIN_CLIENT_SECRET = 'csecret';
+      const provider = new aiProviders.WenxinProvider({ name: 'W', baseUrl: 'x', model: 'm', apiKey: '' });
+
+      // 第一次 chat：触发 OAuth
+      await provider.chat('问题1');
+      expect(mockPost.mock.calls).toHaveLength(2); // OAuth + 补全
+
+      // 第二次 chat：应复用 token，不再发 OAuth 请求
+      mockPost.mockResolvedValueOnce({ data: { result: '第二次响应' } });
+      await provider.chat('问题2');
+
+      // 总共 3 次调用（1 OAuth + 2 补全），证明第二次未触发 OAuth
+      expect(mockPost.mock.calls).toHaveLength(3);
+      const secondCompletionCall = mockPost.mock.calls[2];
+      expect(secondCompletionCall[0]).toContain('access_token=cached-token');
     });
   });
 

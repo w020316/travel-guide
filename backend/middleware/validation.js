@@ -108,14 +108,57 @@ function validateIdParam(fieldName) {
   };
 }
 
+// v10.9.3 修复 P1-3：城市名 ID 校验（用于 cities 类型的 targetId/cityId）
+// 原 validateIdParam 拒绝中文，导致评论/点赞/浏览统计对中文城市（核心场景）失效
+// 此中间件允许中文城市名（与 validateCityName 一致），仍限制长度防 XSS
+const CITY_NAME_ID_REGEX = /^[\u4e00-\u9fa5a-zA-Z0-9·\-\s]{1,30}$/;
+function validateCityIdParam(fieldName) {
+  return (req, res, next) => {
+    const value = req.params[fieldName];
+    if (!value) {
+      return res.status(400).json({ success: false, error: `缺少参数: ${fieldName}` });
+    }
+    if (!CITY_NAME_ID_REGEX.test(value)) {
+      return res.status(400).json({ success: false, error: `${fieldName} 格式非法` });
+    }
+    next();
+  };
+}
+
+// v10.9.3 修复 P1-3：根据 targetType 动态选择校验规则
+// cities 类型用中文城市名校验；comments/guides 类型用严格 ID 校验
+function validateTargetIdByType(targetIdField) {
+  return (req, res, next) => {
+    const { type } = req.params;
+    const value = req.params[targetIdField];
+    if (!value) {
+      return res.status(400).json({ success: false, error: `缺少参数: ${targetIdField}` });
+    }
+    if (type === 'cities') {
+      // 城市名允许中文
+      if (!CITY_NAME_ID_REGEX.test(value)) {
+        return res.status(400).json({ success: false, error: `${targetIdField} 格式非法` });
+      }
+    } else {
+      // comments/guides 用严格 ID
+      if (!/^[a-zA-Z0-9_\-]{1,64}$/.test(value)) {
+        return res.status(400).json({ success: false, error: `${targetIdField} 格式非法` });
+      }
+    }
+    next();
+  };
+}
+
 // P1 修复 4.5：评论内容校验（长度 1-2000，允许常见中文标点）
+// v10.9.3 修复 P1-3：cityId 允许中文城市名（评论的核心场景是按城市查看）
 function validateCommentPayload(req, res, next) {
   const { cityId, content, parentId } = req.body || {};
 
   if (!cityId || typeof cityId !== 'string') {
     return res.status(400).json({ success: false, error: '城市ID不能为空' });
   }
-  if (!/^[a-zA-Z0-9_\-]{1,64}$/.test(cityId)) {
+  // v10.9.3：cityId 允许中文城市名（与 validateCityName 一致）
+  if (!CITY_NAME_ID_REGEX.test(cityId)) {
     return res.status(400).json({ success: false, error: 'cityId 格式非法' });
   }
 
@@ -346,5 +389,8 @@ module.exports = {
   validateProfilePayload,
   validateCitiesArray,
   validateCityBody,
-  VALID_TARGET_TYPES
+  VALID_TARGET_TYPES,
+  // v10.9.3 新增：支持中文城市名的校验中间件（修复 P1-3）
+  validateCityIdParam,
+  validateTargetIdByType
 };

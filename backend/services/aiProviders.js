@@ -209,22 +209,59 @@ class WenxinProvider extends BaseAIProvider {
     super(config);
     this.clientId = process.env.WENXIN_CLIENT_ID || '';
     this.clientSecret = process.env.WENXIN_CLIENT_SECRET || '';
+    // v10.9.3 修复 P1-6：access_token 缓存（百度 token 有效期通常 30 天）
+    // 避免每次 chat 都重新 OAuth，减少网络往返与配额消耗
+    this._cachedAccessToken = null;
+    this._tokenExpiresAt = 0;
   }
 
   get isAvailable() {
     return Boolean(this.apiKey) || (Boolean(this.clientId) && Boolean(this.clientSecret));
   }
 
+  /**
+   * 获取 access_token（带缓存，到期前 5 分钟刷新）
+   * v10.9.3 修复 P0-4：client_secret 改为 POST body 传递，避免出现在 URL query
+   * 避免 URL query 被代理日志/错误对象记录导致密钥泄露
+   */
+  async _getAccessToken() {
+    const now = Date.now();
+    // 缓存有效且距过期 >5 分钟则复用
+    if (this._cachedAccessToken && now < this._tokenExpiresAt - 5 * 60 * 1000) {
+      return this._cachedAccessToken;
+    }
+
+    // 用 application/x-www-form-urlencoded body 传递凭证，不出现在 URL
+    const tokenResponse = await axios.post(
+      'https://aip.baidubce.com/oauth/2.0/token',
+      new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: this.clientId,
+        client_secret: this.clientSecret
+      }).toString(),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        timeout: 15000
+      }
+    );
+
+    this._cachedAccessToken = tokenResponse.data.access_token;
+    // expires_in 单位秒，通常 2592000（30 天）
+    const expiresIn = tokenResponse.data.expires_in || 2592000;
+    this._tokenExpiresAt = now + expiresIn * 1000;
+
+    return this._cachedAccessToken;
+  }
+
   async chat(prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT) {
     console.log('📡 调用文心一言API...');
 
-    // Step 1: 用 client_credentials 换 access_token
-    const tokenResponse = await axios.post(
-      `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.clientId}&client_secret=${this.clientSecret}`
-    );
-    const accessToken = tokenResponse.data.access_token;
+    // Step 1: 获取 access_token（带缓存）
+    const accessToken = await this._getAccessToken();
 
     // Step 2: 调用补全接口（文心不支持 system role，把 system prompt 拼到 user 前面）
+    // v10.9.3 修复 P0-4：access_token 仍需通过 query 传递（百度 API 限制），
+    // 但 access_token 是短期凭证（30 天），泄露风险远低于 client_secret
     const mergedPrompt = `${systemPrompt}\n\n${prompt}`;
     const response = await axios.post(
       `${this.baseUrl}?access_token=${accessToken}`,

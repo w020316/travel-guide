@@ -38,17 +38,21 @@ app.use(helmet({
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
-// CORS配置（修复 P1-3：默认不允许 '*'，生产环境必须显式配置白名单）
-const allowedOrigins = (process.env.CORS_ORIGIN || '').split(',').filter(Boolean);
-if (allowedOrigins.length === 0 && process.env.NODE_ENV === 'production') {
-  console.warn('⚠️ 生产环境未配置 CORS_ORIGIN，CORS 将拒绝所有跨源凭证请求');
+// CORS配置（v10.9.3 修复 P0-2：生产环境未配置 CORS_ORIGIN 时拒绝所有跨源请求，避免凭证泄露）
+const allowedOrigins = (process.env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
+const isProd = process.env.NODE_ENV === 'production';
+if (isProd && allowedOrigins.length === 0) {
+  console.error('❌ 生产环境必须显式配置 CORS_ORIGIN 白名单，当前未配置 → 拒绝所有跨源请求');
 }
 app.use(cors({
   origin: (origin, cb) => {
-    // 允许无 origin 的请求（服务端调用、Postman）
+    // 允许无 origin 的请求（服务端调用、Postman、同源浏览器请求）
     if (!origin) return cb(null, true);
     if (allowedOrigins.length === 0) {
-      // 未配置时仅允许同源（开发环境）
+      // v10.9.3：未配置时，开发环境允许所有，生产环境拒绝所有跨源
+      if (isProd) {
+        return cb(new Error('Not allowed by CORS (production requires explicit whitelist)'));
+      }
       return cb(null, true);
     }
     if (allowedOrigins.includes(origin)) return cb(null, true);
@@ -60,9 +64,9 @@ app.use(cors({
   maxAge: 86400
 }));
 
-// 请求解析
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// 请求解析（v10.9.3 修复 P2-6：限制 body 大小为 1mb，避免大 body DoS）
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // 日志中间件
 if (process.env.NODE_ENV !== 'test') {

@@ -157,7 +157,8 @@ class SocialService {
           throw new Error('无权删除此评论');
         }
         this.comments.delete(commentId);
-        this.counters.comments--;
+        // v10.9.3 修复 P3-6：计数器防负
+        this.counters.comments = Math.max(0, this.counters.comments - 1);
       }
 
       return { success: true, message: '评论删除成功' };
@@ -211,7 +212,8 @@ class SocialService {
         // 内存存储
         if (this.likes.has(likeId)) {
           this.likes.delete(likeId);
-          this.counters.likes--;
+          // v10.9.3 修复 P3-6：计数器防负
+          this.counters.likes = Math.max(0, this.counters.likes - 1);
           return { success: true, liked: false };
         } else {
           this.likes.set(likeId, {
@@ -289,7 +291,8 @@ class SocialService {
       } else {
         if (this.follows.has(followId)) {
           this.follows.delete(followId);
-          this.counters.follows--;
+          // v10.9.3 修复 P3-6：计数器防负
+          this.counters.follows = Math.max(0, this.counters.follows - 1);
           return { success: true, followed: false };
         } else {
           this.follows.set(followId, {

@@ -366,6 +366,79 @@ describe('SocialService', () => {
     });
   });
 
+  describe('v10.9.3 修复 P1-3：中文城市名支持', () => {
+    it('addComment 应支持中文 cityId（如「成都」）', async () => {
+      const result = await socialService.addComment('成都', 'user-a', '春熙路攻略很实用', null);
+
+      expect(result.success).toBe(true);
+      expect(result.comment.cityId).toBe('成都');
+      expect(result.comment.content).toBe('春熙路攻略很实用');
+    });
+
+    it('getComments 应支持中文 cityId 查询', async () => {
+      await socialService.addComment('北京', 'user-a', '故宫必去', null);
+      await socialService.addComment('北京', 'user-b', '长城壮观', null);
+      await socialService.addComment('上海', 'user-c', '外滩夜景', null);
+
+      const result = await socialService.getComments('北京', 1, 20);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(2);
+      expect(result.data.every(c => c.cityId === '北京')).toBe(true);
+    });
+
+    it('toggleLike 应支持 cities 类型的中文 targetId', async () => {
+      // 模拟点赞成都攻略
+      const result = await socialService.toggleLike('cities', '成都', 'user-a');
+
+      expect(result.success).toBe(true);
+      expect(result.liked).toBe(true);
+
+      // 验证存储
+      const stored = socialService.likes.get('cities_成都_user-a');
+      expect(stored).toBeDefined();
+      expect(stored.targetId).toBe('成都');
+    });
+
+    it('recordView 应支持中文城市名 targetId', async () => {
+      const result = await socialService.recordView('cities', '杭州', 'user-a');
+
+      expect(result.success).toBe(true);
+      const view = Array.from(socialService.views.values()).find(
+        v => v.targetId === '杭州'
+      );
+      expect(view).toBeDefined();
+    });
+
+    it('getViewStats 应支持中文城市名查询', async () => {
+      await socialService.recordView('cities', '西安', 'u1');
+      await socialService.recordView('cities', '西安', 'u2');
+
+      const result = await socialService.getViewStats('cities', '西安', '7d');
+
+      expect(result.success).toBe(true);
+      expect(result.stats.totalViews).toBeGreaterThanOrEqual(2);
+    });
+
+    it('中文城市名与其他 targetId 应独立存储，不互相干扰', async () => {
+      // 同时操作成都和重庆
+      await socialService.addComment('成都', 'u1', 'c1', null);
+      await socialService.addComment('重庆', 'u1', 'c2', null);
+      await socialService.toggleLike('cities', '成都', 'u1');
+      await socialService.toggleLike('cities', '重庆', 'u1');
+
+      const chengduComments = await socialService.getComments('成都', 1, 20);
+      const chongqingComments = await socialService.getComments('重庆', 1, 20);
+      const userLikes = await socialService.getUserLikes('u1');
+
+      expect(chengduComments.data).toHaveLength(1);
+      expect(chengduComments.data[0].content).toBe('c1');
+      expect(chongqingComments.data).toHaveLength(1);
+      expect(chongqingComments.data[0].content).toBe('c2');
+      expect(userLikes.data).toHaveLength(2);
+    });
+  });
+
   describe('LRU 上限保护（与 v10.8 修复对齐）', () => {
     it('comments LRU 应在超过上限时淘汰最久未访问的条目', async () => {
       // 默认 max=10000，这里只验证 LRU 实例已配置上限

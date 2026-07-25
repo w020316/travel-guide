@@ -2,8 +2,9 @@
 // 天气相关功能已迁移到 weatherSync.js
 
 // 热门城市数据缓存
+// v10.9.3 修复 P1-7：trendingCacheTime 初值类型修正为 number（原 {} 导致首次 NaN）
 let trendingCache = {};
-let trendingCacheTime = {};
+let trendingCacheTime = 0;
 
 // 获取热门城市排行榜
 async function getTrendingCities() {

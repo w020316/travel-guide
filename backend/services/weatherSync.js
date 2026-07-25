@@ -12,10 +12,11 @@ function __setAxiosForTest(mockAxios) {
 // 修复 P1-13：引入 LRU 缓存，避免对象/Map 无限增长导致内存泄漏
 const LRUCache = require('../utils/lruCache');
 
-// 和风天气API配置 - 使用免费开发版自定义域名
-// kp3h2rh7ab.re.qweatherapi.com 是专属API端点，不需要额外的key参数
-const QWEATHER_FREE_API_URL = 'https://kp3h2rh7ab.re.qweatherapi.com/v7';
-const QWEATHER_GEO_URL = 'https://kp3h2rh7ab.re.qweatherapi.com/v2';
+// 和风天气API配置
+// v10.9.3 修复 P0-5：专属 API 域名等价于凭证，迁移到环境变量，避免仓库公开后被滥用
+// 未配置时回退到原硬编码值（保持现有部署兼容，不破坏功能）
+const QWEATHER_FREE_API_URL = (process.env.QWEATHER_API_URL || 'https://kp3h2rh7ab.re.qweatherapi.com/v7').replace(/\/+$/, '');
+const QWEATHER_GEO_URL = (process.env.QWEATHER_GEO_URL || 'https://kp3h2rh7ab.re.qweatherapi.com/v2').replace(/\/+$/, '');
 
 // 修复 P1-13：天气数据缓存改为 LRU（最多 200 城市，单条 TTL 10 分钟）
 // 原实现使用无上限 plain object，长期运行下 weatherCacheTime / weatherCache 会无限增长

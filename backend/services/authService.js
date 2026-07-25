@@ -109,7 +109,8 @@ class AuthService {
     const token = authHeader.split(' ')[1];
 
     try {
-      const decoded = jwt.verify(token, this.jwtSecret);
+      // v10.9.3 修复 P1-4：显式限制 JWT 算法为 HS256，避免 alg=none 降级攻击
+      const decoded = jwt.verify(token, this.jwtSecret, { algorithms: ['HS256'] });
       req.user = decoded;
       next();
     } catch (error) {
@@ -134,7 +135,8 @@ class AuthService {
       const token = authHeader.split(' ')[1];
       
       try {
-        const decoded = jwt.verify(token, this.jwtSecret);
+        // v10.9.3 修复 P1-4：与 verifyCustomToken 一致，限制算法为 HS256
+        const decoded = jwt.verify(token, this.jwtSecret, { algorithms: ['HS256'] });
         req.user = decoded;
       } catch (error) {
         // 忽略错误，继续执行
