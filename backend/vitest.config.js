@@ -19,7 +19,9 @@ export default defineConfig({
       include: [
         'utils/**/*.js',
         'services/lruCache.js',
-        'services/aiProviders.js'
+        'services/aiProviders.js',
+        // v10.9.1 新增：authService 纳入覆盖率统计（含 Firebase 降级路径）
+        'services/authService.js'
       ],
       exclude: ['node_modules/**', 'tests/**']
     }
