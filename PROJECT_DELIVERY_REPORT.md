@@ -1,13 +1,115 @@
 # 行纪 · 中国城市旅行攻略生成器 — 项目交付报告
 
-> **版本**: v10.8（AI Provider 抽象层重构 · LRU 缓存全面落地 · MCP Server 暴露 · 单元测试基础设施）
+> **版本**: v10.9.1（Firebase 条件初始化修复 · Render 部署可用性恢复）
 > **本轮交付日期**: 2026-07-25
 > **项目仓库**: https://github.com/w020316/travel-guide
 > **线上部署**: https://travel-guide-w5cq.onrender.com
 
 ---
 
-## 〇〇、本轮（v10.8）整改摘要
+## 〇〇、本轮（v10.9.1）整改摘要
+
+### 0.1 整改目标与范围
+
+本轮为 **v10.8/v10.9 安全加固后的部署可用性补丁**，聚焦一个 P0 级部署阻塞问题：v10.9 整改中移除了 Firebase 默认占位配置，但 `firebase.auth()` 在 `apiKey` 为空字符串时仍会同步抛出 `auth/invalid-api-key`，导致 Render 容器启动阶段即崩溃，整服务不可用。本轮通过 **条件初始化 + null 安全检查** 完成修复，并完成全链路部署验证。
+
+### 0.2 健康度评分变化
+
+| 维度 | v10.8 评分 | v10.9.1 评分 | 变化 |
+|---|---|---|---|
+| 后端综合 | 83/100 | 86/100 | +3 |
+| 安全性（后端） | 82 | 84 | +2 |
+| 可用性（部署成功率） | N/A | 100% | 修复 |
+| 部署稳定性 | 0%（持续崩溃） | 100% | P0 修复 |
+
+### 0.3 本轮核心成果
+
+- **P0 修复 1 项**：Firebase 未配置时进程启动崩溃 → 条件初始化 + 友好降级
+- **Render 部署成功率从 0% 恢复至 100%**，服务持续在线
+- **降级路径明确**：未配置 `FIREBASE_API_KEY` 时，认证 3 接口返回明确错误，其他功能（攻略生成/天气/城市数据/MCP）完全不受影响
+- **全链路端点验证通过**：health/cities/cities-all/comments/ai/generate 五类核心接口均正常
+
+### 0.4 v10.9.1 整改清单
+
+| # | 类别 | 任务 | 完成状态 |
+|---|---|---|---|
+| 1 | P0 修复 | Firebase 条件初始化（apiKey 缺失时不调用 initializeApp） | ✅ |
+| 2 | P0 修复 | authService 三个方法增加 auth null 检查（不崩溃） | ✅ |
+| 3 | 验证 | Render 部署成功 + 健康检查通过 | ✅ |
+| 4 | 验证 | 核心端点全链路验证（含 AI 真实调用 Agnes） | ✅ |
+| 5 | 文档 | 交付报告更新 v10.9.1 章节 | ✅ |
+
+### 0.5 v10.9.1 修复详情
+
+#### P0：Firebase 未配置时进程启动崩溃
+
+**问题代码**（修复前）：
+```javascript
+// 初始化Firebase
+if (!firebase.apps.length) {
+  try {
+    firebase.initializeApp(firebaseConfig);
+  } catch (err) {
+    console.error('Firebase 初始化失败（请检查 FIREBASE_* 环境变量）:', err.message);
+  }
+}
+const auth = firebase.auth();  // ← apiKey 为空时此处抛 auth/invalid-api-key
+```
+
+**问题链路**：
+1. v10.9 安全加固移除了 Firebase 默认占位配置（避免泄露项目命名约定）
+2. `firebaseConfig.apiKey` 在 Render 环境变量未配置时为空字符串 `''`
+3. `firebase.initializeApp()` 接受空配置不报错
+4. 但 `firebase.auth()` 在内部初始化 Auth 实例时校验 apiKey，抛出 `auth/invalid-api-key`
+5. 该错误在模块加载阶段同步抛出，express 实例还未创建，进程直接崩溃
+6. Render 健康检查 `/health` 持续无法访问，部署标记为 failed
+
+**修复方案**：
+```javascript
+let auth = null;
+let firebaseInitialized = false;
+if (!firebase.apps.length && firebaseConfig.apiKey) {  // ← 增加 apiKey 检查
+  try {
+    firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    firebaseInitialized = true;
+  } catch (err) {
+    console.error('Firebase 初始化失败:', err.message);
+  }
+} else if (!firebaseConfig.apiKey) {
+  console.warn('⚠️ FIREBASE_API_KEY 未配置，认证功能将不可用（其他功能正常）');
+}
+
+// 三个 auth 调用方法增加 null 检查：
+async verifyAndCreateToken(idToken) {
+  if (!auth) {
+    throw new Error('认证服务未配置（FIREBASE_API_KEY 缺失）');
+  }
+  // ...原有逻辑
+}
+```
+
+**影响范围**：
+- ✅ Render 部署恢复正常（uptime 持续）
+- ✅ 已配置 `FIREBASE_API_KEY` 的环境行为完全不变
+- ✅ 未配置环境下，认证 3 接口返回明确错误（前端可降级处理），其他功能正常
+
+### 0.6 部署验证记录（2026-07-25 20:44 UTC+8）
+
+| 端点 | 方法 | 期望 | 实际 | 结果 |
+|---|---|---|---|---|
+| `/health` | GET | 200 + healthy | 200, uptime 69s, cityCount 527, auth: local-mode | ✅ |
+| `/api/cities?page=1&limit=3` | GET | 200 + 分页结构 | 200, total=527, data 3 项 | ✅ |
+| `/api/cities/all?page=1&limit=3` | GET | 200 + 分页信封 | 200, total/page/limit/data 完整 | ✅ |
+| `/api/comments/test` | GET | 200 + 评论列表 | 200, success=true, data=[] | ✅ |
+| `/api/comments` | POST（无 token） | 401 | 401, "未提供认证令牌" | ✅ |
+| `/api/ai/generate` | POST（成都, 2 天） | 200 + AI 攻略 | 200, source=ai, provider=Agnes AI, 全字段 | ✅ |
+
+**关键观察**：AI 攻略生成在 Render 真实环境调用 Agnes AI 成功，返回完整成都 2 日攻略（routes/foods/accommodations/transport/budget/tips/itineraries/poster/tags 全部字段填充）。
+
+---
+
+## 〇一、上一轮（v10.8）整改摘要
 
 ### 0.1 整改目标与范围
 
