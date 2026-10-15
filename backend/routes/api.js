@@ -63,7 +63,9 @@ router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
     const guideData = await aiService.generateTravelGuide(cityName, preferences || {});
 
     // 合并实时数据
-    const weather = getCityWeather(cityName);
+    // v10.10 修复 P0-5：getCityWeather 自 weatherSync.js 起为 async 函数，
+    // 此处漏 await 会拿到 Promise（恒真），JSON 序列化后 currentWeather 恒为 {}，天气实际从未返回
+    const weather = await getCityWeather(cityName);
     if (weather) {
       guideData.currentWeather = weather;
     }
@@ -420,13 +422,14 @@ router.get('/social/stats', authService.requireAdmin, async (req, res) => {
 // ==================== 城市数据接口（保留原有功能）====================
 
 // 合并实时数据（使用weatherSync的天气服务）
-function mergeWithWeather(cityData, cityName) {
+// v10.10 修复 P0-5：getCityWeather 是 async，必须 await，否则 currentWeather 恒为 {}
+async function mergeWithWeather(cityData, cityName) {
   if (!cityData) return cityData;
   
   const updatedData = { ...cityData };
   
   // 添加实时天气
-  const weather = getCityWeather(cityName);
+  const weather = await getCityWeather(cityName);
   if (weather) {
     updatedData.currentWeather = weather;
   }
@@ -484,7 +487,7 @@ router.get('/cities/all', async (req, res) => {
       // 向后兼容：返回扁平对象
       const cityMap = {};
       for (const [name, data] of allEntries) {
-        cityMap[name] = mergeWithWeather(data, name);
+        cityMap[name] = await mergeWithWeather(data, name);
       }
       return res.json(cityMap);
     }
@@ -500,7 +503,7 @@ router.get('/cities/all', async (req, res) => {
     const paginatedEntries = allEntries.slice(start, start + limit);
     const cityMap = {};
     for (const [name, data] of paginatedEntries) {
-      cityMap[name] = mergeWithWeather(data, name);
+      cityMap[name] = await mergeWithWeather(data, name);
     }
     res.json({
       total: allEntries.length,
@@ -522,7 +525,7 @@ router.get('/cities/search/tags', async (req, res) => {
   try {
     const tags = req.query.tags ? req.query.tags.split(',') : [];
     const cities = await storage.getCitiesByTags(tags);
-    const cityList = cities.map(city => mergeWithWeather(city, city.name));
+    const cityList = await Promise.all(cities.map(city => mergeWithWeather(city, city.name)));
     res.json(cityList);
   } catch (error) {
     console.error('标签搜索失败:', error);
@@ -538,7 +541,7 @@ router.get('/cities/search', validateSearchQuery, async (req, res) => {
       return res.status(400).json({ error: '请提供搜索关键字' });
     }
     const cities = await storage.searchCities(keyword);
-    const cityList = cities.map(city => mergeWithWeather(city, city.name));
+    const cityList = await Promise.all(cities.map(city => mergeWithWeather(city, city.name)));
     res.json(cityList);
   } catch (error) {
     console.error('搜索城市失败:', error);
@@ -552,7 +555,7 @@ router.get('/cities/:name', validateCityName, async (req, res) => {
     const city = await storage.getCity(req.params.name);
 
     if (city) {
-      const cityWithRealTime = mergeWithWeather(city, req.params.name);
+      const cityWithRealTime = await mergeWithWeather(city, req.params.name);
 
       // 记录浏览
       if (req.user) {
@@ -681,10 +684,14 @@ router.post('/expanded/cache/clear', authService.verifyCustomToken, authService.
 // ==================== 天气相关接口 ====================
 
 // 获取城市天气信息
-router.get('/weather/:city', validateCityName, async (req, res) => {
+// v10.10 修复 P0-6：原挂载 validateCityName，但该中间件读取的是 req.params.name，
+// 而本路由参数名是 :city —— cityName 恒为 undefined，接口必然返回 400「城市名称不能为空」。
+// 改用 validateCityIdParam('city')，与路由参数名对齐。
+router.get('/weather/:city', validateCityIdParam('city'), async (req, res) => {
   try {
     const cityData = await storage.getCity(req.params.city);
-    const weather = getCityWeather(req.params.city);
+    // v10.10 修复 P0-5：getCityWeather 是 async，漏 await 会让 weather 恒为 Promise
+    const weather = await getCityWeather(req.params.city);
     
     if (weather) {
       res.json({
@@ -723,7 +730,7 @@ router.post('/cities/sync/:name', authService.verifyCustomToken, authService.req
     const updatedCity = await storage.syncCityFromDatabase(req.params.name);
 
     if (updatedCity) {
-      const cityWithRealTime = mergeWithWeather(updatedCity, req.params.name);
+      const cityWithRealTime = await mergeWithWeather(updatedCity, req.params.name);
       res.json({ success: true, city: cityWithRealTime });
     } else {
       res.status(404).json({ error: '城市不存在' });
