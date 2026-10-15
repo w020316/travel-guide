@@ -8,6 +8,10 @@ try {
     citiesData = require('../data/cities');
 }
 
+// v10.10 修复 P1-15：citiesCache 原为无上限 Map，POST /cities 可无限写入导致内存无界增长。
+// 初始化会预载 527 城，故上限必须高于种子数量；新增城市超限时拒绝，更新已有城市不受限。
+const MAX_CITIES_CACHE = Number(process.env.MAX_CITIES_CACHE) || 2000;
+
 class StorageService {
   constructor() {
     this.useMemoryStorage = true;
@@ -18,6 +22,14 @@ class StorageService {
     // 修复 P2：刷新缓存的 in-flight Promise，避免惊群效应
     // 多个并发请求触发 refreshCache 时，复用同一个 Promise，避免重复扫描数据库
     this._refreshPromise = null;
+  }
+
+  /**
+   * v10.10 修复 P1-15：内存缓存是否已达容量上限
+   * @returns {boolean}
+   */
+  isCityCacheFull() {
+    return this.citiesCache.size >= MAX_CITIES_CACHE;
   }
 
   async initialize(mongooseInstance) {
@@ -125,6 +137,10 @@ class StorageService {
   async addCity(name, data) {
     // P1 修复 7.4：service 层内置原型污染防御，不依赖路由中间件
     this._assertSafePayload(data);
+    // v10.10 修复 P1-15：service 层兜底容量校验（路由层已先行拦截，此处防绕过）
+    if (!this.citiesCache.has(name) && this.isCityCacheFull()) {
+      throw new Error(`城市数量已达上限（${MAX_CITIES_CACHE}），无法新增`);
+    }
     this.citiesCache.set(name, { ...data, lastUpdated: new Date().toISOString() });
     return this.citiesCache.get(name);
   }
