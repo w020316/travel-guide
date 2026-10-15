@@ -644,6 +644,8 @@
         renderHistory();
         updateFavCount();
         bindEvents();
+        // v10.10 阶段五：启用滚动入场动效（原先无 IntersectionObserver 体系）
+        initScrollReveal();
         // 检测 URL 参数，自动打开攻略（支持分享链接）
         const urlState = parseUrlState();
         if (urlState && urlState.city) {
@@ -2660,6 +2662,45 @@
             return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
         }
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    // ---------- v10.10 阶段五：滚动入场动效 ----------
+    // 设计意图：让首屏以下的区块随滚动依次淡入，替代原先的「瞬间出现」，
+    // 制造阅读节奏。仅动 opacity / transform（合成层属性），保证 60fps。
+    // 无障碍：尊重 prefers-reduced-motion，用户要求减少动效时直接跳过（元素保持可见）。
+    let revealObserver = null;
+
+    function initScrollReveal() {
+        // 尊重系统「减少动态效果」偏好：直接不启用，元素以默认可见状态呈现
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return;
+        }
+        // 老浏览器不支持则优雅降级
+        if (!('IntersectionObserver' in window)) return;
+
+        const targets = document.querySelectorAll(
+            '.section-head, .rank-card, .history-list, .search-card'
+        );
+        if (!targets.length) return;
+
+        revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('in');
+                // 一次性入场，触发后即解除观察，避免重复计算
+                revealObserver.unobserve(entry.target);
+            });
+        }, {
+            rootMargin: '0px 0px -10% 0px',
+            threshold: 0.08
+        });
+
+        targets.forEach((el, idx) => {
+            el.classList.add('reveal');
+            // 同组元素按序错开 60ms，形成瀑布节奏；上限 6 档避免长尾等待
+            el.style.transitionDelay = `${Math.min(idx % 6, 5) * 60}ms`;
+            revealObserver.observe(el);
+        });
     }
 
     // 启动
