@@ -1598,7 +1598,7 @@
         sections.push(`
             <div class="gc-head">
                 <div class="gc-eyebrow">${g.source === 'local-db' || g.source === 'local-mock' ? '本地数据 · ' : ''}${escapeHtml(g.duration || '')} · ${escapeHtml(g.difficulty || '适中')}</div>
-                <h1>${escapeHtml(g.title || g.city)}</h1>
+                <h2>${escapeHtml(g.title || g.city)}</h2>
                 <p class="gc-sub">${escapeHtml(g.subtitle || '')}</p>
                 <div class="gc-stats">
                     <div class="gc-stat gc-stat-route">路线 <strong>${originText}</strong></div>

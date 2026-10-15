@@ -646,7 +646,9 @@ input, select { font-family: inherit; }
 .guide-content { font-size: var(--fs-base); color: var(--ink-2); }
 .gc-head { margin-bottom: 36px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
 .gc-head .gc-eyebrow { font-size: var(--fs-2xs); letter-spacing: .2em; color: var(--accent-text); text-transform: uppercase; margin-bottom: 10px; }
-.gc-head h1 { font-family: var(--serif); font-weight: 700; font-size: var(--fs-fluid-h1); line-height: 1.15; color: var(--ink); margin-bottom: 12px; }
+/* v10.10 修复标题层级倒挂：结果页主标题改为 h1（见 index.html），
+   攻略正文的标题相应降为 h2，视觉尺寸保持不变 */
+.gc-head h2 { font-family: var(--serif); font-weight: 700; font-size: var(--fs-fluid-h1); line-height: 1.15; color: var(--ink); margin-bottom: 12px; }
 .gc-head .gc-sub { font-size: var(--fs-base); color: var(--muted); }
 .gc-stats { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 22px; }
 .gc-stat { padding: 10px 16px; background: var(--paper-2); border-radius: var(--radius-sm); font-size: var(--fs-xs); color: var(--muted); }
@@ -1655,7 +1657,7 @@ input[type="date"].input-ghost:focus {
 .hero-title,
 .section-title,
 .result-title,
-.gc-head h1,
+.gc-head h2,
 .modal-head h3 {
     text-wrap: balance;
 }
@@ -1738,4 +1740,31 @@ input[type="date"].input-ghost:focus {
         height: var(--tap-min);
         transform: translate(-50%, -50%);
     }
+}
+
+/* ---------- 6. 视觉层级：结果页工具栏主次区分 ---------- */
+/* 原实现 6 个 .icon-btn 样式完全一致，「下载海报」这一核心转化动作
+   与「复制」权重相同，用户无法一眼识别主操作。 */
+.icon-btn-primary {
+    background: var(--accent-text);
+    border-color: var(--accent-text);
+    color: var(--paper);
+    font-weight: 600;
+}
+.icon-btn-primary:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
+    box-shadow: 0 6px 16px rgba(200,85,61,.24);
+}
+.icon-btn-primary:active {
+    transform: translateY(0) scale(.97);
+}
+
+/* 结果页主标题（h1）保持原有视觉尺寸，不因语义修正而改变外观 */
+.result-title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: var(--fs-fluid-title);
+    color: var(--ink);
 }

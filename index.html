@@ -195,12 +195,15 @@
         <div class="wrap">
             <div class="result-topbar">
                 <button class="back-btn" id="backBtn">← 返回</button>
-                <h2 class="result-title" id="resultTitle">攻略</h2>
+                <!-- v10.10 修复层级倒挂：结果页的主标题应为 h1（DOM 中先于正文出现），
+                     原先误用 h2，导致 h2 出现在正文 h1 之前 -->
+                <h1 class="result-title" id="resultTitle">攻略</h1>
                 <div class="result-actions">
                     <button class="icon-btn" id="favoriteBtn" title="收藏" aria-label="收藏当前攻略" aria-pressed="false">收藏</button>
                     <button class="icon-btn" id="copyTextBtn" title="复制文本" aria-label="复制攻略文本到剪贴板">复制</button>
                     <button class="icon-btn" id="shareLinkBtn" title="复制攻略链接" aria-label="复制攻略分享链接">分享链接</button>
-                    <button class="icon-btn" id="downloadPosterBtn" title="下载海报" aria-label="下载旅行海报图片">下载海报</button>
+                    <!-- v10.10 视觉层级：下载海报是结果页的核心转化动作，提升为主按钮 -->
+                    <button class="icon-btn icon-btn-primary" id="downloadPosterBtn" title="下载海报" aria-label="下载旅行海报图片">下载海报</button>
                     <button class="icon-btn" id="weatherBtn" title="查看目的地天气" aria-label="查看目的地天气预报">查天气</button>
                     <button class="icon-btn" id="regenerateBtn" title="用相同城市换参数重新生成" aria-label="使用相同城市重新生成攻略">再次生成</button>
                 </div>
