@@ -8,8 +8,11 @@
     <meta name="theme-color" content="#C8553D">
 
     <!-- 安全修复 P1：CSP meta 兜底（即使部署时漏配服务器头也有浏览器层防护） -->
+    <!-- v10.10：移除 frame-ancestors —— 该指令经 <meta> 传递时按 CSP 规范会被浏览器忽略，
+         并产生控制台警告。防点击劫持由后端响应头承担（server.js 的 helmet
+         已下发 frame-ancestors 'none' 与 X-Frame-Options），meta 只保留静态资源策略。 -->
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' https://html2canvas.hertzen.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+          content="default-src 'self'; script-src 'self' https://html2canvas.hertzen.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; base-uri 'self'; form-action 'self'">
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
