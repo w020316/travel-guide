@@ -994,12 +994,32 @@ input, select { font-family: inherit; }
         grid-template-columns: 1fr 1fr;
         gap: 14px 18px;
     }
-    .search-meta .meta-group { width: 100%; }
-    .search-meta .meta-label { font-size: 11px; }
+    /* v10.10 修复 P0-3：窄屏搜索表单溢出。
+       现象：375px 下 .search-meta 的 scrollWidth 达 455px，而容器仅 281px，
+            超出部分被 body{overflow-x:hidden} 静默裁剪 —— 目的地输入框、
+            天数按钮（3/4/5/7 不可见）、预算/偏好均被切掉。
+       根因：① grid 子项默认 min-width:auto，不肯收缩到内容宽度以下；
+             ② 「天数」pills 组最小宽度 ≈ 6×38px + 5×6px + label ≈ 292px，
+                远超双列时的单列可用宽度（≈132px）。
+       修复：允许子项收缩 + 让日期/天数占满整行 + pills 允许换行。 */
+    .search-meta .meta-group { width: 100%; min-width: 0; }
+    .search-meta .meta-group > * { min-width: 0; }
+    .search-meta .meta-label { font-size: 11px; flex: 0 0 auto; white-space: nowrap; }
     .search-meta .input-ghost,
-    .search-meta .select-ghost { flex: 1; min-width: 0; max-width: none; }
-    /* 出行日期在窄屏下占满整行 */
-    .search-meta .meta-group:has(#travelDateInput) { grid-column: 1 / -1; }
+    .search-meta .select-ghost,
+    .search-meta input[type="date"].input-ghost {
+        flex: 1 1 auto; min-width: 0; max-width: none; width: auto;
+    }
+    /* 出行日期与天数（pills）在窄屏下占满整行，避免被挤在窄列里溢出 */
+    .search-meta .meta-group:has(#travelDateInput),
+    .search-meta .meta-group:has(.day-pills) { grid-column: 1 / -1; }
+    /* 天数按钮允许换行，兼容 320px 等超窄屏 */
+    .search-meta .day-pills { flex-wrap: wrap; min-width: 0; }
+}
+
+/* v10.10 修复 P0-3（续）：≤480px 降为单列，避免双列挤压导致字段截断与触摸目标过小 */
+@media (max-width: 480px) {
+    .search-meta { grid-template-columns: 1fr; }
 }
 
 /* 隐藏工具类 */
