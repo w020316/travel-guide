@@ -3,6 +3,9 @@ const { Firestore } = require('@google-cloud/firestore');
 const admin = require('firebase-admin');
 // 修复 P1-13：引入 LRU 缓存，避免内存 Map 无上限增长导致内存泄漏
 const LRUCache = require('../utils/lruCache');
+// v10.10 修复 P1-11：改用 safeLog 脱敏，避免 console.error 打印完整 error 对象
+// （可能含用户评论内容 / Firestore request payload / 部署路径 stack）
+const { logError } = require('../utils/safeLog');
 
 class SocialService {
   constructor() {
@@ -47,7 +50,7 @@ class SocialService {
         this.initialized = false;
       }
     } catch (error) {
-      console.error('Firestore初始化失败:', error);
+      logError('SocialService', error, { op: 'Firestore初始化' });
       this._initLRUStorage();
       this.initialized = false;
     }
@@ -94,7 +97,7 @@ class SocialService {
       return { success: true, comment: commentData };
 
     } catch (error) {
-      console.error('添加评论失败:', error);
+      logError('SocialService', error, { op: '添加评论' });
       throw error;
     }
   }
@@ -128,7 +131,7 @@ class SocialService {
       };
 
     } catch (error) {
-      console.error('获取评论失败:', error);
+      logError('SocialService', error, { op: '获取评论' });
       throw error;
     }
   }
@@ -164,7 +167,7 @@ class SocialService {
       return { success: true, message: '评论删除成功' };
 
     } catch (error) {
-      console.error('删除评论失败:', error);
+      logError('SocialService', error, { op: '删除评论' });
       throw error;
     }
   }
@@ -229,7 +232,7 @@ class SocialService {
       }
 
     } catch (error) {
-      console.error('切换点赞状态失败:', error);
+      logError('SocialService', error, { op: '切换点赞状态' });
       throw error;
     }
   }
@@ -255,7 +258,7 @@ class SocialService {
       return { success: true, data: likes };
 
     } catch (error) {
-      console.error('获取用户点赞失败:', error);
+      logError('SocialService', error, { op: '获取用户点赞' });
       throw error;
     }
   }
@@ -307,7 +310,7 @@ class SocialService {
       }
 
     } catch (error) {
-      console.error('关注操作失败:', error);
+      logError('SocialService', error, { op: '关注操作' });
       throw error;
     }
   }
@@ -329,7 +332,7 @@ class SocialService {
       return { success: true, data: followers, count: followers.length };
 
     } catch (error) {
-      console.error('获取粉丝列表失败:', error);
+      logError('SocialService', error, { op: '获取粉丝列表' });
       throw error;
     }
   }
@@ -351,7 +354,7 @@ class SocialService {
       return { success: true, data: following, count: following.length };
 
     } catch (error) {
-      console.error('获取关注列表失败:', error);
+      logError('SocialService', error, { op: '获取关注列表' });
       throw error;
     }
   }
@@ -387,7 +390,7 @@ class SocialService {
       return { success: true };
 
     } catch (error) {
-      console.error('记录浏览失败:', error);
+      logError('SocialService', error, { op: '记录浏览' });
       throw error;
     }
   }
@@ -438,7 +441,7 @@ class SocialService {
       return { success: true, stats };
 
     } catch (error) {
-      console.error('获取浏览统计失败:', error);
+      logError('SocialService', error, { op: '获取浏览统计' });
       throw error;
     }
   }
@@ -494,7 +497,7 @@ class SocialService {
       return { success: true, data: activities };
 
     } catch (error) {
-      console.error('获取用户活动失败:', error);
+      logError('SocialService', error, { op: '获取用户活动' });
       throw error;
     }
   }
@@ -527,7 +530,7 @@ class SocialService {
       };
 
     } catch (error) {
-      console.error('获取热门内容失败:', error);
+      logError('SocialService', error, { op: '获取热门内容' });
       throw error;
     }
   }
