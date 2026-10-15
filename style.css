@@ -1793,3 +1793,42 @@ input[type="date"].input-ghost:focus {
     font-size: var(--fs-fluid-title);
     color: var(--ink);
 }
+
+/* ---------- 7. 数据来源徽章（v10.10 数据透明化） ---------- */
+/* 设计意图：旅行决策对数据可信度极度敏感。当 AI 不可用、内容回退到本地数据库时，
+   必须在结果页如实告知，避免用户误以为拿到的是 AI 结果。
+   两种状态用不同色系区分：AI 生成用品牌浅底（正向），本地库用警告色（提示需核实）。
+   对比度：accent-text/accent-soft = 5.30:1 ✅ ｜ warn-ink/warn-bg = 8.69:1 ✅ */
+.gc-source {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    margin-bottom: var(--space-20);
+    padding: var(--space-4) var(--space-12);
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: var(--fs-2xs);
+    line-height: 1.5;
+    cursor: help;
+}
+.gc-source-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: 0 0 auto;
+}
+.gc-source-label { font-weight: 600; letter-spacing: .02em; }
+.gc-source-time { font-weight: 400; }
+.gc-source-time::before { content: '·'; margin-right: var(--space-4); }
+
+.gc-source-ai {
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    border-color: rgba(158, 63, 44, .18);
+}
+.gc-source-local {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    border-color: var(--warn-line);
+}

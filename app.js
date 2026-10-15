@@ -1606,19 +1606,58 @@
         return slots.filter(s => s.spots.length > 0);
     }
 
+    // v10.10 数据来源透明化
+    // 后端可能返回 'ai' / 'ai-text'（AI 生成）或 'local-mock' / 'local-db' /
+    // 'local-adjusted'（本地数据库 / 降级）。原先前端只识别 local-db 与 local-mock，
+    // 导致实际最常出现的回退值 'local-adjusted'（aiService.js:472）不显示任何来源标识，
+    // 用户无法分辨内容究竟是 AI 生成还是本地库兜底 —— 对旅行决策类产品是信任风险。
+    // 现统一按前缀判定，并显式标注"可能滞后"。
+    function sourceInfo(g) {
+        const raw = String((g && g.source) || '');
+        const isLocal = raw.startsWith('local');
+        return {
+            isLocal,
+            label: isLocal ? '本地数据库' : 'AI 生成',
+            cls: isLocal ? 'gc-source-local' : 'gc-source-ai',
+            note: isLocal
+                ? 'AI 暂不可用，本攻略由本地数据库生成，信息可能滞后，出行前请核实'
+                : '本攻略由 AI 生成，信息仅供参考，出行前请核实'
+        };
+    }
+
     function renderGuide(g) {
         const sections = [];
+
+        // v10.10 修复：章节序号改为「按实际渲染顺序动态分配」。
+        // 原先各处硬编码（'00'/'01'/'02'/'03'）且条件分支只判断了 accommodations，
+        // 未考虑 weather / tips / budget / transportation / reservations / photoSpots 的有无，
+        // 导致实测出现序号错乱：
+        //   00天气 01行程 02美食 03预算 03交通 04票务 07旅拍
+        //   —— '03' 重复（预算 / 交通），且 '04' 直接跳到 '07'（旅拍）
+        // 现改为自增计数器，只在区块真正渲染时递增，保证连续无重复无跳号。
+        let sectionSeq = 0;
+        const nextIdx = () => String(sectionSeq++).padStart(2, '0');
 
         // v9.0: 出发地/目的地信息
         const originText = g.origin ? `${escapeHtml(g.origin)} → ${escapeHtml(g.destination || g.city)}` : `${escapeHtml(g.city)}`;
         const travelersText = g.travelers ? `${escapeHtml(g.travelers)} 人出行` : '2 人出行';
 
         // 头部（v9.0: 新增出发地→目的地、人数、天气）
+        // v10.10: 数据来源徽章（替换原先只识别 local-db/local-mock 的行内前缀）
+        const src = sourceInfo(g);
+        const updatedTs = g.lastUpdated ? Date.parse(g.lastUpdated) : NaN;
+        const updatedText = Number.isFinite(updatedTs) ? `更新于 ${timeAgo(updatedTs)}` : '';
+
         sections.push(`
             <div class="gc-head">
-                <div class="gc-eyebrow">${g.source === 'local-db' || g.source === 'local-mock' ? '本地数据 · ' : ''}${escapeHtml(g.duration || '')} · ${escapeHtml(g.difficulty || '适中')}</div>
+                <div class="gc-eyebrow">${escapeHtml(g.duration || '')} · ${escapeHtml(g.difficulty || '适中')}</div>
                 <h2>${escapeHtml(g.title || g.city)}</h2>
                 <p class="gc-sub">${escapeHtml(g.subtitle || '')}</p>
+                <div class="gc-source ${src.cls}" title="${escapeHtml(src.note)}">
+                    <span class="gc-source-dot" aria-hidden="true"></span>
+                    <span class="gc-source-label">${src.label}</span>
+                    ${updatedText ? `<span class="gc-source-time">${escapeHtml(updatedText)}</span>` : ''}
+                </div>
                 <div class="gc-stats">
                     <div class="gc-stat gc-stat-route">路线 <strong>${originText}</strong></div>
                     <div class="gc-stat">出行 <strong>${travelersText}</strong></div>
@@ -1647,7 +1686,7 @@
             const w = g.weather;
             sections.push(`
                 <section class="gc-section gc-weather">
-                    <h2><span class="gc-idx">00</span>天气情况</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>天气情况</h2>
                     <div class="weather-card">
                         <div class="weather-main">
                             <div class="weather-temp">${escapeHtml(w.temp || '')}</div>
@@ -1668,7 +1707,7 @@
         if (g.routes && g.routes.length) {
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">01</span>每日行程</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>每日行程</h2>
                     ${g.routes.map(r => {
                         const spots = r.spots && Array.isArray(r.spots)
                             ? r.spots.map(s => typeof s === 'string' ? s : s.name).filter(Boolean)
@@ -1713,7 +1752,7 @@
         if (g.foods && g.foods.length) {
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">02</span>必尝美食</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>必尝美食</h2>
                     <div class="food-grid">
                         ${g.foods.map(f => {
                             const foodName = escapeHtml(f.name || '');
@@ -1744,7 +1783,7 @@
             const items = b.breakdown || {};
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">03</span>费用预算</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>费用预算</h2>
                     <div class="budget-box">
                         <div class="budget-total">${escapeHtml(b.total || g.overallBudget || '待估')}</div>
                         <div class="budget-label">预估总费用（参考）</div>
@@ -1764,12 +1803,9 @@
         // 贴士
         if (g.tips) {
             const t = g.tips;
-            const hasAccom = g.accommodations && g.accommodations.length;
-            const hasTransport = g.transportation;
-            const tipsIdx = hasAccom && hasTransport ? '05' : (hasAccom || hasTransport ? '04' : '03');
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">${tipsIdx}</span>实用贴士</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>实用贴士</h2>
                     <div class="tips-grid">
                         ${t.prepare && t.prepare.length ? `<div class="tip-block"><h4>行前准备</h4><ul>${t.prepare.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
                         ${t.avoid && t.avoid.length ? `<div class="tip-block"><h4>避坑指南</h4><ul>${t.avoid.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul></div>` : ''}
@@ -1783,7 +1819,7 @@
         if (g.accommodations && g.accommodations.length) {
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">03</span>住宿推荐</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>住宿推荐</h2>
                     <div class="accommodation-grid">
                         ${g.accommodations.map(a => {
                             const acName = a.name || a.area || '住宿';
@@ -1811,10 +1847,9 @@
         // v10.0: 酒店/民宿比价平台
         const hotelLinks = hotelCompareLinks(g.city);
         if (hotelLinks.length) {
-            const hIdx = '03b';
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">${hIdx}</span>酒店民宿比价</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>酒店民宿比价</h2>
                     <div class="compare-note">
                         <span class="compare-route">${escapeHtml(g.city)} · 全平台比价</span>
                     </div>
@@ -1838,10 +1873,9 @@
         // 交通
         if (g.transportation) {
             const tr = g.transportation;
-            const sectionIdx = g.accommodations && g.accommodations.length ? '04' : '03';
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">${sectionIdx}</span>交通指南</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>交通指南</h2>
                     <div class="transport-card">
                         ${tr.arrival ? `<h4>如何到达</h4><p>${typeof tr.arrival === 'string' ? escapeHtml(tr.arrival) : escapeHtml(tr.arrival.byAir?.details || tr.arrival.byTrain?.details || '高铁/飞机可达')}</p>` : ''}
                         ${tr.localTransport ? `<h4>市内交通</h4><p>${typeof tr.localTransport === 'string' ? escapeHtml(tr.localTransport) : escapeHtml(tr.localTransport.metro || tr.localTransport.bus || '地铁、公交便利')}</p>` : ''}
@@ -1853,11 +1887,10 @@
         // v10.0: 票务比价（火车票/机票/高铁）
         const ticketLinks = ticketCompareLinks(g.origin, g.destination || g.city);
         if (ticketLinks.length) {
-            const tIdx = (g.accommodations && g.accommodations.length ? '05' : '04');
             const hasOrigin = !!g.origin;
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">${tIdx}</span>票务比价 · 火车票/机票</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>票务比价 · 火车票/机票</h2>
                     <div class="compare-note">
                         <span class="compare-route">${hasOrigin ? `${escapeHtml(g.origin)} → ${escapeHtml(g.destination || g.city)}` : `目的地：${escapeHtml(g.destination || g.city)}`}</span>
                         <span class="compare-date">${formatDate()}</span>
@@ -1883,10 +1916,9 @@
         // v10.0: 景点预约提示（在交通/票务之后）
         const reservationSpots = getReservationSpots(g.city, g.routes);
         if (reservationSpots.length) {
-            const rIdx = (g.accommodations && g.accommodations.length ? '06' : '05');
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">${rIdx}</span>景点预约提醒</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>景点预约提醒</h2>
                     <div class="reservation-alert">
                         <div class="ra-icon">!</div>
                         <div class="ra-content">
@@ -1912,10 +1944,9 @@
         // v10.0: 打卡机位推荐（在景点预约之后）
         const photoSpots = getPhotoSpots(g.city);
         if (photoSpots.length) {
-            const pIdx = (g.accommodations && g.accommodations.length ? '07' : '06');
             sections.push(`
                 <section class="gc-section">
-                    <h2><span class="gc-idx">${pIdx}</span>打卡机位推荐</h2>
+                    <h2><span class="gc-idx">${nextIdx()}</span>打卡机位推荐</h2>
                     <div class="photo-spot-grid">
                         ${photoSpots.map(p => `
                             <div class="photo-spot-card">
@@ -1933,10 +1964,9 @@
         }
 
         // v10.0: 照片上传 + AI 修图（在最末）
-        const phIdx = (g.accommodations && g.accommodations.length ? '08' : '07');
         sections.push(`
             <section class="gc-section">
-                <h2><span class="gc-idx">${phIdx}</span>旅拍相册 · AI 修图</h2>
+                <h2><span class="gc-idx">${nextIdx()}</span>旅拍相册 · AI 修图</h2>
                 <div class="photo-upload-section" id="photoUploadSection">
                     <div class="upload-area" id="uploadArea">
                         <input type="file" id="photoInput" accept="image/*" multiple hidden>
@@ -2373,8 +2403,13 @@
             loadingTimer = null;
         }
         // v10.2: 根据模式显示不同文案
+        // v10.10：不再承诺「AI 正在分析」。实测 AI 全链路失败时会静默回退本地数据
+        // （耗时 10s 以上），但原文案仍宣称在用 AI，与实际行为不符。
+        // 改为中性表述，真实来源改由结果页的来源徽章如实标注。
         const isLocal = API.mode === 'local';
-        dom.loadingSub.textContent = isLocal ? '正在从本地数据库检索景点…' : 'AI 正在分析景点、美食与预算…';
+        dom.loadingSub.textContent = isLocal
+            ? '正在从本地数据库检索景点…'
+            : '正在为你规划行程，整理景点、美食与预算…';
         dom.loadingBar.style.width = '0%';
         dom.loading.hidden = false;
         let p = 0;
