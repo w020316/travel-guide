@@ -60,11 +60,14 @@ class BaseAIProvider {
     const timeout = timeoutMs || this.getTimeout();
 
     console.log(`📡 调用 ${this.name} API...`);
+    // v11.1 修复 P0：extra.axiosConfig 展开放在 headers 之后会整体覆盖 headers 键，
+    // 导致 Agnes 的定制头（Accept/UA）把含 Authorization 的认证头顶掉 ——
+    // 任何有效 key 都会 401。改为显式深合并 headers，其余配置仍以子类覆盖优先。
+    const extra = this.extra.axiosConfig || {};
     const response = await axios.post(this.getRequestUrl(), body, {
-      headers,
       timeout,
-      // 兼容 Agnes AI 的特殊配置（不使用代理、关闭 decompress）
-      ...(this.extra.axiosConfig || {})
+      ...extra,
+      headers: { ...headers, ...(extra.headers || {}) }
     });
 
     console.log(`✅ ${this.name} 响应成功`);

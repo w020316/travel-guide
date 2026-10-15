@@ -26,8 +26,16 @@ services:
         sync: false
       - key: AI_PROVIDER
         value: agnes
+      # v11.1：agnes-2.0-flash 已下线（model_not_found），现役全量攻略生成实测
+      # agnes-2.5-flash 27.6s / agnes-3.0-flash 62.6s，选 2.5-flash。
       - key: AGNES_MODEL
-        value: agnes-2.0-flash
+        value: agnes-2.5-flash
+      # v11.1：真实 AI 生成耗时 15-30s，默认 9s 预算/8s 超时会掐断正常生成，
+      # 故放宽（死链路的快速失败由熔断机制保证：401/403 一次即熔断）。
+      - key: AI_TOTAL_BUDGET_MS
+        value: "60000"
+      - key: AI_PROVIDER_TIMEOUT_MS
+        value: "55000"
       # 以下敏感变量请在 Render 后台手动设置（Environment 标签页）
       - key: AGNES_API_KEY
         sync: false
