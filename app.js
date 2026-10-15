@@ -1595,15 +1595,15 @@
         // 头部（v9.0: 新增出发地→目的地、人数、天气）
         sections.push(`
             <div class="gc-head">
-                <div class="gc-eyebrow">${g.source === 'local-db' || g.source === 'local-mock' ? '本地数据 · ' : ''}${g.duration || ''} · ${g.difficulty || '适中'}</div>
-                <h1>${g.title || g.city}</h1>
-                <p class="gc-sub">${g.subtitle || ''}</p>
+                <div class="gc-eyebrow">${g.source === 'local-db' || g.source === 'local-mock' ? '本地数据 · ' : ''}${escapeHtml(g.duration || '')} · ${escapeHtml(g.difficulty || '适中')}</div>
+                <h1>${escapeHtml(g.title || g.city)}</h1>
+                <p class="gc-sub">${escapeHtml(g.subtitle || '')}</p>
                 <div class="gc-stats">
                     <div class="gc-stat gc-stat-route">路线 <strong>${originText}</strong></div>
                     <div class="gc-stat">出行 <strong>${travelersText}</strong></div>
-                    <div class="gc-stat">最佳季节 <strong>${g.season || '四季皆宜'}</strong></div>
-                    <div class="gc-stat">行程 <strong>${g.duration || '3天'}</strong></div>
-                    <div class="gc-stat">预算 <strong>${g.overallBudget || (g.budget && g.budget.total) || '待估'}</strong></div>
+                    <div class="gc-stat">最佳季节 <strong>${escapeHtml(g.season || '四季皆宜')}</strong></div>
+                    <div class="gc-stat">行程 <strong>${escapeHtml(g.duration || '3天')}</strong></div>
+                    <div class="gc-stat">预算 <strong>${escapeHtml(g.overallBudget || (g.budget && g.budget.total) || '待估')}</strong></div>
                 </div>
             </div>
         `);
@@ -1658,8 +1658,8 @@
                         return `
                             <div class="route-day">
                                 <div class="route-day-head">
-                                    <span class="route-day-num">${String(r.day || 1).padStart(2, '0')}</span>
-                                    <span class="route-day-theme">${r.theme || r.title || `Day ${r.day || 1}`}</span>
+                                    <span class="route-day-num">${escapeHtml(String(Number(r.day) || 1).padStart(2, '0'))}</span>
+                                    <span class="route-day-theme">${escapeHtml(r.theme || r.title || `Day ${r.day || 1}`)}</span>
                                 </div>
                                 ${routeLine ? `<div class="route-day-route">${escapeHtml(routeLine)}</div>` : ''}
                                 ${timeSlots.map(slot => `
@@ -1725,7 +1725,7 @@
                 <section class="gc-section">
                     <h2><span class="gc-idx">03</span>费用预算</h2>
                     <div class="budget-box">
-                        <div class="budget-total">${b.total || g.overallBudget || '待估'}</div>
+                        <div class="budget-total">${escapeHtml(b.total || g.overallBudget || '待估')}</div>
                         <div class="budget-label">预估总费用（参考）</div>
                         <div class="budget-items">
                             ${Object.entries(items).map(([k, v]) => `
@@ -1799,7 +1799,7 @@
                     </div>
                     <div class="compare-grid">
                         ${hotelLinks.map(t => `
-                            <a class="compare-card" href="${t.url}" target="_blank" rel="noopener noreferrer">
+                            <a class="compare-card" href="${escapeHtml(t.url)}" target="_blank" rel="noopener noreferrer">
                                 <div class="cc-head">
                                     <span class="cc-platform">${escapeHtml(t.platform)}</span>
                                     <span class="cc-badge cc-badge-${t.badge}">${escapeHtml(t.badge)}</span>
@@ -1844,7 +1844,7 @@
                     ${hasOrigin ? '' : '<p class="compare-tip" style="background:#FFF8E7;border-left:3px solid #E8C875;">未填写出发地，以下链接直达各平台首页，请手动输入出发地与日期后搜索。</p>'}
                     <div class="compare-grid">
                         ${ticketLinks.map(t => `
-                            <a class="compare-card" href="${t.url}" target="_blank" rel="noopener noreferrer">
+                            <a class="compare-card" href="${escapeHtml(t.url)}" target="_blank" rel="noopener noreferrer">
                                 <div class="cc-head">
                                     <span class="cc-platform">${escapeHtml(t.platform)}</span>
                                     <span class="cc-badge cc-badge-${t.badge}">${escapeHtml(t.badge)}</span>
@@ -1878,7 +1878,7 @@
                                             <span class="ra-advance">${escapeHtml(r.advance)}</span>
                                         </div>
                                         <div class="ra-note">${escapeHtml(r.note)}</div>
-                                        ${r.url ? `<a class="ra-link" href="${r.url}" target="_blank" rel="noopener noreferrer">立即预约 →</a>` : ''}
+                                        ${r.url ? `<a class="ra-link" href="${escapeHtml(r.url)}" target="_blank" rel="noopener noreferrer">立即预约 →</a>` : ''}
                                     </div>
                                 `).join('')}
                             </div>
