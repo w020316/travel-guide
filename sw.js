@@ -62,6 +62,13 @@ self.addEventListener('fetch', event => {
     // 仅处理 GET 请求
     if (request.method !== 'GET') return;
 
+    // v10.10 修复 P0-7：绝不缓存 API 响应。
+    // 原实现对「所有同源 GET」做缓存优先，导致 /api/likes/user、/api/activity/timeline、
+    // /api/followers 等带鉴权的响应被写入 Cache Storage 并按 URL 复用 ——
+    // 共享设备上会把上一会话的数据返回给下一个请求，且登出后仍返回旧数据。
+    // 直接放行 API 请求，交给网络处理。
+    if (url.pathname.startsWith('/api/')) return;
+
     // 同源资源：缓存优先（stale-while-revalidate）
     if (url.origin === self.location.origin) {
         event.respondWith(
