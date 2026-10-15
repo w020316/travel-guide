@@ -1325,12 +1325,16 @@ input, select { font-family: inherit; }
 }
 
 /* 模态框焦点管理（修复 P2：弹窗可访问性） */
-.modal[hidden] { display: none; }
-.modal {
-    /* 当模态框显示时，阻止背景滚动 */
-    position: fixed; inset: 0;
-    z-index: 1000;
+/* v10.10 修复 P0-1：原选择器误写为 .modal，导致内层卡片被赋 position:fixed;inset:0，
+   从而脱离外层 .modal-overlay 的 grid 居中流并撑满视口 —— 表现为所有弹窗吸附左上角。
+   定位 / 层级 / 居中均由 .modal-overlay(:690) 承担，此处只负责「阻止背景滚动」。 */
+.modal-overlay[hidden] { display: none; }
+.modal-overlay {
+    /* 滚动链隔离：弹窗打开时背景不再跟随滚动 */
+    overscroll-behavior: contain;
 }
+/* 渐进增强：支持 :has() 的浏览器直接锁定 body 滚动（不支持时自动忽略，无副作用） */
+body:has(.modal-overlay:not([hidden])) { overflow: hidden; }
 
 /* 减少动效偏好支持：尊重用户偏好 */
 @media (prefers-reduced-motion: reduce) {
