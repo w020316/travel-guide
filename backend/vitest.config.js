@@ -17,13 +17,17 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'text-summary', 'lcov'],
       include: [
+        // v10.10 修复 P1-8：原口径仅含 5 个文件，导致核心模块完全未纳入统计 ——
+        //   routes/api.js(833行)、middleware/validation.js(396行)、services/aiService.js(671行)、
+        //   server.js、storage.js、weatherSync.js 全部缺失，41 个路由 0 单测。
+        //   这正是「天气接口漏 await」「/weather/:city 参数名不匹配」长期漏网的根因。
+        // 同时修正死配置：原 services/lruCache.js 路径不存在（真实文件在 utils/lruCache.js，
+        //   已由 utils/**/*.js 覆盖），且 storage/weatherSync 有测试却不计入，等于白测。
+        'server.js',
         'utils/**/*.js',
-        'services/lruCache.js',
-        'services/aiProviders.js',
-        // v10.9.1 新增：authService 纳入覆盖率统计（含 Firebase 降级路径）
-        'services/authService.js',
-        // v10.9.2 新增：socialService 纳入覆盖率统计（含内存降级路径）
-        'services/socialService.js'
+        'services/**/*.js',
+        'middleware/**/*.js',
+        'routes/**/*.js'
       ],
       exclude: ['node_modules/**', 'tests/**']
     }
