@@ -54,6 +54,28 @@ router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
       }
     }
 
+    // v10.10 修复 P1-10：preferences 其余字段此前完全未校验，会原样传入
+    // aiService.buildPrompt()（见 aiService.js 的 prompt 拼装），构成 prompt 注入通道；
+    // 与前端未转义字段组合还可放大为 XSS。此处按「正则 + 枚举白名单」收敛。
+    if (preferences && typeof preferences === 'object') {
+      const TEXT_PATTERN = /^[\u4e00-\u9fa5a-zA-Z0-9·\-\s]{1,30}$/;
+      const TRAVEL_TYPES = new Set(['balanced', 'culture', 'foodie', 'nature', 'relaxation', 'adventure']);
+      const BUDGET_RANGES = new Set(['low', 'medium', 'high']);
+      const TRAVELER_COUNTS = new Set(['1', '2', '3', '4', '5', '6+']);
+
+      // 出发地 / 目的地：与城市名同规则，非法则丢弃为空
+      for (const key of ['origin', 'destination']) {
+        if (preferences[key] === undefined || preferences[key] === null) continue;
+        const v = String(preferences[key]).trim();
+        preferences[key] = TEXT_PATTERN.test(v) ? v : '';
+      }
+
+      // 枚举字段：不在白名单内一律回退默认值
+      if (!TRAVEL_TYPES.has(preferences.travelType)) preferences.travelType = 'balanced';
+      if (!BUDGET_RANGES.has(preferences.budgetRange)) preferences.budgetRange = 'medium';
+      if (!TRAVELER_COUNTS.has(String(preferences.travelers))) preferences.travelers = '2';
+    }
+
     // 记录浏览统计
     if (req.user) {
       await socialService.recordView('cities', cityName, req.user.uid);
@@ -421,6 +443,20 @@ router.get('/social/stats', authService.requireAdmin, async (req, res) => {
 
 // ==================== 城市数据接口（保留原有功能）====================
 
+// 合并「轻量元数据」：仅季节性标签 + 更新时间，不触发任何外部请求。
+// v10.10 修复 P1-8：列表类接口（/cities/all、/cities/search、/cities/search/tags）原先逐城调用
+// mergeWithWeather，冷缓存下会并发触发最多 527×(geo+now+3d) ≈ 1581 次上游 HTTP 请求，
+// 构成资源放大与对上游 API 的 DoS。列表接口不需要逐城天气，故改用本同步版本。
+function mergeCityMeta(cityData, cityName) {
+  if (!cityData) return cityData;
+
+  return {
+    ...cityData,
+    seasonalTags: getSeasonalTags(cityName),
+    lastUpdated: new Date().toISOString()
+  };
+}
+
 // 合并实时数据（使用weatherSync的天气服务）
 // v10.10 修复 P0-5：getCityWeather 是 async，必须 await，否则 currentWeather 恒为 {}
 async function mergeWithWeather(cityData, cityName) {
@@ -487,7 +523,7 @@ router.get('/cities/all', async (req, res) => {
       // 向后兼容：返回扁平对象
       const cityMap = {};
       for (const [name, data] of allEntries) {
-        cityMap[name] = await mergeWithWeather(data, name);
+        cityMap[name] = mergeCityMeta(data, name);
       }
       return res.json(cityMap);
     }
@@ -503,7 +539,7 @@ router.get('/cities/all', async (req, res) => {
     const paginatedEntries = allEntries.slice(start, start + limit);
     const cityMap = {};
     for (const [name, data] of paginatedEntries) {
-      cityMap[name] = await mergeWithWeather(data, name);
+      cityMap[name] = mergeCityMeta(data, name);
     }
     res.json({
       total: allEntries.length,
@@ -525,7 +561,7 @@ router.get('/cities/search/tags', async (req, res) => {
   try {
     const tags = req.query.tags ? req.query.tags.split(',') : [];
     const cities = await storage.getCitiesByTags(tags);
-    const cityList = await Promise.all(cities.map(city => mergeWithWeather(city, city.name)));
+    const cityList = cities.map(city => mergeCityMeta(city, city.name));
     res.json(cityList);
   } catch (error) {
     console.error('标签搜索失败:', error);
@@ -541,7 +577,7 @@ router.get('/cities/search', validateSearchQuery, async (req, res) => {
       return res.status(400).json({ error: '请提供搜索关键字' });
     }
     const cities = await storage.searchCities(keyword);
-    const cityList = await Promise.all(cities.map(city => mergeWithWeather(city, city.name)));
+    const cityList = cities.map(city => mergeCityMeta(city, city.name));
     res.json(cityList);
   } catch (error) {
     console.error('搜索城市失败:', error);
@@ -795,6 +831,11 @@ router.post('/cities', authService.verifyCustomToken, authService.requireAdmin, 
     const existing = await storage.getCity(name);
     if (existing) {
       return res.status(409).json({ success: false, error: '城市已存在' });
+    }
+
+    // v10.10 修复 P1-15：内存存储有容量上限，超出后拒绝新增，避免无界增长
+    if (storage.isCityCacheFull()) {
+      return res.status(507).json({ success: false, error: '城市数量已达上限，无法新增' });
     }
 
     const city = await storage.addCity(name.trim(), data);
