@@ -46,8 +46,14 @@
         history: loadHistory()
     };
 
-    // v10.1: 省份/直辖市识别（用户输入省份名时给出友好提示）
-    const PROVINCES = ['北京','上海','天津','重庆','广东','浙江','江苏','四川','湖北','湖南','陕西','山东','河南','辽宁','吉林','黑龙江','云南','贵州','广西','海南','甘肃','青海','宁夏','新疆','西藏','安徽','福建','江西','河北','山西','内蒙古','香港','澳门','台湾'];
+    // v10.1: 省份识别（用户输入省份名时给出友好提示）
+    // v10.10 修复 P0：原数组把北京/上海/天津/重庆四个直辖市与省份混在一起，
+    // 导致 detectProvince('北京') 返回真值 → submitCity() 直接 return 且提示
+    // 「北京是一个省份」这一事实错误 —— 热门榜单首卡（北京）点击后静默失败，
+    // 榜单 12 城中有 2 城（北京、天津）中招。
+    // 直辖市既是省级行政区，也是 527 城数据库中的有效城市，必须按城市处理。
+    const MUNICIPALITIES = ['北京', '上海', '天津', '重庆'];
+    const PROVINCES = ['广东','浙江','江苏','四川','湖北','湖南','陕西','山东','河南','辽宁','吉林','黑龙江','云南','贵州','广西','海南','甘肃','青海','宁夏','新疆','西藏','安徽','福建','江西','河北','山西','内蒙古','香港','澳门','台湾'];
     // 各省热门城市（用于省份输入时推荐）
     const PROVINCE_HOT_CITIES = {
         '黑龙江':['哈尔滨','齐齐哈尔','牡丹江','大庆','漠河','雪乡'],
@@ -79,9 +85,19 @@
     };
 
     // v10.1: 检测用户输入是否为省份名（支持"省/市/区/自治区/特别行政区"等后缀）
+    // v10.10 修复 P0：判定顺序改为「先确认是否有效城市，再判省份」。
+    // 只要该名称存在于城市数据库（含 4 个直辖市），一律按城市处理，
+    // 从根上避免"名称既是省级行政区又是有效城市"这类误判。
     function detectProvince(input) {
         if (!input) return null;
         const raw = input.trim();
+
+        const isKnownCity = name => CITIES && Object.prototype.hasOwnProperty.call(CITIES, name);
+        const isMunicipality = name => MUNICIPALITIES.includes(name);
+
+        // 直辖市直接放行（即使在降级的 file:// 种子数据中未收录）
+        if (isMunicipality(raw)) return null;
+        if (isKnownCity(raw)) return null;
         if (PROVINCES.includes(raw)) return raw;
         // 移除常见后缀：省/市/区/自治区/壮族自治区/回族自治区/维吾尔自治区/特别行政区
         const cleaned = raw
@@ -92,6 +108,8 @@
             .replace(/自治区$/, '')
             .replace(/[省市]$/, '')
             .trim();
+        if (isMunicipality(cleaned)) return null;
+        if (isKnownCity(cleaned)) return null;
         if (PROVINCES.includes(cleaned)) return cleaned;
         return null;
     }
@@ -1145,12 +1163,13 @@
         if (!targetCity) { toast('请输入城市名称', 'error'); return; }
 
         // v10.1: 省份识别 — 用户输入"黑龙江"等省份名时，提示选择具体城市
+        // v10.10：直辖市（北京/上海/天津/重庆）已由 detectProvince 放行，不再误判
         const province = detectProvince(targetCity);
         if (province) {
             const hotCities = PROVINCE_HOT_CITIES[province] || [];
             const msg = hotCities.length
-                ? `「${province}」是一个省份，请选择具体城市。推荐：${hotCities.slice(0,4).join('、')}`
-                : `「${province}」是一个省份，请输入具体城市名`;
+                ? `「${province}」是一个省份，请输入具体的城市名。推荐：${hotCities.slice(0,4).join('、')}`
+                : `「${province}」是一个省份，请输入具体的城市名`;
             toast(msg, 'error');
             // 自动填充推荐城市到搜索框，方便用户
             if (hotCities.length) {
