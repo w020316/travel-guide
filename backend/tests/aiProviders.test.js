@@ -139,14 +139,24 @@ describe('AI Providers', () => {
   });
 
   describe('getTimeout', () => {
-    it('Agnes 超时应为 120000ms', () => {
-      const provider = new aiProviders.AgnesProvider({ name: 'A', baseUrl: 'x', model: 'm', apiKey: 'k' });
-      expect(provider.getTimeout()).toBe(120000);
+    // v11.0 P1 修复：超时收紧为 8s（原 Agnes 120s / 其他 60s 导致死链路等待不可控）
+    it('所有 provider 超时应统一为 8000ms（含 Agnes）', () => {
+      const config = { name: 'X', baseUrl: 'x', model: 'm', apiKey: 'k' };
+      [new aiProviders.AgnesProvider(config), new aiProviders.DeepSeekProvider(config), new aiProviders.OpenAIProvider(config), new aiProviders.TongyiProvider(config)].forEach(provider => {
+        expect(provider.getTimeout()).toBe(8000);
+      });
     });
 
-    it('其他 provider 默认 60000ms', () => {
-      const provider = new aiProviders.DeepSeekProvider({ name: 'D', baseUrl: 'x', model: 'm', apiKey: 'k' });
-      expect(provider.getTimeout()).toBe(60000);
+    it('可通过 AI_PROVIDER_TIMEOUT_MS 环境变量覆盖', () => {
+      const prev = process.env.AI_PROVIDER_TIMEOUT_MS;
+      process.env.AI_PROVIDER_TIMEOUT_MS = '12345';
+      try {
+        const provider = new aiProviders.DeepSeekProvider({ name: 'D', baseUrl: 'x', model: 'm', apiKey: 'k' });
+        expect(provider.getTimeout()).toBe(12345);
+      } finally {
+        if (prev === undefined) delete process.env.AI_PROVIDER_TIMEOUT_MS;
+        else process.env.AI_PROVIDER_TIMEOUT_MS = prev;
+      }
     });
   });
 
@@ -191,7 +201,7 @@ describe('AI Providers', () => {
           headers: expect.objectContaining({
             'Authorization': 'Bearer test-key'
           }),
-          timeout: 60000
+          timeout: 8000
         })
       );
     });
@@ -213,7 +223,7 @@ describe('AI Providers', () => {
       expect(callArgs[2]).toMatchObject({
         decompress: false,
         proxy: false,
-        timeout: 120000
+        timeout: 8000
       });
     });
 
@@ -226,6 +236,17 @@ describe('AI Providers', () => {
         apiKey: 'k'
       });
       await expect(provider.chat('hello')).rejects.toThrow('Network timeout');
+    });
+
+    it('v11.0：chat 支持调用方指定 timeoutMs（预算裁剪）', async () => {
+      mockPost.mockResolvedValueOnce({
+        data: { choices: [{ message: { content: 'ok' } }] }
+      });
+      const provider = new aiProviders.DeepSeekProvider({
+        name: 'D', baseUrl: 'https://api.example.com/v1', model: 'm', apiKey: 'k'
+      });
+      await provider.chat('hello', undefined, 1500);
+      expect(mockPost.mock.calls[0][2].timeout).toBe(1500);
     });
   });
 

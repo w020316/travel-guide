@@ -49,9 +49,31 @@ class AIService {
     // 修复 P1-13：LRU 缓存，max=500 防止无限增长，TTL=30min 自动过期
     this.cache = new LRUCache({ max: 500, ttl: 30 * 60 * 1000 });
     this.cacheExpiry = 30 * 60 * 1000; // 30分钟缓存（保留兼容）
+
+    // v11.0 修复 P1：AI 整体时间预算（time budget）
+    // 从请求进入 AI 层开始计时，全链路（含多 provider 串行重试）总耗时上限，
+    // 超出立即回退本地库，保证用户等待时间可预期（约 8-10s 内必返回）。
+    this.totalBudgetMs = Number(process.env.AI_TOTAL_BUDGET_MS) || 9000;
+    // 剩余预算低于该值时不再发起新的网络尝试（发起了也来不及完成）
+    this.minAttemptMs = 1000;
   }
 
-  async generateTravelGuide(city, preferences = {}) {
+  /**
+   * 生成旅游攻略
+   * v11.0 时间控制层（只改时序，不改对外行为）：
+   * - 整体预算：从本次调用开始算，AI 全链路总耗时 ≤ totalBudgetMs（默认 9s），超时立即回退本地库；
+   *   预算通过 _budget 参数在递归（切换备选 API）间传递，不会因递归重置
+   * - 单次请求上限：min(provider.getTimeout()=8s, 剩余预算)，双重裁剪
+   * - 熔断冷却：连续失败的 provider 冷却期内直接跳过（不发网络请求），
+   *   消除「第二次请求仍等满全程」的耗时波动
+   * 对外行为保持不变：响应结构 / source 字段 / 缓存逻辑 / 回退 local-adjusted 均与原版一致
+   *
+   * @param {string} city - 城市名
+   * @param {Object} [preferences] - 用户偏好
+   * @param {Object|null} [_budget] - 内部参数：递归间传递的预算上下文 { deadline }
+   * @returns {Promise<Object>} 攻略数据
+   */
+  async generateTravelGuide(city, preferences = {}, _budget = null) {
     const cacheKey = `${city}-${JSON.stringify(preferences)}`;
 
     // 检查缓存（LRU 内部处理 TTL）
@@ -61,22 +83,34 @@ class AIService {
       return cached;
     }
 
+    // v11.0：整体预算锚点 —— 仅在最外层调用时创建，递归复用同一 deadline
+    const deadline = (_budget && _budget.deadline) || (Date.now() + this.totalBudgetMs);
+    const budget = { deadline };
+
     try {
       const provider = this.providers[this.currentProvider];
 
-      if (!provider.isAvailable) {
-        console.warn(`⚠️ ${provider.name} API Key未配置，尝试其他可用API`);
+      // v11.0：eligibility = 已配置 key 且不在熔断冷却期
+      if (!this._isProviderEligible(provider)) {
+        console.warn(`⚠️ ${provider.name} 不可用或熔断冷却中，尝试其他可用API`);
 
         // 尝试查找可用的API Key
         for (const [key, value] of Object.entries(this.providers)) {
-          if (value.isAvailable && key !== this.currentProvider) {
+          if (value.isAvailable && key !== this.currentProvider && this._isProviderEligible(value)) {
             console.log(`🔄 切换到备用AI: ${value.name}`);
             this.currentProvider = key;
-            return this.generateTravelGuide(city, preferences);
+            return this.generateTravelGuide(city, preferences, budget);
           }
         }
 
-        console.warn('❌ 所有AI API均未配置，使用本地数据生成');
+        console.warn('❌ 所有AI API均不可用（未配置或冷却中），使用本地数据生成');
+        return this.generateLocalGuide(city, preferences);
+      }
+
+      // v11.0：预算检查 —— 剩余时间不足以发起有效请求时立即回退
+      const remaining = deadline - Date.now();
+      if (remaining < this.minAttemptMs) {
+        console.warn(`⏱️ AI整体预算已耗尽（剩余 ${remaining}ms），回退本地数据`);
         return this.generateLocalGuide(city, preferences);
       }
 
@@ -84,8 +118,14 @@ class AIService {
 
       const prompt = this.buildPrompt(city, preferences);
 
-      // v10.8：统一调用 provider.chat()，移除 6 个 callXxxAPI 方法
-      const response = await provider.chat(prompt);
+      // v11.0：单次请求超时 = min(单 provider 上限 8s, 剩余预算)，禁止超长超时叠加
+      const attemptTimeout = Math.min(provider.getTimeout(), remaining);
+
+      // v10.8：统一调用 provider.chat()；v11.0：外包预算竞速裁剪
+      const response = await this._chatWithBudget(provider, prompt, attemptTimeout);
+
+      // v11.0：成功即重置该 provider 的熔断计数
+      provider.recordSuccess();
 
       console.log(`✅ ${provider.name}响应成功`);
 
@@ -98,6 +138,8 @@ class AIService {
       return guideData;
 
     } catch (error) {
+      // v11.0：记录失败（可能触发熔断冷却）
+      this._recordProviderFailure(this.providers[this.currentProvider], error);
       console.error('❌ AI生成失败:', error.message);
 
       // 尝试切换到下一个可用的API
@@ -106,12 +148,14 @@ class AIService {
 
       for (let i = currentIndex + 1; i < providers.length; i++) {
         const nextProvider = providers[i];
-        if (this.providers[nextProvider].isAvailable) {
+        if (this._isProviderEligible(this.providers[nextProvider])) {
           console.log(`🔄 切换到备选API: ${this.providers[nextProvider].name}`);
           this.currentProvider = nextProvider;
           try {
-            return await this.generateTravelGuide(city, preferences);
+            // v11.0：递归传递同一预算上下文，总耗时仍受 deadline 约束
+            return await this.generateTravelGuide(city, preferences, budget);
           } catch (e) {
+            // 递归内部已记录该 provider 的失败；此处仅继续尝试下一个
             continue;
           }
         }
@@ -120,6 +164,66 @@ class AIService {
       // 最终回退到本地数据
       console.log('⚠️ 所有AI API失败，使用本地数据');
       return this.generateLocalGuide(city, preferences);
+    }
+  }
+
+  /**
+   * v11.0：provider 是否允许发起真实网络请求
+   * 已配置 API Key 且不在熔断冷却期
+   * @param {Object|null} provider
+   * @returns {boolean}
+   */
+  _isProviderEligible(provider) {
+    return Boolean(provider && provider.isAvailable && provider.canAttempt());
+  }
+
+  /**
+   * v11.0：带预算竞速的 provider 调用
+   * 双保险：axios 自身 timeout（裁剪到剩余预算）+ Promise.race 硬性定时器，
+   * 即使底层请求悬挂（如 DNS 卡死、axios 未生效超时）也能在预算点切断
+   * @param {Object} provider - BaseAIProvider 实例
+   * @param {string} prompt - 提示词
+   * @param {number} timeoutMs - 本次尝试的超时上限（毫秒）
+   * @returns {Promise<string>} AI 返回文本
+   */
+  _chatWithBudget(provider, prompt, timeoutMs) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(`${provider.name} 请求超出时间上限 ${timeoutMs}ms`));
+      }, timeoutMs);
+      if (typeof timer.unref === 'function') {
+        timer.unref(); // 不阻止进程退出
+      }
+
+      provider.chat(prompt, undefined, timeoutMs).then(
+        result => {
+          clearTimeout(timer);
+          resolve(result);
+        },
+        err => {
+          clearTimeout(timer);
+          reject(err);
+        }
+      );
+    });
+  }
+
+  /**
+   * v11.0：记录 provider 失败并在触发熔断时输出日志
+   * @param {Object|null} provider
+   * @param {Error|null} error
+   */
+  _recordProviderFailure(provider, error) {
+    if (!provider || typeof provider.recordFailure !== 'function') {
+      return;
+    }
+    provider.recordFailure(error);
+    const cooldownMs = provider.cooldownRemainingMs();
+    if (cooldownMs > 0) {
+      console.warn(
+        `🚫 ${provider.name} 连续失败已达 ${provider.breakerThreshold} 次，` +
+        `熔断进入冷却 ${Math.round(cooldownMs / 1000)}s，冷却期内跳过该 provider`
+      );
     }
   }
 

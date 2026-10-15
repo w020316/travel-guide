@@ -31,6 +31,15 @@ class BaseAIProvider {
     this.model = config.model;
     this.apiKey = config.apiKey || '';
     this.extra = config.extra || {};
+
+    // v11.0 修复 P1：熔断/冷却（circuit breaker）
+    // 同一 provider 连续失败 AI_BREAKER_THRESHOLD 次后进入冷却期，
+    // 冷却期内 canAttempt() 返回 false，调用方直接跳过、不发网络请求。
+    // 避免依赖全挂时每次请求都重新等满超时（耗时不可预测的主要来源）。
+    this.breakerThreshold = Number(process.env.AI_BREAKER_THRESHOLD) || 2;
+    this.breakerCooldownMs = Number(process.env.AI_BREAKER_COOLDOWN_MS) || 5 * 60 * 1000;
+    this._consecutiveFailures = 0;
+    this._cooldownUntil = 0;
   }
 
   get isAvailable() {
@@ -41,12 +50,14 @@ class BaseAIProvider {
    * 统一调用入口
    * @param {string} prompt - 用户提示
    * @param {string} systemPrompt - 系统提示
+   * @param {number|null} timeoutMs - 可选：调用方（aiService 预算层）指定的本次超时上限，
+   *   用于把「单次请求耗时」裁剪到整体 AI 预算内；不传则使用 getTimeout()
    * @returns {Promise<string>} AI 返回的文本
    */
-  async chat(prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT) {
+  async chat(prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT, timeoutMs = null) {
     const body = this.buildRequestBody(prompt, systemPrompt);
     const headers = this.buildHeaders();
-    const timeout = this.getTimeout();
+    const timeout = timeoutMs || this.getTimeout();
 
     console.log(`📡 调用 ${this.name} API...`);
     const response = await axios.post(this.getRequestUrl(), body, {
@@ -87,14 +98,69 @@ class BaseAIProvider {
     };
   }
 
-  /** 子类可重写：超时时间 */
+  /** 子类可重写：超时时间（v11.0 默认收紧为 8s，禁止无超时/超长超时叠加） */
   getTimeout() {
-    return 60000;
+    return Number(process.env.AI_PROVIDER_TIMEOUT_MS) || 8000;
   }
 
   /** 子类可重写：解析响应 */
   parseResponse(data) {
     return data.choices[0].message.content;
+  }
+
+  // ==================== v11.0 熔断/冷却（circuit breaker） ====================
+
+  /**
+   * 当前是否允许发起真实网络请求
+   * - 连续失败次数未达阈值：允许
+   * - 已达阈值且仍在冷却期内：禁止（跳过，不发起网络请求）
+   * - 冷却期已过：放行一次探测（half-open）；若再失败会立刻重新进入冷却
+   * @param {number} [now] - 当前时间戳（默认 Date.now()，便于测试注入）
+   * @returns {boolean}
+   */
+  canAttempt(now = Date.now()) {
+    if (this._consecutiveFailures < this.breakerThreshold) {
+      return true;
+    }
+    return now >= this._cooldownUntil;
+  }
+
+  /** 成功后重置熔断计数 */
+  recordSuccess() {
+    this._consecutiveFailures = 0;
+    this._cooldownUntil = 0;
+  }
+
+  /**
+   * 记录一次失败
+   * - 普通失败（超时/5xx/网络错误）：连续失败达到阈值后进入冷却期
+   * - 401/403（凭证无效/无权限）：重试在短期内不可能成功，视为致命错误，
+   *   一次即触发熔断（等价于连续失败 threshold 次），避免后续请求继续等满超时
+   * @param {Error|null} [error] - axios 抛出的错误（可能带 response.status）
+   */
+  recordFailure(error = null) {
+    const status = error && error.response && error.response.status;
+    if (status === 401 || status === 403) {
+      // 致命凭证错误：立即达到阈值
+      this._consecutiveFailures = Math.max(this._consecutiveFailures + 1, this.breakerThreshold);
+    } else {
+      this._consecutiveFailures += 1;
+    }
+    if (this._consecutiveFailures >= this.breakerThreshold) {
+      this._cooldownUntil = Date.now() + this.breakerCooldownMs;
+    }
+  }
+
+  /**
+   * 剩余冷却时间（毫秒）；未熔断时返回 0
+   * @param {number} [now] - 当前时间戳（默认 Date.now()，便于测试注入）
+   * @returns {number}
+   */
+  cooldownRemainingMs(now = Date.now()) {
+    if (this._consecutiveFailures < this.breakerThreshold) {
+      return 0;
+    }
+    return Math.max(0, this._cooldownUntil - now);
   }
 }
 
@@ -128,9 +194,8 @@ class AgnesProvider extends BaseAIProvider {
     };
   }
 
-  getTimeout() {
-    return 120000;
-  }
+  // v11.0：移除 120s 超时 —— 改由 aiService 预算层统一控制，
+  // 单次请求上限 BaseAIProvider.getTimeout()（默认 8s），防止死链路长时间悬挂
 
   // buildHeaders 继承 BaseAIProvider，但需要合并 extra.axiosConfig.headers
   // axios 会合并 config 中的 headers 与 per-request headers
