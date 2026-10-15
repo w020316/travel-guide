@@ -1,5 +1,6 @@
 // Service Worker for 行纪 XING JI
-const CACHE_VERSION = 'v10.5';
+// v10.10：CACHE_VERSION 与产品版本对齐（原 'v10.5' 长期落后，导致 PWA 缓存旧资源）
+const CACHE_VERSION = 'v10.10';
 const CACHE_NAME = `xingji-${CACHE_VERSION}`;
 const STATIC_CACHE = `xingji-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `xingji-runtime-${CACHE_VERSION}`;
@@ -13,7 +14,11 @@ const CORE_ASSETS = [
     '/manifest.json',
     '/data/expandedCities.js',
     '/icon.svg',
-    '/offline.html'
+    '/offline.html',
+    // v10.10 修复 P0-2：内联脚本外置后的两个新文件，必须纳入预缓存，
+    // 否则离线时 index.html / offline.html 会因缺少脚本而失去 PWA 与重连能力
+    '/pwa.js',
+    '/offline.js'
 ];
 
 // 安装：预缓存核心资源（失败容忍，单文件失败不阻断安装）

@@ -267,36 +267,8 @@
     <script src="app.js" defer></script>
 
     <!-- PWA: Service Worker 注册（生产环境启用） -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => {
-                        console.log('[PWA] Service Worker 已注册:', reg.scope);
-                        // 监听更新提示
-                        reg.addEventListener('updatefound', () => {
-                            const newWorker = reg.installing;
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    // 新版本已就绪，可提示用户刷新
-                                    if (window.__toast) {
-                                        window.__toast('发现新版本，刷新以更新', { action: '刷新', onAction: () => location.reload() });
-                                    }
-                                }
-                            });
-                        });
-                    })
-                    .catch(err => console.warn('[PWA] SW 注册失败:', err));
-            });
-
-            // 监听网络状态
-            window.addEventListener('online', () => {
-                if (window.__toast) window.__toast('网络已恢复');
-            });
-            window.addEventListener('offline', () => {
-                if (window.__toast) window.__toast('当前处于离线状态，仅可访问已缓存内容', { duration: 4000 });
-            });
-        }
-    </script>
+    <!-- v10.10 修复 P0-2：原为内联 <script>，被 helmet CSP 的 script-src 'self' 拦截，
+         导致 SW 从未注册、离线能力整体失效。外置为同源 pwa.js，由 script-src 'self' 覆盖。 -->
+    <script src="pwa.js" defer></script>
 </body>
 </html>

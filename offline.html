@@ -99,7 +99,9 @@
         <p class="eyebrow">Offline Mode</p>
         <h1>当前处于离线状态</h1>
         <p>别担心，已生成的攻略、收藏与照片仍可在本地访问。<br>恢复网络后即可继续生成新的攻略。</p>
-        <button class="btn" onclick="location.reload()">重新连接</button>
+        <!-- v10.10 修复 P0-2：原为内联 onclick，被 helmet 默认的 script-src-attr 'none' 拦截而失效，
+             改为在 offline.js 中用 addEventListener 绑定 -->
+        <button class="btn" id="reconnectBtn" type="button">重新连接</button>
         <div class="features">
             <div class="feature">
                 <span class="feature-icon">✓</span>
@@ -115,9 +117,8 @@
             </div>
         </div>
     </div>
-    <script>
-        // 监听网络恢复
-        window.addEventListener('online', () => location.reload());
-    </script>
+    <!-- v10.10 修复 P0-2：原为内联 <script>，被 CSP script-src 'self' 拦截，
+         导致网络恢复后无法自动重连。外置为同源 offline.js。 -->
+    <script src="offline.js" defer></script>
 </body>
 </html>
