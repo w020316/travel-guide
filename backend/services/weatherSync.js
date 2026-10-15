@@ -18,6 +18,11 @@ const LRUCache = require('../utils/lruCache');
 const QWEATHER_FREE_API_URL = (process.env.QWEATHER_API_URL || 'https://kp3h2rh7ab.re.qweatherapi.com/v7').replace(/\/+$/, '');
 const QWEATHER_GEO_URL = (process.env.QWEATHER_GEO_URL || 'https://kp3h2rh7ab.re.qweatherapi.com/v2').replace(/\/+$/, '');
 
+// v10.10 修复 P1-9：外部请求统一超时。
+// 原实现三处 axios.get 均未设置 timeout，网络异常时请求会一直悬挂；
+// 叠加列表接口的逐城调用会持续占用 socket 直至耗尽。
+const QWEATHER_TIMEOUT_MS = Number(process.env.QWEATHER_TIMEOUT_MS) || 6000;
+
 // 修复 P1-13：天气数据缓存改为 LRU（最多 200 城市，单条 TTL 10 分钟）
 // 原实现使用无上限 plain object，长期运行下 weatherCacheTime / weatherCache 会无限增长
 const weatherCache = new LRUCache({ max: 200, ttl: 10 * 60 * 1000 });
@@ -38,7 +43,8 @@ async function getCityLocationId(cityName) {
       params: {
         location: cityName,
         adm: 'China'
-      }
+      },
+      timeout: QWEATHER_TIMEOUT_MS
     });
 
     if (response.data.code === '200' && response.data.location && response.data.location.length > 0) {
@@ -66,14 +72,16 @@ async function getRealWeather(cityName) {
     const weatherResponse = await axios.get(`${QWEATHER_FREE_API_URL}/weather/now`, {
       params: {
         location: locationId
-      }
+      },
+      timeout: QWEATHER_TIMEOUT_MS
     });
 
     // 获取天气预报
     const forecastResponse = await axios.get(`${QWEATHER_FREE_API_URL}/weather/3d`, {
       params: {
         location: locationId
-      }
+      },
+      timeout: QWEATHER_TIMEOUT_MS
     });
 
     if (weatherResponse.data.code !== '200' || !weatherResponse.data.now) {
