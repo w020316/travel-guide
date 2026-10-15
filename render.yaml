@@ -17,8 +17,13 @@ services:
         value: production
       - key: PORT
         value: 3001
+      # v10.10 修复 P1-14：原值为 "*"。但 server.js 对白名单做精确匹配
+      # （allowedOrigins.includes(origin)），"*" 永不命中真实 Origin，
+      # 效果与意图相反 —— 会拒绝所有携带 Origin 的请求（含同源 POST）。
+      # 统一部署（Express 同时托管前端与 API）下请填写本站公网域名；
+      # 多个域名用英文逗号分隔。留空则仅放行无 Origin 的请求（服务端调用 / 同源 GET）。
       - key: CORS_ORIGIN
-        value: "*"
+        sync: false
       - key: AI_PROVIDER
         value: agnes
       - key: AGNES_MODEL

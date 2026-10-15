@@ -39,7 +39,15 @@ app.use(helmet({
 }));
 
 // CORS配置（v10.9.3 修复 P0-2：生产环境未配置 CORS_ORIGIN 时拒绝所有跨源请求，避免凭证泄露）
-const allowedOrigins = (process.env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
+const rawOrigins = (process.env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
+// v10.10 修复 P1-14：剔除通配符 "*"。
+// 本服务对白名单做精确匹配（allowedOrigins.includes(origin)），"*" 永不命中真实 Origin，
+// 效果与配置意图完全相反 —— 会拒绝所有携带 Origin 的请求（含同源 POST）。
+// 此处显式剔除并告警；切勿为其补上通配符支持，否则将变成「* + credentials:true」的高危组合。
+if (rawOrigins.includes('*')) {
+  console.error('❌ CORS_ORIGIN 不允许使用通配符 "*"（精确匹配下无效且危险），已忽略该项，请配置明确的域名白名单');
+}
+const allowedOrigins = rawOrigins.filter(o => o !== '*');
 const isProd = process.env.NODE_ENV === 'production';
 if (isProd && allowedOrigins.length === 0) {
   console.error('❌ 生产环境必须显式配置 CORS_ORIGIN 白名单，当前未配置 → 拒绝所有跨源请求');
