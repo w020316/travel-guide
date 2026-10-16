@@ -28,10 +28,13 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       // v11.2 高德 JS API 2.0 运行时需求：restapi.amap.com（日志/服务脚本）、
       // 'unsafe-eval'（引擎内部 eval）、worker-src blob:（矢量渲染 Worker）
-      scriptSrc: ["'self'", 'https://html2canvas.hertzen.com', 'https://webapi.amap.com', 'https://restapi.amap.com', "'unsafe-eval'"],
+      // v11.3 修复线上底图不渲染：jsapi-service.amap.com 是高德 JS API 2.0 的 WebGL 渲染器模块宿主，
+      // 被 script-src 拦截会导致底图全灰、画布 0×0。script-src 属最高风险资源类型，故用精确域名而非通配。
+      scriptSrc: ["'self'", 'https://html2canvas.hertzen.com', 'https://webapi.amap.com', 'https://restapi.amap.com', 'https://jsapi-service.amap.com', "'unsafe-eval'"],
       styleSrc: ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-      imgSrc: ["'self'", 'data:', 'blob:', 'https://*.is.autonavi.com', 'https://autnapi.amap.com', 'https://vdata.amap.com'],
+      // v11.3：logo@2x.png 在 webapi.amap.com、POI 图标在 o4.amap.com 等子域，img-src 放行高德图片子域。
+      imgSrc: ["'self'", 'data:', 'blob:', 'https://*.is.autonavi.com', 'https://autnapi.amap.com', 'https://vdata.amap.com', 'https://webapi.amap.com', 'https://*.amap.com'],
       connectSrc: ["'self'", 'https://restapi.amap.com', 'https://*.amap.com'],
       workerSrc: ["'self'", 'blob:'],
       frameAncestors: ["'none'"],

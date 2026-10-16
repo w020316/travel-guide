@@ -12,7 +12,7 @@
          并产生控制台警告。防点击劫持由后端响应头承担（server.js 的 helmet
          已下发 frame-ancestors 'none' 与 X-Frame-Options），meta 只保留静态资源策略。 -->
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com https://restapi.amap.com 'unsafe-eval'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com; connect-src 'self' https://restapi.amap.com https://*.amap.com; worker-src 'self' blob:; base-uri 'self'; form-action 'self'">
+          content="default-src 'self'; script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com https://restapi.amap.com https://jsapi-service.amap.com 'unsafe-eval'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com https://webapi.amap.com https://*.amap.com; connect-src 'self' https://restapi.amap.com https://*.amap.com; worker-src 'self' blob:; base-uri 'self'; form-action 'self'">
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
