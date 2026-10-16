@@ -1739,6 +1739,7 @@
             </div>
         `);
 
+
         // v10.2: 未知城市提示 — 城市不在数据库中时显示友好提醒
         if (g.isUnknownCity) {
             sections.push(`
@@ -1821,6 +1822,28 @@
                             </div>
                         `;
                     }).join('')}
+                </section>
+            `);
+        }
+
+        // v11.2: 行程地图（腾讯地图 GL JS）— 展示目的地与每日行程景点分布。
+        // 景点名从 routes 归一化提取（与上方行程渲染同源），上限 12 个防 QPS 超限；
+        // city/spots 通过 data-* 传给 initGuideMap()，避免 innerHTML 注入风险。
+        if (g.routes && g.routes.length) {
+            const mapSpots = [];
+            g.routes.forEach(r => {
+                const daySpots = ((r.spots || [])).map(s => (typeof s === 'string' ? s : (s && s.name) || '')).filter(Boolean);
+                daySpots.forEach(s => { if (mapSpots.length < 12 && !mapSpots.includes(s)) mapSpots.push(s); });
+            });
+            sections.push(`
+                <section class="gc-section gc-map-section">
+                    <h2><span class="gc-idx">${nextIdx()}</span>行程地图</h2>
+                    <p class="gc-map-sub">目的地与 ${escapeHtml(String(mapSpots.length))} 个行程景点的分布（点击标注查看详情）</p>
+                    <div class="gc-map-box" id="gcMapBox" data-city="${escapeHtml(g.city)}" data-spots="${escapeHtml(mapSpots.join('|'))}">
+                        <div class="gc-map-loading" id="gcMapLoading"><span class="gc-map-spinner" aria-hidden="true"></span>正在加载地图…</div>
+                        <div class="gc-map-hint" id="gcMapHint" hidden></div>
+                        <div class="gc-map-canvas" id="gcMapCanvas" hidden></div>
+                    </div>
                 </section>
             `);
         }
@@ -2069,6 +2092,115 @@
 
         // v10.0: 绑定照片上传事件
         bindPhotoUploadEvents();
+
+        // v11.2: 初始化行程地图（异步，失败不影响攻略渲染）
+        initGuideMap();
+    }
+
+    // ---------- v11.2: 行程地图（腾讯地图 GL JS，非默认场景：用户自备 Key）----------
+    // Key 由后端 /api/config/map 下发（env MAP_TENCENT_KEY），前端零硬编码；
+    // 认证改版后 API KEY 放请求头由 SDK 内部处理，前端只需加载 SDK 与调用 Search 服务。
+    let tmapLoadPromise = null;
+    function loadTMapScript(key) {
+        if (window.TMap) return Promise.resolve(window.TMap);
+        if (!tmapLoadPromise) {
+            tmapLoadPromise = new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://map.qq.com/api/gljs?v=1.exp&libraries=service&key=' + encodeURIComponent(key);
+                s.async = true;
+                s.onload = () => resolve(window.TMap);
+                s.onerror = () => { tmapLoadPromise = null; reject(new Error('腾讯地图脚本加载失败（检查网络或 Key 域名白名单）')); };
+                document.head.appendChild(s);
+            });
+        }
+        return tmapLoadPromise;
+    }
+
+    const GC_MAP_PIN_CITY = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.3 21.7 0 14 0z" fill="#9e3f2c"/><circle cx="14" cy="14" r="6" fill="#fff"/></svg>');
+    const GC_MAP_PIN_SPOT = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="34" viewBox="0 0 24 34"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 22 12 22s12-13 12-22C24 5.4 18.6 0 12 0z" fill="#3777ff"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg>');
+
+    async function initGuideMap() {
+        const box = document.getElementById('gcMapBox');
+        if (!box || box.dataset.mapReady === '1') return;
+        box.dataset.mapReady = '1';
+        const city = box.dataset.city || '';
+        const spots = (box.dataset.spots || '').split('|').filter(Boolean);
+        const loading = document.getElementById('gcMapLoading');
+        const hint = document.getElementById('gcMapHint');
+        const canvas = document.getElementById('gcMapCanvas');
+        const showHint = (html) => {
+            if (loading) loading.hidden = true;
+            if (canvas) canvas.hidden = true;
+            if (hint) { hint.innerHTML = html; hint.hidden = false; }
+        };
+        try {
+            const res = await fetch(`${API.base}/api/config/map`);
+            if (!res.ok) throw new Error('配置接口 ' + res.status);
+            const cfg = await res.json();
+            if (!cfg.key) {
+                showHint('<div class="gn-title">地图功能尚未启用</div><div class="gn-desc">需要一把免费的腾讯位置服务 Key：<a href="https://lbs.qq.com/dev/console/application/mine" target="_blank" rel="noopener">lbs.qq.com</a> 注册 → 创建应用 → 添加 Key（勾选 WebServiceAPI 与 JavascriptAPI GL）→ Key 配置域名白名单。将 Key 配置到后端环境变量 MAP_TENCENT_KEY 后刷新即可。</div>');
+                return;
+            }
+            const TMap = await loadTMapScript(cfg.key);
+            const search = new TMap.service.Search({ pageSize: 5 });
+            const cityRes = await search.searchRegion({ keyword: city, region: city, autoExtend: false });
+            const center = cityRes && cityRes.data && cityRes.data[0] && cityRes.data[0].location;
+            if (!center) throw new Error('未定位到城市「' + city + '」');
+            const map = new TMap.Map(canvas, { center: new TMap.LatLng(center.lat, center.lng), zoom: 11 });
+
+            // 景点标注：逐个搜索（免费 Key 有 QPS 限制，串行 + 间隔）；单点失败跳过
+            const markerGeoms = [{ id: 'city', styleId: 'pinCity', position: new TMap.LatLng(center.lat, center.lng), properties: { title: city + '（目的地）' } }];
+            const labelGeoms = [];
+            const pts = [[center.lat, center.lng]];
+            for (let i = 0; i < spots.length; i++) {
+                try {
+                    const r = await search.searchRegion({ keyword: spots[i], region: city, autoExtend: false });
+                    const hit = r && r.data && r.data[0];
+                    if (hit && hit.location) {
+                        markerGeoms.push({ id: 'spot' + i, styleId: 'pinSpot', position: new TMap.LatLng(hit.location.lat, hit.location.lng), properties: { title: hit.title || spots[i] } });
+                        labelGeoms.push({ id: 'lbl' + i, styleId: 'lbl', position: new TMap.LatLng(hit.location.lat, hit.location.lng), content: spots[i], properties: { title: spots[i] } });
+                        pts.push([hit.location.lat, hit.location.lng]);
+                    }
+                } catch (e) { /* 单点搜索失败不影响整体 */ }
+                await new Promise(r2 => setTimeout(r2, 220));
+            }
+            if (loading) loading.hidden = true;
+            canvas.hidden = false;
+            const markerLayer = new TMap.MultiMarker({
+                map,
+                styles: {
+                    pinCity: new TMap.MarkerStyle({ width: 28, height: 40, anchor: { x: 14, y: 40 }, src: GC_MAP_PIN_CITY }),
+                    pinSpot: new TMap.MarkerStyle({ width: 24, height: 34, anchor: { x: 12, y: 34 }, src: GC_MAP_PIN_SPOT })
+                },
+                geometries: markerGeoms
+            });
+            if (labelGeoms.length) {
+                new TMap.MultiLabel({
+                    map,
+                    styles: { lbl: new TMap.LabelStyle({ color: '#3777ff', size: 13, offset: { x: 0, y: -38 }, alignment: 'center' }) },
+                    geometries: labelGeoms
+                });
+            }
+            // 视野自适应：包含全部标注点（fitBounds 不存在时退回城市中心）
+            try {
+                if (pts.length > 1 && typeof map.fitBounds === 'function') {
+                    const lats = pts.map(p => p[0]); const lngs = pts.map(p => p[1]);
+                    map.fitBounds(new TMap.LatLngBounds(new TMap.LatLng(Math.min(...lats), Math.min(...lngs)), new TMap.LatLng(Math.max(...lats), Math.max(...lngs))), { padding: 40 });
+                }
+            } catch (e) { /* 保持默认视野 */ }
+            // 点击标注弹信息窗
+            const info = new TMap.InfoWindow({ map, position: markerGeoms[0].position, offset: { x: 0, y: -46 } });
+            info.close();
+            markerLayer.on('click', evt => {
+                const geo = evt.geometry;
+                if (!geo) return;
+                info.open();
+                info.setPosition(geo.position);
+                info.setContent('<div class="gc-map-info">' + escapeHtml(geo.properties.title) + '</div>');
+            });
+        } catch (err) {
+            showHint('<div class="gn-title">地图加载失败</div><div class="gn-desc">' + escapeHtml(String((err && err.message) || err)) + '。不影响攻略内容，可稍后刷新重试。</div>');
+        }
     }
 
     // v10.0: 照片上传与 AI 修图

@@ -1864,3 +1864,76 @@ input[type="date"].input-ghost:focus {
     color: var(--warn-ink);
     border-color: var(--warn-line);
 }
+
+/* ---------- 8. 行程地图（v11.2 腾讯地图 GL JS） ---------- */
+/* 设计意图：地图是行程的空间视图，容器必须固定高度（GL JS 在高度不固定时不渲染）。
+   加载态用攻略页统一的 loading 视觉；引导/失败态复用 gc-notice 的排版语言。 */
+.gc-map-section .gc-map-sub {
+    margin: 0 0 var(--space-12);
+    font-size: var(--fs-2xs);
+    color: var(--ink-2, #6b6b6b);
+}
+.gc-map-box {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    border-radius: var(--radius-lg, 12px);
+    border: 1px solid var(--line, #e5e0da);
+    overflow: hidden;
+    background: var(--surface-2, #f7f4ef);
+}
+.gc-map-canvas {
+    width: 100%;
+    height: 100%;
+}
+.gc-map-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-8);
+    font-size: var(--fs-sm, 14px);
+    color: var(--ink-2, #6b6b6b);
+}
+.gc-map-spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--line, #e5e0da);
+    border-top-color: var(--accent, #9e3f2c);
+    animation: gc-map-spin 0.9s linear infinite;
+}
+@keyframes gc-map-spin { to { transform: rotate(360deg); } }
+.gc-map-hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--space-8);
+    padding: var(--space-20);
+    background: var(--warn-bg, #fdf6ec);
+}
+.gc-map-hint .gn-title {
+    font-weight: 600;
+    font-size: var(--fs-sm, 14px);
+    color: var(--warn-ink, #8a5a1f);
+}
+.gc-map-hint .gn-desc {
+    font-size: var(--fs-2xs, 12px);
+    line-height: 1.6;
+    color: var(--warn-ink, #8a5a1f);
+}
+.gc-map-hint a { color: var(--accent, #9e3f2c); }
+.gc-map-info {
+    max-width: 240px;
+    padding: var(--space-6) var(--space-10);
+    font-size: var(--fs-2xs, 12px);
+    font-weight: 600;
+    line-height: 1.5;
+}
+@media (max-width: 640px) {
+    .gc-map-box { height: 300px; }
+}

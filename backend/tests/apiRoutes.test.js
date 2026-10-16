@@ -201,3 +201,28 @@ describe('鉴权边界 —— 未登录不得执行管理操作', () => {
     expect([401, 403]).toContain(status);
   }, 30000);
 });
+
+describe('GET /api/config/map —— v11.2 行程地图配置接口', () => {
+  const prevKey = process.env.MAP_TENCENT_KEY;
+
+  it('未配置 MAP_TENCENT_KEY 时返回空串 key（前端据此显示配置引导）', async () => {
+    delete process.env.MAP_TENCENT_KEY;
+    const { status, body } = await req('/api/config/map');
+    expect(status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.provider).toBe('tencent');
+    expect(body.key).toBe('');
+  });
+
+  it('配置 MAP_TENCENT_KEY 时原样下发（Key 为前端公开值，安全靠 Referer 白名单）', async () => {
+    process.env.MAP_TENCENT_KEY = 'TEST-MAP-KEY-123';
+    const { status, body } = await req('/api/config/map');
+    expect(status).toBe(200);
+    expect(body.key).toBe('TEST-MAP-KEY-123');
+  });
+
+  afterAll(() => {
+    if (prevKey === undefined) delete process.env.MAP_TENCENT_KEY;
+    else process.env.MAP_TENCENT_KEY = prevKey;
+  });
+});
