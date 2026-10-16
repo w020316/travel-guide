@@ -36,10 +36,12 @@ services:
         value: "60000"
       - key: AI_PROVIDER_TIMEOUT_MS
         value: "55000"
-      # v11.2 行程地图：腾讯位置服务前端 Key（lbs.qq.com 免费申请，
-      # 建议在控制台为 Key 配置 Referer 域名白名单）。未配置时前端地图区块
-      # 显示配置引导，不影响攻略其余功能。
-      - key: MAP_TENCENT_KEY
+      # v11.2 行程地图：高德开放平台凭证（lbs.amap.com 免费申请，Web端(JS API)类型，
+      # 建议在控制台为 Key 配置域名白名单）。JS API 2.0 需 Key 与安全密钥成对使用；
+      # 未配置时前端地图区块显示配置引导，不影响攻略其余功能。
+      - key: MAP_AMAP_KEY
+        sync: false
+      - key: MAP_AMAP_SECRET
         sync: false
       # 以下敏感变量请在 Render 后台手动设置（Environment 标签页）
       - key: AGNES_API_KEY

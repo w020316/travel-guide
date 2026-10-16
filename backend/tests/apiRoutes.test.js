@@ -202,27 +202,33 @@ describe('鉴权边界 —— 未登录不得执行管理操作', () => {
   }, 30000);
 });
 
-describe('GET /api/config/map —— v11.2 行程地图配置接口', () => {
-  const prevKey = process.env.MAP_TENCENT_KEY;
+describe('GET /api/config/map —— v11.2 行程地图配置接口（高德）', () => {
+  const prevKey = process.env.MAP_AMAP_KEY;
+  const prevSecret = process.env.MAP_AMAP_SECRET;
 
-  it('未配置 MAP_TENCENT_KEY 时返回空串 key（前端据此显示配置引导）', async () => {
-    delete process.env.MAP_TENCENT_KEY;
+  it('未配置 MAP_AMAP_KEY 时返回空串 key（前端据此显示配置引导）', async () => {
+    delete process.env.MAP_AMAP_KEY;
     const { status, body } = await req('/api/config/map');
     expect(status).toBe(200);
     expect(body.success).toBe(true);
-    expect(body.provider).toBe('tencent');
+    expect(body.provider).toBe('amap');
     expect(body.key).toBe('');
+    expect(body.secret).toBe('');
   });
 
-  it('配置 MAP_TENCENT_KEY 时原样下发（Key 为前端公开值，安全靠 Referer 白名单）', async () => {
-    process.env.MAP_TENCENT_KEY = 'TEST-MAP-KEY-123';
+  it('配置 MAP_AMAP_KEY/SECRET 时原样下发（JS API 2.0 需成对使用）', async () => {
+    process.env.MAP_AMAP_KEY = 'TEST-AMAP-KEY';
+    process.env.MAP_AMAP_SECRET = 'TEST-AMAP-SECRET';
     const { status, body } = await req('/api/config/map');
     expect(status).toBe(200);
-    expect(body.key).toBe('TEST-MAP-KEY-123');
+    expect(body.key).toBe('TEST-AMAP-KEY');
+    expect(body.secret).toBe('TEST-AMAP-SECRET');
   });
 
   afterAll(() => {
-    if (prevKey === undefined) delete process.env.MAP_TENCENT_KEY;
-    else process.env.MAP_TENCENT_KEY = prevKey;
+    if (prevKey === undefined) delete process.env.MAP_AMAP_KEY;
+    else process.env.MAP_AMAP_KEY = prevKey;
+    if (prevSecret === undefined) delete process.env.MAP_AMAP_SECRET;
+    else process.env.MAP_AMAP_SECRET = prevSecret;
   });
 });

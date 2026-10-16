@@ -2097,27 +2097,29 @@
         initGuideMap();
     }
 
-    // ---------- v11.2: 行程地图（腾讯地图 GL JS，非默认场景：用户自备 Key）----------
-    // Key 由后端 /api/config/map 下发（env MAP_TENCENT_KEY），前端零硬编码；
-    // 认证改版后 API KEY 放请求头由 SDK 内部处理，前端只需加载 SDK 与调用 Search 服务。
-    let tmapLoadPromise = null;
-    function loadTMapScript(key) {
-        if (window.TMap) return Promise.resolve(window.TMap);
-        if (!tmapLoadPromise) {
-            tmapLoadPromise = new Promise((resolve, reject) => {
+    // ---------- v11.2: 行程地图（高德地图 JS API 2.0，非默认场景：用户自备 Key+安全密钥）----------
+    // Key/Secret 由后端 /api/config/map 下发（env MAP_AMAP_KEY / MAP_AMAP_SECRET），前端零硬编码；
+    // 高德 2021.12 后申请的 Key 必须配安全密钥（_AMapSecurityConfig，需在 SDK 加载前设置）。
+    let amapLoadPromise = null;
+    function loadAMapScript(key, secret) {
+        if (window.AMap) return Promise.resolve(window.AMap);
+        if (!amapLoadPromise) {
+            amapLoadPromise = new Promise((resolve, reject) => {
+                // 安全密钥必须先于 SDK 加载设置，否则 2021.12 后的 Key 报 INVALID_USER_SCODE
+                window._AMapSecurityConfig = { securityJsCode: secret };
                 const s = document.createElement('script');
-                s.src = 'https://map.qq.com/api/gljs?v=1.exp&libraries=service&key=' + encodeURIComponent(key);
+                s.src = 'https://webapi.amap.com/maps?v=2.0&key=' + encodeURIComponent(key) + '&plugin=AMap.PlaceSearch';
                 s.async = true;
-                s.onload = () => resolve(window.TMap);
-                s.onerror = () => { tmapLoadPromise = null; reject(new Error('腾讯地图脚本加载失败（检查网络或 Key 域名白名单）')); };
+                s.onload = () => resolve(window.AMap);
+                s.onerror = () => { amapLoadPromise = null; reject(new Error('高德地图脚本加载失败（检查网络或 Key/域名白名单）')); };
                 document.head.appendChild(s);
             });
         }
-        return tmapLoadPromise;
+        return amapLoadPromise;
     }
 
-    const GC_MAP_PIN_CITY = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.3 21.7 0 14 0z" fill="#9e3f2c"/><circle cx="14" cy="14" r="6" fill="#fff"/></svg>');
-    const GC_MAP_PIN_SPOT = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="34" viewBox="0 0 24 34"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 22 12 22s12-13 12-22C24 5.4 18.6 0 12 0z" fill="#3777ff"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg>');
+    const AMAP_PIN_CITY = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.3 21.7 0 14 0z" fill="#9e3f2c"/><circle cx="14" cy="14" r="6" fill="#fff"/></svg>');
+    const AMAP_PIN_SPOT = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="34" viewBox="0 0 24 34"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 22 12 22s12-13 12-22C24 5.4 18.6 0 12 0z" fill="#3777ff"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg>');
 
     async function initGuideMap() {
         const box = document.getElementById('gcMapBox');
@@ -2138,66 +2140,53 @@
             if (!res.ok) throw new Error('配置接口 ' + res.status);
             const cfg = await res.json();
             if (!cfg.key) {
-                showHint('<div class="gn-title">地图功能尚未启用</div><div class="gn-desc">需要一把免费的腾讯位置服务 Key：<a href="https://lbs.qq.com/dev/console/application/mine" target="_blank" rel="noopener">lbs.qq.com</a> 注册 → 创建应用 → 添加 Key（勾选 WebServiceAPI 与 JavascriptAPI GL）→ Key 配置域名白名单。将 Key 配置到后端环境变量 MAP_TENCENT_KEY 后刷新即可。</div>');
+                showHint('<div class="gn-title">地图功能尚未启用</div><div class="gn-desc">需要一对免费的高德开放平台凭证：<a href="https://console.amap.com/dev/key/app" target="_blank" rel="noopener">console.amap.com</a> 注册 → 创建应用 → 添加 Key（服务平台选「Web端(JS API)」）→ 复制 Key 与安全密钥。配到后端环境变量 MAP_AMAP_KEY / MAP_AMAP_SECRET 后刷新即可。</div>');
                 return;
             }
-            const TMap = await loadTMapScript(cfg.key);
-            const search = new TMap.service.Search({ pageSize: 5 });
-            const cityRes = await search.searchRegion({ keyword: city, region: city, autoExtend: false });
-            const center = cityRes && cityRes.data && cityRes.data[0] && cityRes.data[0].location;
-            if (!center) throw new Error('未定位到城市「' + city + '」');
-            const map = new TMap.Map(canvas, { center: new TMap.LatLng(center.lat, center.lng), zoom: 11 });
-
-            // 景点标注：逐个搜索（免费 Key 有 QPS 限制，串行 + 间隔）；单点失败跳过
-            const markerGeoms = [{ id: 'city', styleId: 'pinCity', position: new TMap.LatLng(center.lat, center.lng), properties: { title: city + '（目的地）' } }];
-            const labelGeoms = [];
-            const pts = [[center.lat, center.lng]];
-            for (let i = 0; i < spots.length; i++) {
-                try {
-                    const r = await search.searchRegion({ keyword: spots[i], region: city, autoExtend: false });
-                    const hit = r && r.data && r.data[0];
-                    if (hit && hit.location) {
-                        markerGeoms.push({ id: 'spot' + i, styleId: 'pinSpot', position: new TMap.LatLng(hit.location.lat, hit.location.lng), properties: { title: hit.title || spots[i] } });
-                        labelGeoms.push({ id: 'lbl' + i, styleId: 'lbl', position: new TMap.LatLng(hit.location.lat, hit.location.lng), content: spots[i], properties: { title: spots[i] } });
-                        pts.push([hit.location.lat, hit.location.lng]);
+            const AMap = await loadAMapScript(cfg.key, cfg.secret || '');
+            const map = new AMap.Map(canvas, { zoom: 11, viewMode: '2D', center: null });
+            // 城市定位：PlaceSearch 以城市名搜地标，取首个 POI 坐标为中心
+            const searcher = new AMap.PlaceSearch({ city: city, citylimit: true, pageSize: 5 });
+            const searchPoi = (kw) => new Promise((resolve) => {
+                searcher.search(kw, (status, result) => {
+                    if (status === 'complete' && result.poiList && result.poiList.pois && result.poiList.pois.length) {
+                        resolve(result.poiList.pois[0]);
+                    } else {
+                        resolve(null);
                     }
-                } catch (e) { /* 单点搜索失败不影响整体 */ }
-                await new Promise(r2 => setTimeout(r2, 220));
+                });
+            });
+            const centerPoi = await searchPoi(city);
+            if (!centerPoi || !centerPoi.location) throw new Error('未定位到城市「' + city + '」');
+            map.setCenter([centerPoi.location.lng, centerPoi.location.lat]);
+            // 景点标注：逐个搜索（免费档有 QPS 限制，串行 + 300ms 间隔）；单点失败跳过
+            const info = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -38), isCustom: false });
+            const addMarker = (poi, icon) => {
+                const m = new AMap.Marker({
+                    position: [poi.location.lng, poi.location.lat],
+                    icon: icon,
+                    title: poi.name,
+                    map: map
+                });
+                m.on('click', () => {
+                    info.setContent('<div class="gc-map-info">' + escapeHtml(poi.name) + '</div>');
+                    info.open(map, [poi.location.lng, poi.location.lat]);
+                });
+                return m;
+            };
+            addMarker(centerPoi, AMAP_PIN_CITY);
+            let labeled = 0;
+            for (let i = 0; i < spots.length; i++) {
+                const poi = await searchPoi(city + spots[i]) || await searchPoi(spots[i]);
+                if (poi && poi.location) {
+                    addMarker(poi, AMAP_PIN_SPOT);
+                    labeled++;
+                }
+                await new Promise(r2 => setTimeout(r2, 300));
             }
             if (loading) loading.hidden = true;
             canvas.hidden = false;
-            const markerLayer = new TMap.MultiMarker({
-                map,
-                styles: {
-                    pinCity: new TMap.MarkerStyle({ width: 28, height: 40, anchor: { x: 14, y: 40 }, src: GC_MAP_PIN_CITY }),
-                    pinSpot: new TMap.MarkerStyle({ width: 24, height: 34, anchor: { x: 12, y: 34 }, src: GC_MAP_PIN_SPOT })
-                },
-                geometries: markerGeoms
-            });
-            if (labelGeoms.length) {
-                new TMap.MultiLabel({
-                    map,
-                    styles: { lbl: new TMap.LabelStyle({ color: '#3777ff', size: 13, offset: { x: 0, y: -38 }, alignment: 'center' }) },
-                    geometries: labelGeoms
-                });
-            }
-            // 视野自适应：包含全部标注点（fitBounds 不存在时退回城市中心）
-            try {
-                if (pts.length > 1 && typeof map.fitBounds === 'function') {
-                    const lats = pts.map(p => p[0]); const lngs = pts.map(p => p[1]);
-                    map.fitBounds(new TMap.LatLngBounds(new TMap.LatLng(Math.min(...lats), Math.min(...lngs)), new TMap.LatLng(Math.max(...lats), Math.max(...lngs))), { padding: 40 });
-                }
-            } catch (e) { /* 保持默认视野 */ }
-            // 点击标注弹信息窗
-            const info = new TMap.InfoWindow({ map, position: markerGeoms[0].position, offset: { x: 0, y: -46 } });
-            info.close();
-            markerLayer.on('click', evt => {
-                const geo = evt.geometry;
-                if (!geo) return;
-                info.open();
-                info.setPosition(geo.position);
-                info.setContent('<div class="gc-map-info">' + escapeHtml(geo.properties.title) + '</div>');
-            });
+            if (labeled > 0) map.setFitView(null, false, [50, 50, 50, 50]);
         } catch (err) {
             showHint('<div class="gn-title">地图加载失败</div><div class="gn-desc">' + escapeHtml(String((err && err.message) || err)) + '。不影响攻略内容，可稍后刷新重试。</div>');
         }

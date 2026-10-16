@@ -21,14 +21,15 @@ router.use(rateLimiter(100, 60000));
 
 // ==================== 前端配置接口 ====================
 
-// v11.2: 地图功能配置 — 返回腾讯地图前端 Key（供 JS API GL 加载用）。
-// Key 设计为公开值（个人用途 + 腾讯位置服务控制台配 Referer 域名白名单防护），
-// 未配置 MAP_TENCENT_KEY 时返回空串，前端据此显示配置引导而非地图。
+// v11.2: 地图功能配置 — 返回高德地图前端 Key 与安全密钥（JS API 2.0 必须成对使用）。
+// Key/Secret 设计为公开值（个人用途 + 高德控制台配域名白名单防护），
+// 未配置时返回空串，前端据此显示配置引导而非地图。
 router.get('/config/map', (req, res) => {
   res.json({
     success: true,
-    provider: 'tencent',
-    key: process.env.MAP_TENCENT_KEY || ''
+    provider: 'amap',
+    key: process.env.MAP_AMAP_KEY || '',
+    secret: process.env.MAP_AMAP_SECRET || ''
   });
 });
 

@@ -26,11 +26,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", 'https://html2canvas.hertzen.com', 'https://map.qq.com'],
+      scriptSrc: ["'self'", 'https://html2canvas.hertzen.com', 'https://webapi.amap.com'],
       styleSrc: ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-      imgSrc: ["'self'", 'data:', 'blob:', 'https://map.gtimg.com'],
-      connectSrc: ["'self'", 'https://apis.map.qq.com'],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https://*.is.autonavi.com', 'https://autnapi.amap.com', 'https://vdata.amap.com'],
+      connectSrc: ["'self'", 'https://restapi.amap.com', 'https://*.amap.com'],
       frameAncestors: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"]
