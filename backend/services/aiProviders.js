@@ -233,7 +233,16 @@ class OpenAIProvider extends BaseAIProvider {
 }
 
 class ZhipuProvider extends BaseAIProvider {
-  // GLM-4 兼容 OpenAI 接口，buildRequestBody/parseResponse 用默认实现
+  // GLM-4 兼容 OpenAI 接口，parseResponse 用默认实现
+  // v11.2：默认模型 glm-4-flash（官方免费档，限速 ~30-60 tok/s）。全量攻略
+  // JSON 输出 3000+ tokens 时实测需 40-90s，max_tokens 8000 会让兜底请求
+  // 几乎必然撞 55s 超时。压到 2600 控制生成时长在预算内（finish_reason=stop
+  // 实测不触顶），代价是兜底内容比主链路精简 —— 兜底可用性优先。
+  buildRequestBody(prompt, systemPrompt) {
+    const body = super.buildRequestBody(prompt, systemPrompt);
+    body.max_tokens = 2600;
+    return body;
+  }
 }
 
 // ============== 通义千问（DashScope 接口） ==============

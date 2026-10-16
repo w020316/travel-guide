@@ -20,9 +20,11 @@ class AIService {
         apiKey: process.env.TONGYI_API_KEY || ''
       }),
       zhipu: createProvider('zhipu', {
-        name: '智谱AI (GLM-4)',
+        name: '智谱AI (GLM)',
         baseUrl: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-        model: 'glm-4-plus',
+        // v11.2：默认 glm-4-flash（官方免费模型）。glm-4-plus 为付费模型，
+        // 免费账户调用返回 429（余额/并发不足），作为兜底链路不可用。
+        model: process.env.ZHIPU_MODEL || 'glm-4-flash',
         apiKey: process.env.ZHIPU_API_KEY || ''
       }),
       deepseek: createProvider('deepseek', {
