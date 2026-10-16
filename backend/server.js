@@ -18,16 +18,19 @@ const PORT = process.env.PORT || 3001;
 app.set('trust proxy', process.env.TRUST_PROXY_HOPS ? Number(process.env.TRUST_PROXY_HOPS) : 1);
 
 // 安全中间件
+// v11.2：CSP 指令必须与 index.html 的 meta CSP 保持一致 —— 浏览器对
+// 响应头 CSP 与 meta CSP 取交集执行，只改一边会导致另一边被静默拦截
+// （实测：meta 放行 map.qq.com 后 SDK 仍被 helmet 头的 CSP 拦截，报 csp）。
 app.use(helmet({
   // 修复 P1-2：启用 CSP（允许同源 + 已知外部资源）
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", 'https://html2canvas.hertzen.com'],
+      scriptSrc: ["'self'", 'https://html2canvas.hertzen.com', 'https://map.qq.com'],
       styleSrc: ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-      imgSrc: ["'self'", 'data:', 'blob:'],
-      connectSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https://map.gtimg.com'],
+      connectSrc: ["'self'", 'https://apis.map.qq.com'],
       frameAncestors: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"]
