@@ -1,0 +1,47 @@
+{
+  "city": "成都",
+  "ts": "2026-10-16T11:40:09.203Z",
+  "clickTarget": {
+    "x": 1090.5374755859375,
+    "y": 489.2,
+    "title": "成都大熊猫繁育研究基地"
+  },
+  "infoAfterMouse": {
+    "present": true,
+    "text": "成都大熊猫繁育研究基地×"
+  },
+  "markerSummary": {
+    "total": 10,
+    "titles": [
+      "成都市",
+      "成都大熊猫繁育研究基地",
+      "宽窄巷子景区",
+      "锦里古街",
+      "成都武侯祠博物馆",
+      "成都杜甫草堂博物馆",
+      "成都太古里",
+      "青城山景区",
+      "都江堰",
+      "天府广场"
+    ]
+  },
+  "mapCanvas": {
+    "innerCanvas": {
+      "w": 1708,
+      "h": 756,
+      "cw": 854,
+      "ch": 378
+    },
+    "container": null,
+    "logoImgComplete": {
+      "src": "https://webapi.amap.com/theme/v2.0/logo@2x.png",
+      "complete": true,
+      "naturalW": 172
+    }
+  },
+  "csp": [
+    "Running the JavaScript URL violates the following Content Security Policy directive 'script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com https://restapi.amap.com https://jsapi-service.amap.com 'unsafe-eval''. Either the 'unsafe-inline' keyword, a hash ('sha256-...'), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handle",
+    "Running the JavaScript URL violates the following Content Security Policy directive 'script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com https://restapi.amap.com https://jsapi-service.amap.com 'unsafe-eval''. Either the 'unsafe-inline' keyword, a hash ('sha256-...'), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handle"
+  ],
+  "pageErrors": []
+}

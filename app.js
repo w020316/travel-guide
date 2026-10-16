@@ -1830,18 +1830,41 @@
         // 景点名从 routes 归一化提取（与上方行程渲染同源），上限 12 个防 QPS 超限；
         // city/spots 通过 data-* 传给 initGuideMap()，避免 innerHTML 注入风险。
         if (g.routes && g.routes.length) {
-            const mapSpots = [];
-            g.routes.forEach(r => {
-                const daySpots = ((r.spots || [])).map(s => (typeof s === 'string' ? s : (s && s.name) || '')).filter(Boolean);
-                daySpots.forEach(s => { if (mapSpots.length < 12 && !mapSpots.includes(s)) mapSpots.push(s); });
+            // v11.3: 按天分组提取景点，供地图「按天分色 + 路线连线」使用。
+            // 限制天数/每天点数/总点数，控制 PlaceSearch 调用量（免费档 QPS 有限）；
+            // 天内去重、跨天保留（同一地点可被多天到访）。
+            const MAP_MAX_DAYS = 7, MAP_MAX_PER_DAY = 6, MAP_MAX_TOTAL = 16;
+            const mapDays = [];
+            let mapTotal = 0;
+            g.routes.slice(0, MAP_MAX_DAYS).forEach((r, idx) => {
+                const rawSpots = ((r.spots || []))
+                    .map(s => (typeof s === 'string' ? s : (s && s.name) || ''))
+                    .filter(Boolean);
+                const seen = new Set();
+                const uniq = [];
+                rawSpots.forEach(s => { if (!seen.has(s)) { seen.add(s); uniq.push(s); } });
+                const room = MAP_MAX_TOTAL - mapTotal;
+                const picked = uniq.slice(0, Math.min(MAP_MAX_PER_DAY, room));
+                if (!picked.length) return;
+                mapTotal += picked.length;
+                mapDays.push({
+                    day: Number(r.day) || (idx + 1),
+                    theme: String(r.theme || r.title || ''),
+                    spots: picked
+                });
             });
+            const mapSpots = mapDays.reduce((acc, d) => acc.concat(d.spots), []);
+            // 兼容：无分天数据时不写 data-days，前端自动退化为统一蓝标
+            const daysAttr = mapDays.length ? ` data-days="${escapeHtml(JSON.stringify(mapDays))}"` : '';
+            const multiDay = mapDays.length >= 2;
             sections.push(`
                 <section class="gc-section gc-map-section">
                     <h2><span class="gc-idx">${nextIdx()}</span>行程地图</h2>
-                    <p class="gc-map-sub">目的地与 ${escapeHtml(String(mapSpots.length))} 个行程景点的分布（点击标注查看详情）</p>
-                    <div class="gc-map-box" id="gcMapBox" data-city="${escapeHtml(g.city)}" data-spots="${escapeHtml(mapSpots.join('|'))}">
+                    <p class="gc-map-sub">目的地与 ${escapeHtml(String(mapSpots.length))} 个行程景点的分布${multiDay ? '（按天分色，连线为当日游览路线）' : '（点击标注查看详情）'}</p>
+                    <div class="gc-map-box" id="gcMapBox" data-city="${escapeHtml(g.city)}" data-spots="${escapeHtml(mapSpots.join('|'))}"${daysAttr}>
                         <div class="gc-map-loading" id="gcMapLoading"><span class="gc-map-spinner" aria-hidden="true"></span>正在加载地图…</div>
                         <div class="gc-map-hint" id="gcMapHint" hidden></div>
+                        <div class="gc-map-legend" id="gcMapLegend" hidden></div>
                         <div class="gc-map-canvas" id="gcMapCanvas" hidden></div>
                     </div>
                 </section>
@@ -2120,6 +2143,27 @@
 
     const AMAP_PIN_CITY = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.3 21.7 0 14 0z" fill="#9e3f2c"/><circle cx="14" cy="14" r="6" fill="#fff"/></svg>');
     const AMAP_PIN_SPOT = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="34" viewBox="0 0 24 34"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 22 12 22s12-13 12-22C24 5.4 18.6 0 12 0z" fill="#3777ff"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg>');
+    // v11.3: 按天分色板 —— 7 色，彼此色相分离、明度偏高以适配浅色底图，
+    // 且刻意避开目的地砖红(#9e3f2c)，保证「目的地红标」始终最醒目。
+    const AMAP_DAY_COLORS = ['#3d8bfd', '#10b981', '#f59e0b', '#a78bfa', '#22d3ee', '#f472b6', '#94a3b8'];
+    // 生成指定颜色的图钉（与蓝标同形，仅换填充色）
+    const amapPin = (color) => 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="34" viewBox="0 0 24 34"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 22 12 22s12-13 12-22C24 5.4 18.6 0 12 0z" fill="' + color + '"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg>');
+    // 解析 data-days（JSON），非法/空则返回 null → 走退化分支
+    function parseMapDays(raw) {
+        if (!raw) return null;
+        try {
+            const arr = JSON.parse(raw);
+            if (!Array.isArray(arr)) return null;
+            const days = arr.map((d, i) => ({
+                day: Number(d && d.day) || (i + 1),
+                theme: String((d && d.theme) || ''),
+                spots: (d && Array.isArray(d.spots)) ? d.spots.filter(x => typeof x === 'string' && x) : []
+            })).filter(d => d.spots.length);
+            return days.length ? days : null;
+        } catch (e) {
+            return null;
+        }
+    }
 
     async function initGuideMap() {
         const box = document.getElementById('gcMapBox');
@@ -2127,12 +2171,15 @@
         box.dataset.mapReady = '1';
         const city = box.dataset.city || '';
         const spots = (box.dataset.spots || '').split('|').filter(Boolean);
+        const days = parseMapDays(box.dataset.days);
         const loading = document.getElementById('gcMapLoading');
         const hint = document.getElementById('gcMapHint');
         const canvas = document.getElementById('gcMapCanvas');
+        const legend = document.getElementById('gcMapLegend');
         const showHint = (html) => {
             if (loading) loading.hidden = true;
             if (canvas) canvas.hidden = true;
+            if (legend) legend.hidden = true;
             if (hint) { hint.innerHTML = html; hint.hidden = false; }
         };
         try {
@@ -2158,20 +2205,24 @@
             const map = new AMap.Map(canvas, { zoom: 11, viewMode: '2D', center: null });
             // 城市定位：PlaceSearch 以城市名搜地标，取首个 POI 坐标为中心
             const searcher = new AMap.PlaceSearch({ city: city, citylimit: true, pageSize: 5 });
-            const searchPoi = (kw) => new Promise((resolve) => {
-                searcher.search(kw, (status, result) => {
-                    if (status === 'complete' && result.poiList && result.poiList.pois && result.poiList.pois.length) {
-                        resolve(result.poiList.pois[0]);
-                    } else {
-                        resolve(null);
-                    }
+            // 关键词结果缓存：跨天重复景点（如「西湖」出现多次）只搜一次，省 QPS
+            const poiCache = new Map();
+            const searchPoi = (kw) => {
+                if (poiCache.has(kw)) return Promise.resolve(poiCache.get(kw));
+                return new Promise((resolve) => {
+                    searcher.search(kw, (status, result) => {
+                        const poi = (status === 'complete' && result.poiList && result.poiList.pois && result.poiList.pois.length)
+                            ? result.poiList.pois[0] : null;
+                        poiCache.set(kw, poi);
+                        resolve(poi);
+                    });
                 });
-            });
+            };
             const centerPoi = await searchPoi(city);
             if (!centerPoi || !centerPoi.location) throw new Error('未定位到城市「' + city + '」');
             map.setCenter([centerPoi.location.lng, centerPoi.location.lat]);
-            // 景点标注：逐个搜索（免费档有 QPS 限制，串行 + 300ms 间隔）；单点失败跳过
             const info = new AMap.InfoWindow({ offset: new AMap.Pixel(0, -38), isCustom: false });
+            const overlays = [];
             const addMarker = (poi, icon) => {
                 const m = new AMap.Marker({
                     position: [poi.location.lng, poi.location.lat],
@@ -2183,21 +2234,63 @@
                     info.setContent('<div class="gc-map-info">' + escapeHtml(poi.name) + '</div>');
                     info.open(map, [poi.location.lng, poi.location.lat]);
                 });
+                overlays.push(m);
                 return m;
             };
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
             addMarker(centerPoi, AMAP_PIN_CITY);
             let labeled = 0;
-            for (let i = 0; i < spots.length; i++) {
-                const poi = await searchPoi(city + spots[i]) || await searchPoi(spots[i]);
-                if (poi && poi.location) {
-                    addMarker(poi, AMAP_PIN_SPOT);
-                    labeled++;
+
+            if (days) {
+                // v11.3: 按天分色标注 + 当日路线连线（Polyline 带方向箭头）
+                const dayColors = days.map((d, i) => AMAP_DAY_COLORS[i % AMAP_DAY_COLORS.length]);
+                const dayPins = dayColors.map(amapPin);
+                if (legend && days.length >= 2) {
+                    legend.innerHTML = days.map((d, i) =>
+                        `<span class="gc-map-legend-item"><i class="gc-map-legend-dot" style="background:${dayColors[i]}"></i>第${d.day}天</span>`
+                    ).join('');
+                    legend.hidden = false;
                 }
-                await new Promise(r2 => setTimeout(r2, 300));
+                for (let di = 0; di < days.length; di++) {
+                    const positions = [];
+                    const list = days[di].spots;
+                    for (let si = 0; si < list.length; si++) {
+                        const poi = await searchPoi(city + list[si]) || await searchPoi(list[si]);
+                        if (poi && poi.location) {
+                            addMarker(poi, dayPins[di]);
+                            positions.push([poi.location.lng, poi.location.lat]);
+                            labeled++;
+                        }
+                        await sleep(300);
+                    }
+                    if (positions.length >= 2) {
+                        overlays.push(new AMap.Polyline({
+                            path: positions,
+                            strokeColor: dayColors[di],
+                            strokeWeight: 4,
+                            strokeOpacity: 0.85,
+                            strokeStyle: 'solid',
+                            lineJoin: 'round',
+                            lineCap: 'round',
+                            showDir: true,
+                            zIndex: 50,
+                            map: map
+                        }));
+                    }
+                }
+            } else {
+                // 退化：无分天数据 → 统一蓝标（保持旧行为，不报错）
+                for (let i = 0; i < spots.length; i++) {
+                    const poi = await searchPoi(city + spots[i]) || await searchPoi(spots[i]);
+                    if (poi && poi.location) { addMarker(poi, AMAP_PIN_SPOT); labeled++; }
+                    await sleep(300);
+                }
             }
+
             if (loading) loading.hidden = true;
             canvas.hidden = false;
-            if (labeled > 0) map.setFitView(null, false, [50, 50, 50, 50]);
+            // 以标注+连线为界自适应视野，padding 60px、限制最大缩放避免单日城市过度放大
+            if (labeled > 0) map.setFitView(overlays, false, [60, 60, 60, 60], 15);
         } catch (err) {
             showHint('<div class="gn-title">地图加载失败</div><div class="gn-desc">' + escapeHtml(String((err && err.message) || err)) + '。不影响攻略内容，可稍后刷新重试。</div>');
         }

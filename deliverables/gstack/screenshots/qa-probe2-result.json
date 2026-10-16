@@ -1,0 +1,62 @@
+{
+  "city": "成都",
+  "ts": "2026-10-16T11:28:12.584Z",
+  "clickTarget": {
+    "x": 885.3375244140625,
+    "y": 447.97499389648436,
+    "title": "宽窄巷子景区"
+  },
+  "infoAfterMouse": {
+    "present": true,
+    "text": "奎星楼街×"
+  },
+  "markerSummary": {
+    "total": 13,
+    "titles": [
+      "成都市",
+      "宽窄巷子景区",
+      "人民公园",
+      "春熙路步行街",
+      "成都太古里",
+      "奎星楼街",
+      "成都大熊猫繁育研究基地",
+      "成都武侯祠博物馆",
+      "锦里古街",
+      "玉林街",
+      "成都杜甫草堂博物馆",
+      "青羊宫",
+      "文殊院"
+    ]
+  },
+  "mapCanvas": {
+    "innerCanvas": {
+      "w": 0,
+      "h": 0,
+      "cw": 0,
+      "ch": 0
+    },
+    "container": null,
+    "logoImgComplete": {
+      "src": "https://webapi.amap.com/theme/v2.0/logo@2x.png",
+      "complete": true,
+      "naturalW": 0
+    }
+  },
+  "csp": [
+    "Running the JavaScript URL violates the following Content Security Policy directive 'script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com https://restapi.amap.com 'unsafe-eval''. Either the 'unsafe-inline' keyword, a hash ('sha256-...'), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handlers, style attributes and javasc",
+    "Running the JavaScript URL violates the following Content Security Policy directive 'script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com https://restapi.amap.com 'unsafe-eval''. Either the 'unsafe-inline' keyword, a hash ('sha256-...'), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handlers, style attributes and javasc",
+    "Loading the script 'https://jsapi-service.amap.com/mapsplugincdn?v=2.3.5.6&cls=WebGLRender&key=46f98061ab1247259f11894f29eafb19&t=1773639622895' violates the following Content Security Policy directive: \"script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com https://restapi.amap.com 'unsafe-eval'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a ",
+    "Loading the script 'https://jsapi-service.amap.com/mapsplugincdn?v=2.3.5.6&cls=WebGLRender&key=46f98061ab1247259f11894f29eafb19&t=1773639622895' violates the following Content Security Policy directive: \"script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com https://restapi.amap.com 'unsafe-eval'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a ",
+    "Loading the image 'https://webapi.amap.com/theme/v2.0/logo@2x.png' violates the following Content Security Policy directive: \"img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com\". The action has been blocked.",
+    "Loading the image 'https://webapi.amap.com/theme/v2.0/logo@2x.png' violates the following Content Security Policy directive: \"img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com\". The action has been blocked.",
+    "Loading the image 'https://o4.amap.com/icon/2.0.2.45/v1/1_0_s/icons_1?key=46f98061ab1247259f11894f29eafb19' violates the following Content Security Policy directive: \"img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com\". The action has been blocked.",
+    "Loading the image 'https://o4.amap.com/icon/2.0.2.45/v1/1_0_s/icons_1?key=46f98061ab1247259f11894f29eafb19' violates the following Content Security Policy directive: \"img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com\". The action has been blocked.",
+    "Loading the image 'https://o4.amap.com/icon/2.0.2.45/v1/1_0_s/icons_4?key=46f98061ab1247259f11894f29eafb19' violates the following Content Security Policy directive: \"img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com\". The action has been blocked.",
+    "Loading the image 'https://o4.amap.com/icon/2.0.2.45/v1/1_0_s/icons_4?key=46f98061ab1247259f11894f29eafb19' violates the following Content Security Policy directive: \"img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com\". The action has been blocked.",
+    "Loading the image 'https://o4.amap.com/icon/2.0.2.45/v1/1_0_s/icons_9?key=46f98061ab1247259f11894f29eafb19' violates the following Content Security Policy directive: \"img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com\". The action has been blocked.",
+    "Loading the image 'https://o4.amap.com/icon/2.0.2.45/v1/1_0_s/icons_9?key=46f98061ab1247259f11894f29eafb19' violates the following Content Security Policy directive: \"img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com\". The action has been blocked.",
+    "Loading the image 'https://o4.amap.com/icon/2.0.2.45/v1/1_0_s/icons_64?key=46f98061ab1247259f11894f29eafb19' violates the following Content Security Policy directive: \"img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com\". The action has been blocked.",
+    "Loading the image 'https://o4.amap.com/icon/2.0.2.45/v1/1_0_s/icons_64?key=46f98061ab1247259f11894f29eafb19' violates the following Content Security Policy directive: \"img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com\". The action has been blocked."
+  ],
+  "pageErrors": []
+}

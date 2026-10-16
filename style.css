@@ -2092,6 +2092,37 @@ input[type="date"].input-ghost:focus {
     font-weight: 600;
     line-height: 1.5;
 }
+/* v11.3: 按天分色图例 —— 叠在地图左上角，半透明深色卡片保证在浅色底图上可读 */
+.gc-map-legend {
+    position: absolute;
+    top: var(--space-12, 12px);
+    left: var(--space-12, 12px);
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4, 4px) var(--space-12, 12px);
+    max-width: calc(100% - 24px);
+    padding: var(--space-8, 8px) var(--space-12, 12px);
+    border-radius: var(--radius-sm, 8px);
+    background: rgba(24, 22, 20, .8);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+.gc-map-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-4, 4px);
+    font-size: var(--fs-2xs, 12px);
+    line-height: 1.4;
+    color: #f2ede7;
+    white-space: nowrap;
+}
+.gc-map-legend-dot {
+    width: 10px;
+    height: 10px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .35);
+}
 @media (max-width: 640px) {
     .gc-map-box { height: 300px; }
 }
@@ -2302,7 +2333,7 @@ body::after {
 .ts-time, .compare-date, .compare-route,
 .poster .p-days, .poster .p-budget,
 .rank-card .rc-meta, .gc-source-time,
-.history-chip .hc-time,
+.history-chip .hc-time, .gc-map-legend-item,
 .fav-item, input[type="date"] {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
