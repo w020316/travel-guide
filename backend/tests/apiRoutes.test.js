@@ -208,6 +208,7 @@ describe('GET /api/config/map —— v11.2 行程地图配置接口（高德）'
 
   it('未配置 MAP_AMAP_KEY 时返回空串 key（前端据此显示配置引导）', async () => {
     delete process.env.MAP_AMAP_KEY;
+    delete process.env.MAP_AMAP_SECRET;
     const { status, body } = await req('/api/config/map');
     expect(status).toBe(200);
     expect(body.success).toBe(true);
