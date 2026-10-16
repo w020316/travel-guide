@@ -155,4 +155,120 @@ describe('weatherSync', () => {
       expect(cache.get('test')).toBeUndefined();
     });
   });
+
+  // v10.11 新增：认证参数与路径构造（全部走 mock axios，不发起真实网络请求）
+  describe('认证参数与路径构造（v10.11）', () => {
+    const ORIGINAL_KEY = process.env.QWEATHER_API_KEY;
+
+    afterEach(() => {
+      // 恢复环境变量，避免污染其他用例
+      if (ORIGINAL_KEY === undefined) {
+        delete process.env.QWEATHER_API_KEY;
+      } else {
+        process.env.QWEATHER_API_KEY = ORIGINAL_KEY;
+      }
+    });
+
+    it('三个请求均应走正确路径（/geo/v2/city/lookup、/v7/weather/now、/v7/weather/3d）并附带 key 认证', async () => {
+      process.env.QWEATHER_API_KEY = 'test-key-123';
+
+      // geo lookup → weather/now → weather/3d 依次 mock
+      mockGet.mockResolvedValueOnce({ data: { code: '200', location: [{ id: 'CTU_001' }] } });
+      mockGet.mockResolvedValueOnce({
+        data: {
+          code: '200',
+          now: { temp: '22', feelsLike: '20', text: '晴', humidity: '60', windDir: '东南', windScale: '2', vis: '15', pressure: '1015' },
+          updateTime: '2026-07-25T10:00:00+08:00'
+        }
+      });
+      mockGet.mockResolvedValueOnce({ data: { daily: [] } });
+
+      const result = await weatherSync.getRealWeather('成都');
+      expect(result).not.toBeNull();
+      expect(mockGet).toHaveBeenCalledTimes(3);
+
+      const [geoUrl, geoCfg] = mockGet.mock.calls[0];
+      const [nowUrl, nowCfg] = mockGet.mock.calls[1];
+      const [fcUrl, fcCfg] = mockGet.mock.calls[2];
+
+      // 路径：geo 必须是 /geo/v2/city/lookup（修复前误拼 /v2/city/lookup → 404）
+      expect(geoUrl).toMatch(/\/geo\/v2\/city\/lookup$/);
+      expect(nowUrl).toContain('/v7/weather/now');
+      expect(fcUrl).toContain('/v7/weather/3d');
+
+      // 认证：和风所有接口都需要 key 查询参数（修复前完全未携带 → 401/403）
+      expect(geoCfg.params.key).toBe('test-key-123');
+      expect(nowCfg.params.key).toBe('test-key-123');
+      expect(fcCfg.params.key).toBe('test-key-123');
+
+      // 业务参数仍应完整
+      expect(geoCfg.params.location).toBe('成都');
+      expect(geoCfg.params.adm).toBe('China');
+      expect(nowCfg.params.location).toBe('CTU_001');
+      expect(fcCfg.params.location).toBe('CTU_001');
+
+      // 来源标记：真实数据
+      expect(result.source).toBe('qweather');
+    });
+
+    it('未配置 QWEATHER_API_KEY 时不应附加 key 参数', async () => {
+      delete process.env.QWEATHER_API_KEY;
+
+      mockGet.mockResolvedValueOnce({ data: { code: '200', location: [{ id: 'CTU_001' }] } });
+      mockGet.mockResolvedValueOnce({
+        data: {
+          code: '200',
+          now: { temp: '22', feelsLike: '20', text: '晴', humidity: '60', windDir: '东南', windScale: '2', vis: '15', pressure: '1015' }
+        }
+      });
+      mockGet.mockResolvedValueOnce({ data: { daily: [] } });
+
+      await weatherSync.getRealWeather('成都');
+
+      for (const [, cfg] of mockGet.mock.calls) {
+        expect(cfg.params.key).toBeUndefined();
+      }
+    });
+
+    it('真实 API 失败回退模拟数据时应标记 source: simulated', async () => {
+      mockGet.mockRejectedValue(new Error('Network error'));
+
+      const result = await weatherSync.getCityWeather('成都');
+      expect(result.source).toBe('simulated');
+    });
+
+    it('QWEATHER_API_VERSION 应可配置天气 API 版本段（便于 v7 停服后无代码切换）', async () => {
+      const originalVersion = process.env.QWEATHER_API_VERSION;
+      const originalApiUrl = process.env.QWEATHER_API_URL;
+      vi.resetModules();
+      try {
+        // 版本段只在模块加载时读取，需重新导入以生效
+        delete process.env.QWEATHER_API_URL; // 确保走「host + 版本段」默认拼接
+        process.env.QWEATHER_API_VERSION = 'v9';
+        const fresh = (await import('../services/weatherSync')).default;
+
+        const localGet = vi.fn();
+        localGet.mockResolvedValueOnce({ data: { code: '200', location: [{ id: 'X_001' }] } });
+        localGet.mockResolvedValueOnce({
+          data: {
+            code: '200',
+            now: { temp: '20', feelsLike: '18', text: '晴', humidity: '50', windDir: '东', windScale: '2', vis: '10', pressure: '1010' }
+          }
+        });
+        localGet.mockResolvedValueOnce({ data: { daily: [] } });
+        fresh.__setAxiosForTest({ get: localGet, post: vi.fn() });
+
+        const result = await fresh.getRealWeather('成都');
+        expect(result).not.toBeNull();
+        expect(localGet.mock.calls[1][0]).toContain('/v9/weather/now');
+        expect(localGet.mock.calls[2][0]).toContain('/v9/weather/3d');
+      } finally {
+        if (originalVersion === undefined) delete process.env.QWEATHER_API_VERSION;
+        else process.env.QWEATHER_API_VERSION = originalVersion;
+        if (originalApiUrl === undefined) delete process.env.QWEATHER_API_URL;
+        else process.env.QWEATHER_API_URL = originalApiUrl;
+        vi.resetModules();
+      }
+    });
+  });
 });

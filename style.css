@@ -1832,3 +1832,35 @@ input[type="date"].input-ghost:focus {
     color: var(--warn-ink);
     border-color: var(--warn-line);
 }
+
+/* ---------- 7.1 天气来源徽章（v10.11 天气数据透明化） ---------- */
+/* 设计意图：天气直接影响出行决策，模拟数据（如「15-25℃」的季节模板）
+   不标注来源会被误认为实时天气。徽章固定在天气卡片右上角，
+   复用攻略来源徽章的色系：实时 = 品牌浅底（正向），模拟 = 警告色（需核实）。 */
+.weather-source {
+    position: absolute;
+    top: var(--space-12);
+    right: var(--space-12);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    padding: var(--space-4) var(--space-12);
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: var(--fs-2xs);
+    line-height: 1.5;
+    cursor: help;
+}
+.weather-source-label { font-weight: 600; letter-spacing: .02em; }
+
+.weather-source-real {
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    border-color: rgba(158, 63, 44, .18);
+}
+.weather-source-simulated {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    border-color: var(--warn-line);
+}

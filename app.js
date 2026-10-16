@@ -333,6 +333,43 @@
         if (!g.title) g.title = `${g.city || ''}·旅行手记`;
         if (!g.subtitle) g.subtitle = `发现${g.city || ''}的独特魅力`;
 
+        // 8. v10.11 天气来源透明化：后端 generate 接口会附加 currentWeather
+        //    （weatherSync 返回，含 source: 'qweather' | 'simulated'），但前端
+        //    此前从未消费该字段 —— 天气区块渲染的一直是模板/AI 生成的季节性
+        //    描述（如「15-25℃」），用户无从分辨真假。现透传来源标记：
+        //    真实数据（qweather）时用实时温度/天气现象覆盖模板内容并标记来源，
+        //    保证「实时天气」徽章与展示内容一致；其余一律按模拟数据处理。
+        //
+        //    F1 修复（QA 回归 8041ca4）：原实现无条件 `g.weather = g.weather || {}`
+        //    预创建空真值对象 —— 当 AI 载荷无 weather 字段且和风回退模拟数据时
+        //    （线上最常见形态），只填了 source，导致 submitCity 中
+        //    `if (!guide.weather) guide.weather = genWeather(...)` 兜底被跳过，
+        //    renderGuide 渲染出只有「模拟数据」徽章、温度/描述全空的空白卡片。
+        //    现改为：g.weather 缺失时直接用 currentWeather.current 构造完整
+        //    天气对象（qweather 与 simulated 的 current 字段结构一致），
+        //    不再产生空壳；已有 weather 对象时行为不变（qweather 实时覆盖
+        //    分支已回归验证通过，保持原样）。
+        if (g.currentWeather && g.currentWeather.source && g.currentWeather.current) {
+            const cw = g.currentWeather;
+            const cur = cw.current;
+            const isReal = cw.source === 'qweather';
+            if (!g.weather) {
+                g.weather = {
+                    source: cw.source,
+                    temp: cur.temp || '',
+                    desc: isReal
+                        ? `实时天气：${cur.condition || ''}，湿度 ${cur.humidity || '—'}，${cur.wind || '—'}，能见度 ${cur.visibility || '—'}`
+                        : `${cur.condition || '—'}，湿度 ${cur.humidity || '—'}，${cur.wind || '—'}`
+                };
+            } else {
+                g.weather.source = cw.source;
+                if (isReal) {
+                    g.weather.temp = cur.temp;
+                    g.weather.desc = `实时天气：${cur.condition}，湿度 ${cur.humidity}，${cur.wind}，能见度 ${cur.visibility}`;
+                }
+            }
+        }
+
         return g;
     }
 
@@ -795,9 +832,24 @@
     }
 
     // ---------- 排行榜 ----------
+    // v10.11 修复 UX 走查 E4（P2）：「本周值得一去的地方」原先直接对全量
+    // 城市按 scoreCity 排序取前 12，冷门城市（漯河、株洲、许昌等）与热门城市
+    // 分数接近，随日期种子经常混入榜单，与「编辑精选」语义落差明显。
+    // 现改为：先过滤到主流旅游城市候选池（覆盖全国主要区域、保持多样性，
+    // 北京/天津为直辖市予以保留），再按 scoreCity 排序取 12 城。
+    const RANKING_CANDIDATE_CITIES = [
+        '北京', '上海', '成都', '杭州', '西安', '重庆', '广州', '厦门',
+        '南京', '青岛', '苏州', '丽江', '三亚', '哈尔滨', '武汉', '长沙',
+        '天津', '大理', '桂林', '深圳', '昆明', '拉萨', '张家界',
+        '洛阳', '扬州', '泉州', '威海', '贵阳', '黄山', '乌鲁木齐'
+    ];
+
     function renderRanking() {
-        const list = Object.entries(CITIES)
-            .map(([name, d]) => ({ name, ...d }))
+        const candidates = RANKING_CANDIDATE_CITIES.filter(name => CITIES[name]);
+        // 候选池异常缺失时回退全量城市，保证榜单永不空白
+        const pool = candidates.length >= 12 ? candidates : Object.keys(CITIES);
+        const list = pool
+            .map(name => ({ name, ...CITIES[name] }))
             .sort((a, b) => scoreCity(b) - scoreCity(a))
             .slice(0, 12);
 
@@ -1625,6 +1677,25 @@
         };
     }
 
+    // v10.11 天气数据来源透明化（UX 走查 P2：模拟天气无标注直接展示）
+    // 天气数据只有两种来源：
+    //   'qweather'   —— 后端和风天气同步的真实数据（weatherSync 透传）
+    //   'simulated'  —— 模拟回退（后端 weatherSync 降级，或本地/AI 生成的
+    //                   季节性模板天气；无 source 字段时按模拟处理）
+    function weatherSourceInfo(g) {
+        const w = (g && g.weather) || {};
+        const raw = String(w.source || 'simulated');
+        const isReal = raw === 'qweather';
+        return {
+            isReal,
+            label: isReal ? '实时天气' : '模拟数据',
+            cls: isReal ? 'weather-source-real' : 'weather-source-simulated',
+            note: isReal
+                ? '数据来自和风天气实时接口'
+                : '和风天气服务暂不可用，当前展示模拟数据，出行前请查看实时天气预报'
+        };
+    }
+
     function renderGuide(g) {
         const sections = [];
 
@@ -1682,12 +1753,18 @@
         }
 
         // v9.0: 天气情况区块（在行程之前展示）
+        // v10.11: 天气卡片角落增加来源徽章 —— 模拟数据必须显式标注
         if (g.weather) {
             const w = g.weather;
+            const wSrc = weatherSourceInfo(g);
             sections.push(`
                 <section class="gc-section gc-weather">
                     <h2><span class="gc-idx">${nextIdx()}</span>天气情况</h2>
                     <div class="weather-card">
+                        <div class="weather-source ${wSrc.cls}" title="${escapeHtml(wSrc.note)}">
+                            <span class="gc-source-dot" aria-hidden="true"></span>
+                            <span class="weather-source-label">${wSrc.label}</span>
+                        </div>
                         <div class="weather-main">
                             <div class="weather-temp">${escapeHtml(w.temp || '')}</div>
                             <div class="weather-desc">${escapeHtml(w.desc || '')}</div>
