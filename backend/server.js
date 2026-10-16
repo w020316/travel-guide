@@ -26,11 +26,14 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", 'https://html2canvas.hertzen.com', 'https://webapi.amap.com'],
+      // v11.2 高德 JS API 2.0 运行时需求：restapi.amap.com（日志/服务脚本）、
+      // 'unsafe-eval'（引擎内部 eval）、worker-src blob:（矢量渲染 Worker）
+      scriptSrc: ["'self'", 'https://html2canvas.hertzen.com', 'https://webapi.amap.com', 'https://restapi.amap.com', "'unsafe-eval'"],
       styleSrc: ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: ["'self'", 'data:', 'blob:', 'https://*.is.autonavi.com', 'https://autnapi.amap.com', 'https://vdata.amap.com'],
       connectSrc: ["'self'", 'https://restapi.amap.com', 'https://*.amap.com'],
+      workerSrc: ["'self'", 'blob:'],
       frameAncestors: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"]

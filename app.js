@@ -2144,6 +2144,13 @@
                 return;
             }
             const AMap = await loadAMapScript(cfg.key, cfg.secret || '');
+            // PlaceSearch 插件用官方异步加载器确保注册完成（URL plugin 参数
+            // 在部分网络环境下不生效，实测 AMap.PlaceSearch undefined）
+            await new Promise((resolve, reject) => {
+                if (window.AMap.PlaceSearch) return resolve();
+                window.AMap.plugin('AMap.PlaceSearch', () => resolve());
+                setTimeout(() => reject(new Error('PlaceSearch 插件加载超时')), 15000);
+            });
             const map = new AMap.Map(canvas, { zoom: 11, viewMode: '2D', center: null });
             // 城市定位：PlaceSearch 以城市名搜地标，取首个 POI 坐标为中心
             const searcher = new AMap.PlaceSearch({ city: city, citylimit: true, pageSize: 5 });
