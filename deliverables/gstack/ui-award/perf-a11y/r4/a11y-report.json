@@ -1,0 +1,776 @@
+{
+  "contrast": [
+    {
+      "label": "正文 body",
+      "sel": "body",
+      "ratio": 16.25,
+      "size": 16,
+      "weight": "400",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(250,247,242)",
+      "text": "跳到主要内容\n    \n  ",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "Hero 导语",
+      "sel": ".hero-lede",
+      "ratio": 5.4,
+      "size": 16,
+      "weight": "400",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(250,247,242)",
+      "text": "输入城市名，AI 即刻生成行",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "Hero 主标题",
+      "sel": ".hero-title",
+      "ratio": 16.25,
+      "size": 80,
+      "weight": "900",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(250,247,242)",
+      "text": "为每一座城，写一份值得出发的",
+      "need": 3,
+      "large": true,
+      "pass": true
+    },
+    {
+      "label": "eyebrow 编号(等宽)",
+      "sel": ".eyebrow-no",
+      "ratio": 6.14,
+      "size": 11,
+      "weight": "600",
+      "color": "rgb(158, 63, 44)",
+      "bg": "rgb(250,247,242)",
+      "text": "No.001",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "eyebrow 中文",
+      "sel": ".eyebrow-text",
+      "ratio": 6.14,
+      "size": 12,
+      "weight": "600",
+      "color": "rgb(158, 63, 44)",
+      "bg": "rgb(250,247,242)",
+      "text": "中国城市旅行手记",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "Hero 竖排落款(装饰)",
+      "sel": ".hero-vtext",
+      "missing": true
+    },
+    {
+      "label": "区块标题 h2",
+      "sel": ".section-title",
+      "ratio": 16.25,
+      "size": 44,
+      "weight": "700",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(250,247,242)",
+      "text": "本周值得一去的地方",
+      "need": 3,
+      "large": true,
+      "pass": true
+    },
+    {
+      "label": "区块右侧说明",
+      "sel": ".section-aside .live-text",
+      "ratio": 5.4,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(250,247,242)",
+      "text": "按季节智能排序",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "榜单卡标题",
+      "sel": ".rank-card .rc-title",
+      "ratio": 6.45,
+      "size": 14,
+      "weight": "500",
+      "color": "rgb(158, 63, 44)",
+      "bg": "rgb(254,253,251)",
+      "text": "北京·皇城古韵",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "榜单卡元信息(等宽)",
+      "sel": ".rank-card .rc-meta",
+      "ratio": 5.49,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(110, 103, 94)",
+      "bg": "rgb(254,253,251)",
+      "text": "季节 春秋最佳\n      ",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "榜单卡标签",
+      "sel": ".rank-card .rc-tag",
+      "ratio": 5.67,
+      "size": 12,
+      "weight": "400",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(254,253,251)",
+      "text": "历史文化",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "榜单脚注",
+      "sel": ".ranking-foot",
+      "ratio": 5.22,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(110, 103, 94)",
+      "bg": "rgb(250,247,242)",
+      "text": "数据来自 527 座城市数据",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "热门城市按钮",
+      "sel": ".qc-btn",
+      "ratio": 10.42,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(58, 53, 46)",
+      "bg": "rgb(242,237,228)",
+      "text": "北京",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "导航链接",
+      "sel": ".nav-link",
+      "ratio": 11.37,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(58, 53, 46)",
+      "bg": "rgb(250,247,242)",
+      "text": "热门榜单",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "主按钮文字",
+      "sel": ".btn-primary",
+      "ratio": 16.25,
+      "size": 16,
+      "weight": "600",
+      "color": "rgb(250, 247, 242)",
+      "bg": "rgb(28,26,23)",
+      "text": "生成攻略",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "表单标签",
+      "sel": ".meta-label",
+      "ratio": 5.49,
+      "size": 12,
+      "weight": "400",
+      "color": "rgb(110, 103, 94)",
+      "bg": "rgb(254,253,251)",
+      "text": "出发地",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "热门出发标签",
+      "sel": ".qc-label",
+      "ratio": 5.49,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(110, 103, 94)",
+      "bg": "rgb(254,253,251)",
+      "text": "热门出发：",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    }
+  ],
+  "contrastResult": [
+    {
+      "label": "区块序号(等宽)",
+      "sel": ".gc-idx",
+      "ratio": 6.14,
+      "size": 14,
+      "weight": "500",
+      "color": "rgb(158, 63, 44)",
+      "bg": "rgb(250,247,242)",
+      "text": "00",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "结果页 h2",
+      "sel": ".gc-section > h2",
+      "ratio": 16.25,
+      "size": 22,
+      "weight": "700",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(250,247,242)",
+      "text": "00天气情况",
+      "need": 3,
+      "large": true,
+      "pass": true
+    },
+    {
+      "label": "统计数字",
+      "sel": ".gc-stat strong",
+      "ratio": 5.63,
+      "size": 14,
+      "weight": "600",
+      "color": "rgb(158, 63, 44)",
+      "bg": "rgb(242,237,228)",
+      "text": "成都",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "预算合计",
+      "sel": ".budget-total",
+      "ratio": 6.45,
+      "size": 36,
+      "weight": "700",
+      "color": "rgb(158, 63, 44)",
+      "bg": "rgb(254,253,251)",
+      "text": "1573元（人均 787元）",
+      "need": 3,
+      "large": true,
+      "pass": true
+    },
+    {
+      "label": "气温(等宽)",
+      "sel": ".weather-temp",
+      "ratio": 16.25,
+      "size": 32,
+      "weight": "700",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(250,247,242)",
+      "text": "15-25℃",
+      "need": 3,
+      "large": true,
+      "pass": true
+    },
+    {
+      "label": "海报 eyebrow(等宽)",
+      "sel": ".poster .p-eyebrow",
+      "ratio": 9.68,
+      "size": 11,
+      "weight": "500",
+      "color": "rgb(42, 74, 56)",
+      "bg": "rgb(254,253,251)",
+      "text": "XING JI · TRAV",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "对比日期(等宽)",
+      "sel": ".compare-date",
+      "ratio": 5.3,
+      "size": 12,
+      "weight": "600",
+      "color": "rgb(158, 63, 44)",
+      "bg": "rgb(243,228,223)",
+      "text": "2026-10-16",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "地图说明",
+      "sel": ".gc-map-sub",
+      "ratio": 11.37,
+      "size": 12,
+      "weight": "400",
+      "color": "rgb(58, 53, 46)",
+      "bg": "rgb(250,247,242)",
+      "text": "目的地与 11 个行程景点的",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    },
+    {
+      "label": "结果页主标题",
+      "sel": ".result-title",
+      "ratio": 16.25,
+      "size": 32,
+      "weight": "700",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(250,247,242)",
+      "text": "成都·慢生活之旅",
+      "need": 3,
+      "large": true,
+      "pass": true
+    },
+    {
+      "label": "数据来源时间(等宽)",
+      "sel": ".gc-source-time",
+      "missing": true
+    },
+    {
+      "label": "贴士正文",
+      "sel": ".tip-block li",
+      "ratio": 10.42,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(58, 53, 46)",
+      "bg": "rgb(242,237,228)",
+      "text": "身份证/护照",
+      "need": 4.5,
+      "large": false,
+      "pass": true
+    }
+  ],
+  "semantics": {
+    "headings": [
+      {
+        "level": 1,
+        "text": "成都·慢生活之旅",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "成都·慢生活之旅",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "00天气情况",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "01每日行程",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "02行程地图",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "03必尝美食",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "04费用预算",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "05实用贴士",
+        "hidden": false
+      },
+      {
+        "level": 4,
+        "text": "行前准备",
+        "hidden": false
+      },
+      {
+        "level": 4,
+        "text": "避坑指南",
+        "hidden": false
+      },
+      {
+        "level": 4,
+        "text": "最佳时间",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "06住宿推荐",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "07酒店民宿比价",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "08交通指南",
+        "hidden": false
+      },
+      {
+        "level": 4,
+        "text": "如何到达",
+        "hidden": false
+      },
+      {
+        "level": 4,
+        "text": "市内交通",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "09票务比价 · 火车票/机票",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "10景点预约提醒",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "11打卡机位推荐",
+        "hidden": false
+      },
+      {
+        "level": 2,
+        "text": "12旅拍相册 · AI 修图",
+        "hidden": false
+      }
+    ],
+    "landmarks": {
+      "header": 1,
+      "nav": 2,
+      "main": 1,
+      "footer": 1,
+      "aside": 1,
+      "form": 1,
+      "article": 13,
+      "section": 17
+    },
+    "roles": [
+      {
+        "tag": "svg",
+        "role": "presentation",
+        "cls": "[object SVGAnimatedString]"
+      },
+      {
+        "tag": "DIV",
+        "role": "listbox",
+        "cls": "search-suggestions"
+      },
+      {
+        "tag": "DIV",
+        "role": "group",
+        "cls": "day-pills"
+      },
+      {
+        "tag": "DIV",
+        "role": "img",
+        "cls": "poster style-fresh"
+      },
+      {
+        "tag": "DIV",
+        "role": "dialog",
+        "cls": "modal favorites-modal"
+      }
+    ],
+    "imgs": [],
+    "lang": "zh-CN"
+  },
+  "namesAndLabels": {
+    "emptyButtons": [],
+    "controls": [
+      {
+        "id": "cityInput",
+        "type": "text",
+        "label": true,
+        "ariaLabel": "城市名称",
+        "ariaLabelledby": null,
+        "placeholder": "输入城市名，如 成都、丽江、敦煌…",
+        "required": false
+      },
+      {
+        "id": "originInput",
+        "type": "text",
+        "label": true,
+        "ariaLabel": null,
+        "ariaLabelledby": null,
+        "placeholder": "如 北京",
+        "required": false
+      },
+      {
+        "id": "destinationInput",
+        "type": "text",
+        "label": true,
+        "ariaLabel": null,
+        "ariaLabelledby": null,
+        "placeholder": "如 成都",
+        "required": false
+      },
+      {
+        "id": "travelDateInput",
+        "type": "date",
+        "label": true,
+        "ariaLabel": null,
+        "ariaLabelledby": null,
+        "placeholder": "选择日期",
+        "required": false
+      },
+      {
+        "id": "travelers",
+        "type": "select-one",
+        "label": true,
+        "ariaLabel": null,
+        "ariaLabelledby": null,
+        "placeholder": null,
+        "required": false
+      },
+      {
+        "id": "travelType",
+        "type": "select-one",
+        "label": true,
+        "ariaLabel": null,
+        "ariaLabelledby": null,
+        "placeholder": null,
+        "required": false
+      },
+      {
+        "id": "budgetRange",
+        "type": "select-one",
+        "label": true,
+        "ariaLabel": null,
+        "ariaLabelledby": null,
+        "placeholder": null,
+        "required": false
+      },
+      {
+        "id": "photoInput",
+        "type": "file",
+        "label": false,
+        "ariaLabel": null,
+        "ariaLabelledby": null,
+        "placeholder": null,
+        "required": false
+      },
+      {
+        "id": "favSearchInput",
+        "type": "text",
+        "label": false,
+        "ariaLabel": "搜索收藏的城市或标题",
+        "ariaLabelledby": null,
+        "placeholder": "搜索收藏的城市或标题…",
+        "required": false
+      }
+    ],
+    "focusableInAriaHidden": []
+  },
+  "skipLink": {
+    "text": "跳到主要内容",
+    "href": "#homePage"
+  },
+  "tabStops": [
+    {
+      "tag": "BUTTON",
+      "id": "backBtn",
+      "cls": "back-btn",
+      "text": "← 返回",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "favoriteBtn",
+      "cls": "icon-btn",
+      "text": "收藏",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "copyTextBtn",
+      "cls": "icon-btn",
+      "text": "复制",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "shareLinkBtn",
+      "cls": "icon-btn",
+      "text": "分享链接",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "downloadPosterBtn",
+      "cls": "icon-btn icon-btn-primar",
+      "text": "下载海报",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "weatherBtn",
+      "cls": "icon-btn",
+      "text": "查天气",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "regenerateBtn",
+      "cls": "icon-btn",
+      "text": "再次生成",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "cls": "style-pill active",
+      "text": "清新",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "cls": "style-pill",
+      "text": "复古",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "cls": "style-pill",
+      "text": "极简",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "cls": "style-pill",
+      "text": "水墨",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "cls": "ext-link",
+      "text": "地图",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "cls": "ext-link",
+      "text": "百科",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "cls": "ext-link",
+      "text": "地图",
+      "outline": "2px rgb(158, 63, 44) off3px",
+      "boxShadow": false
+    }
+  ],
+  "modal": {
+    "overlayRole": null,
+    "overlayAriaModal": null,
+    "overlayAriaLabel": null,
+    "overlayAriaLabelledby": null,
+    "dialogRole": "dialog",
+    "closeBtnName": "关闭收藏弹层",
+    "focusInsideModal": true,
+    "activeTag": "BUTTON",
+    "activeId": "closeFavoritesModal",
+    "focusTrap": true,
+    "tabTrapped": true,
+    "escapedAt": -1,
+    "escClose": {
+      "hidden": true,
+      "focusBack": "navFavoritesBtn"
+    }
+  },
+  "reducedMotion": {
+    "revealCount": 0,
+    "allVisible": true,
+    "samples": [
+      {
+        "cls": "wrap hero-inner",
+        "opacity": "1",
+        "dur": "1e-05s",
+        "transDur": "1e-05s"
+      },
+      {
+        "cls": "hero-aside",
+        "opacity": "1",
+        "dur": "1e-05s",
+        "transDur": "1e-05s"
+      },
+      {
+        "cls": "hero-title",
+        "opacity": "1",
+        "dur": "1e-05s",
+        "transDur": "1e-05s"
+      },
+      {
+        "cls": "search-card",
+        "opacity": "1",
+        "dur": "1e-05s",
+        "transDur": "1e-05s"
+      },
+      {
+        "cls": "section-head",
+        "opacity": "1",
+        "dur": "1e-05s",
+        "transDur": "1e-05s"
+      },
+      {
+        "cls": "section-head",
+        "opacity": "1",
+        "dur": "1e-05s",
+        "transDur": "1e-05s"
+      }
+    ]
+  },
+  "zoom": [
+    {
+      "width": 720,
+      "overflowPx": 0,
+      "pass": true,
+      "clipped": []
+    },
+    {
+      "width": 640,
+      "overflowPx": 0,
+      "pass": true,
+      "clipped": []
+    }
+  ]
+}

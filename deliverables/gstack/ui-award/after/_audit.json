@@ -1,0 +1,213 @@
+{
+  "contrast": [
+    {
+      "label": "正文 body",
+      "ratio": 16.25,
+      "need": 4.5,
+      "pass": true,
+      "size": 16,
+      "fg": "rgb(28, 26, 23)",
+      "bg": "rgb(250, 247, 242)"
+    },
+    {
+      "label": "Hero 导语",
+      "ratio": 5.4,
+      "need": 4.5,
+      "pass": true,
+      "size": 16,
+      "fg": "rgb(107, 101, 92)",
+      "bg": "rgb(250, 247, 242)"
+    },
+    {
+      "label": "Hero 主标题",
+      "ratio": 16.25,
+      "need": 3,
+      "pass": true,
+      "size": 80,
+      "fg": "rgb(28, 26, 23)",
+      "bg": "rgb(250, 247, 242)"
+    },
+    {
+      "label": "Hero eyebrow",
+      "ratio": 6.14,
+      "need": 4.5,
+      "pass": true,
+      "size": 12,
+      "fg": "rgb(158, 63, 44)",
+      "bg": "rgb(250, 247, 242)"
+    },
+    {
+      "label": "区块标题",
+      "ratio": 16.25,
+      "need": 3,
+      "pass": true,
+      "size": 44,
+      "fg": "rgb(28, 26, 23)",
+      "bg": "rgb(250, 247, 242)"
+    },
+    {
+      "label": "卡片副标题",
+      "ratio": 6.45,
+      "need": 4.5,
+      "pass": true,
+      "size": 13,
+      "fg": "rgb(158, 63, 44)",
+      "bg": "rgb(254, 253, 251)"
+    },
+    {
+      "label": "卡片标签",
+      "ratio": 5.67,
+      "need": 4.5,
+      "pass": true,
+      "size": 12,
+      "fg": "rgb(107, 101, 92)",
+      "bg": "rgb(254, 253, 251)"
+    },
+    {
+      "label": "卡片元信息",
+      "ratio": 5.49,
+      "need": 4.5,
+      "pass": true,
+      "size": 13,
+      "fg": "rgb(110, 103, 94)",
+      "bg": "rgb(254, 253, 251)"
+    },
+    {
+      "label": "热门城市按钮",
+      "ratio": 10.42,
+      "need": 4.5,
+      "pass": true,
+      "size": 13,
+      "fg": "rgb(58, 53, 46)",
+      "bg": "rgb(242, 237, 228)"
+    },
+    {
+      "label": "导航链接",
+      "ratio": 11.37,
+      "need": 4.5,
+      "pass": true,
+      "size": 14,
+      "fg": "rgb(58, 53, 46)",
+      "bg": "rgba(250, 247, 242, 0.82)"
+    },
+    {
+      "label": "主按钮文字",
+      "ratio": 16.25,
+      "need": 4.5,
+      "pass": true,
+      "size": 16,
+      "fg": "rgb(250, 247, 242)",
+      "bg": "rgb(28, 26, 23)"
+    },
+    {
+      "label": "表单标签",
+      "ratio": 5.49,
+      "need": 4.5,
+      "pass": true,
+      "size": 12,
+      "fg": "rgb(110, 103, 94)",
+      "bg": "rgb(254, 253, 251)"
+    },
+    {
+      "label": "城市输入框",
+      "ratio": 16.25,
+      "need": 4.5,
+      "pass": true,
+      "size": 16,
+      "fg": "rgb(28, 26, 23)",
+      "bg": "rgb(250, 247, 242)"
+    },
+    {
+      "label": "榜单脚注",
+      "ratio": 5.22,
+      "need": 4.5,
+      "pass": true,
+      "size": 13,
+      "fg": "rgb(110, 103, 94)",
+      "bg": "rgb(250, 247, 242)"
+    },
+    {
+      "label": "区块右侧说明",
+      "ratio": 5.4,
+      "need": 4.5,
+      "pass": true,
+      "size": 13,
+      "fg": "rgb(107, 101, 92)",
+      "bg": "rgb(250, 247, 242)"
+    }
+  ],
+  "touch": [
+    {
+      "w": 768,
+      "smallCount": 0,
+      "samples": []
+    },
+    {
+      "w": 414,
+      "smallCount": 0,
+      "samples": []
+    },
+    {
+      "w": 375,
+      "smallCount": 0,
+      "samples": []
+    }
+  ],
+  "overflow": [
+    {
+      "w": 1920,
+      "home": 0,
+      "result": 0,
+      "pass": true
+    },
+    {
+      "w": 1440,
+      "home": 0,
+      "result": 0,
+      "pass": true
+    },
+    {
+      "w": 1024,
+      "home": 0,
+      "result": 0,
+      "pass": true
+    },
+    {
+      "w": 768,
+      "home": 0,
+      "result": 0,
+      "pass": true
+    },
+    {
+      "w": 414,
+      "home": 0,
+      "result": 0,
+      "pass": true
+    },
+    {
+      "w": 375,
+      "home": 0,
+      "result": 0,
+      "pass": true
+    }
+  ],
+  "focus": {
+    "tag": "A",
+    "cls": "brand",
+    "outline": "2px solid rgb(158, 63, 44)",
+    "offset": "3px"
+  },
+  "reducedMotion": {
+    "heroTitle": {
+      "opacity": "1",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)"
+    },
+    "searchCard": {
+      "opacity": "1",
+      "transform": "none"
+    },
+    "revealVisible": true,
+    "revealCount": 0
+  },
+  "notes": []
+}

@@ -79,13 +79,25 @@
 ### 2.1 字族
 
 ```css
---serif: 'Noto Serif SC', 'Songti SC', 'Source Han Serif SC', 'Noto Serif CJK SC', 'SimSun', serif;
---sans:  'Noto Sans SC', system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+/* 基础字族（回退链） */
+--serif: 'Noto Serif SC', 'Source Han Serif SC', 'Noto Serif CJK SC', 'Songti SC', 'STSong', 'SimSun', serif;
+--sans:  'Noto Sans SC', system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+         'Microsoft YaHei', 'Source Han Sans SC', 'WenQuanYi Micro Hei', sans-serif;
+--mono:  ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas,
+         'Noto Sans SC', monospace;
+
+/* 语义别名（组件按「角色」取用，不直接引用具体字族） */
+--font-display: var(--serif);   /* 页面级展示标题：h1 / hero / 区块标题 */
+--font-title:   var(--serif);   /* 组件标题：卡片 / 弹窗 / 正文小标题 */
+--font-sans:    var(--sans);    /* 正文 */
+--font-mono:    var(--mono);    /* 数字 / 日期 / 预算 / 时间 */
 ```
 
-**推导**：原回退链只写了 `'Songti SC'`（macOS 专属），Windows/Linux 会直接落到通用 `serif`，中文渲染劣化明显。补齐 `Source Han Serif SC` / `Noto Serif CJK SC` / `SimSun` 三级回退，保证三大平台都命中真实中文衬线体。
+**推导**：原回退链只写了 `'Songti SC'`（macOS 专属），Windows/Linux 会直接落到通用 `serif`，中文渲染劣化明显。补齐 `Source Han Serif SC` / `Noto Serif CJK SC` / `STSong` / `SimSun` 回退；无衬线侧补 `PingFang SC`（macOS）与 `Source Han Sans SC` / `WenQuanYi Micro Hei`（Linux）。
 
-同时补齐 `-moz-osx-font-smoothing` 与 `text-rendering: optimizeLegibility`（原先只有 macOS 专属的 `-webkit-font-smoothing`）。
+**分级原则（v11.1 R2 引入语义别名）**：层级靠**字重 + 字距 + 颜色**建立，不靠频繁切换字体族；`--font-display` 只给 ≥24px 的页面级展示标题，≤20px 的组件标题统一走 `--font-title`，数字/日期一律 `--font-mono` + `font-variant-numeric: tabular-nums`。
+
+同时补齐 `-moz-osx-font-smoothing` 与 `text-rendering: optimizeLegibility`（原先只有 macOS 专属的 `-webkit-font-smoothing`），并新增 `font-synthesis: none` 禁止浏览器伪造 CJK 粗体/斜体。
 
 ### 2.2 字号阶梯
 
@@ -97,14 +109,15 @@
 |---|---|---|
 | `--fs-3xs` | 11px | 英文副标、角标（原 9/10px，提升到可读下限） |
 | `--fs-2xs` | 12px | meta 标签、徽章 |
-| `--fs-xs` | 13px | 卡片副题、辅助信息 |
-| `--fs-sm` | 14px | 正文小号、按钮 |
+| `--fs-sm` | 14px | 次级正文、控件 |
 | `--fs-base` | 16px | 正文基准 |
 | `--fs-md` | 18px | 区块小标题 |
 | `--fs-lg` | 22px | 卡片标题、弹窗标题 |
 | `--fs-xl` | 28px | 次级标题 |
 | `--fs-2xl` | 32px | 区块数字 |
 | `--fs-3xl` | 36px | 大标题 |
+
+> **v11.1 R2**：原 `--fs-xs: 13px` 与 12/14 仅差 1px，三档近乎 +1 步进、视觉上无法区分且徒增维护面，已**删除**（小字只保留「12px 辅助 / 14px 次级正文」两级）。仍存在的 `var(--fs-xs)` 引用已全部迁移到 `--fs-sm`。
 
 **② 流体尺寸（断点间平滑，4 个）**
 

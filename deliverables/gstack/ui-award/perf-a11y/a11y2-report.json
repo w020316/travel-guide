@@ -1,0 +1,276 @@
+{
+  "homeTabStops": [
+    {
+      "tag": "A",
+      "id": "",
+      "cls": "skip-link",
+      "text": "跳到主要内容",
+      "outline": "2px rgb(158, 63, 44) off2px"
+    },
+    {
+      "tag": "A",
+      "id": "brandHome",
+      "cls": "brand",
+      "text": "行\n                ",
+      "outline": "2px rgb(158, 63, 44) off3px"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "cls": "nav-link",
+      "text": "热门榜单",
+      "outline": "2px rgb(158, 63, 44) off3px"
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "cls": "nav-link",
+      "text": "生成攻略",
+      "outline": "2px rgb(158, 63, 44) off3px"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "navFavoritesBtn",
+      "cls": "nav-link ghost-btn",
+      "text": "我的收藏 0",
+      "outline": "2px rgb(158, 63, 44) off3px"
+    },
+    {
+      "tag": "INPUT",
+      "id": "cityInput",
+      "cls": "",
+      "text": "",
+      "outline": "NONE"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "generateBtn",
+      "cls": "btn-primary",
+      "text": "生成攻略",
+      "outline": "2px rgb(158, 63, 44) off3px"
+    },
+    {
+      "tag": "INPUT",
+      "id": "originInput",
+      "cls": "input-ghost",
+      "text": "",
+      "outline": "NONE"
+    },
+    {
+      "tag": "INPUT",
+      "id": "destinationInput",
+      "cls": "input-ghost",
+      "text": "",
+      "outline": "NONE"
+    },
+    {
+      "tag": "INPUT",
+      "id": "travelDateInput",
+      "cls": "input-ghost",
+      "text": "2026-10-16",
+      "outline": "NONE"
+    },
+    {
+      "tag": "INPUT",
+      "id": "travelDateInput",
+      "cls": "input-ghost",
+      "text": "2026-10-16",
+      "outline": "NONE"
+    },
+    {
+      "tag": "SELECT",
+      "id": "travelers",
+      "cls": "select-ghost",
+      "text": "1 人\n              ",
+      "outline": "NONE"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "cls": "pill",
+      "text": "1",
+      "outline": "2px rgb(158, 63, 44) off3px"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "cls": "pill",
+      "text": "2",
+      "outline": "2px rgb(158, 63, 44) off3px"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "cls": "pill active",
+      "text": "3",
+      "outline": "2px rgb(158, 63, 44) off3px"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "cls": "pill",
+      "text": "4",
+      "outline": "2px rgb(158, 63, 44) off3px"
+    }
+  ],
+  "homeSkipLink": {
+    "text": "跳到主要内容",
+    "href": "#homePage"
+  },
+  "skipLinkFocus": {
+    "tag": "A",
+    "cls": "skip-link",
+    "text": "跳到主要内容",
+    "top": "-80px",
+    "position": "fixed",
+    "outline": "2px rgb(158, 63, 44)",
+    "bg": "rgb(28, 26, 23)",
+    "color": "rgb(250, 247, 242)",
+    "visibleInViewport": false
+  },
+  "skipLinkActivate": {
+    "activeTag": "MAIN",
+    "activeId": "homePage",
+    "focusOnMain": true,
+    "mainTabindex": "-1",
+    "scrollY": 69
+  },
+  "badges": [
+    {
+      "sel": ".badge",
+      "ratio": 6.14,
+      "size": 11,
+      "weight": "700",
+      "color": "rgb(250, 247, 242)",
+      "bg": "rgb(158,63,44)",
+      "text": "0",
+      "need": 4.5,
+      "pass": true
+    },
+    {
+      "sel": ".cc-badge-官方",
+      "missing": true
+    },
+    {
+      "sel": ".cc-badge-比价",
+      "missing": true
+    },
+    {
+      "sel": ".cc-badge-本地",
+      "missing": true
+    },
+    {
+      "sel": ".cc-badge-民宿",
+      "missing": true
+    }
+  ],
+  "listbox": {
+    "hidden": false,
+    "role": "listbox",
+    "optionCount": 0,
+    "ariaLabel": "城市建议",
+    "childCount": 5,
+    "inputActiveDescendant": null,
+    "inputExpanded": null,
+    "inputAutocomplete": null,
+    "options": [
+      {
+        "tag": "DIV",
+        "role": null,
+        "text": "成都\n       "
+      },
+      {
+        "tag": "DIV",
+        "role": null,
+        "text": "成都\n       "
+      },
+      {
+        "tag": "DIV",
+        "role": null,
+        "text": "成都"
+      },
+      {
+        "tag": "DIV",
+        "role": null,
+        "text": "成都·慢生活之旅"
+      },
+      {
+        "tag": "DIV",
+        "role": null,
+        "text": "美食之都 · 休闲慢"
+      },
+      {
+        "tag": "DIV",
+        "role": null,
+        "text": "荣成\n       "
+      },
+      {
+        "tag": "DIV",
+        "role": null,
+        "text": "荣成\n       "
+      },
+      {
+        "tag": "DIV",
+        "role": null,
+        "text": "荣成"
+      }
+    ]
+  },
+  "controlContext": {
+    "photoInput": {
+      "parentCls": "upload-area",
+      "nearestLabel": false,
+      "siblingText": "点击或拖拽上传旅行照片\n                            "
+    },
+    "favSearchInput": {
+      "parentCls": "fav-search",
+      "nearestLabel": false,
+      "siblingText": ""
+    }
+  },
+  "headingAudit": {
+    "sequence": [
+      1,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      4,
+      4,
+      4,
+      2,
+      2,
+      2,
+      4,
+      4,
+      2,
+      2,
+      2,
+      2
+    ],
+    "jumps": [
+      {
+        "from": "h2",
+        "to": "h4",
+        "text": "行前准备"
+      },
+      {
+        "from": "h2",
+        "to": "h4",
+        "text": "如何到达"
+      }
+    ],
+    "duplicateH2": [],
+    "h1Count": 1
+  },
+  "pageSwitching": {
+    "homeHidden": true,
+    "homeAriaHidden": null,
+    "resultHidden": false,
+    "resultAriaHidden": null,
+    "resultRole": null
+  }
+}

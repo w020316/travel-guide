@@ -1,0 +1,89 @@
+{
+  "url": "http://127.0.0.1:3001/index.html",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "runs": {
+    "home_overlay_on": {
+      "frameCount": 241,
+      "durationMs": 3999.8,
+      "avgFps": 60,
+      "p50": 16.7,
+      "p95": 16.9,
+      "p99": 17,
+      "maxFrameMs": 17,
+      "droppedFrames": 0,
+      "droppedPct": 0,
+      "veryDroppedFrames": 0,
+      "longTasks": 0,
+      "longTaskTotalMs": 0,
+      "longTaskMaxMs": 0,
+      "cdp": {
+        "LayoutDuration": 0,
+        "RecalcStyleDuration": 0.038,
+        "ScriptDuration": 0.022,
+        "TaskDuration": 0.189,
+        "LayoutCount": 1,
+        "RecalcStyleCount": 241
+      }
+    },
+    "home_overlay_off": {
+      "frameCount": 241,
+      "durationMs": 3999.8,
+      "avgFps": 60,
+      "p50": 16.7,
+      "p95": 16.8,
+      "p99": 16.9,
+      "maxFrameMs": 16.9,
+      "droppedFrames": 0,
+      "droppedPct": 0,
+      "veryDroppedFrames": 0,
+      "longTasks": 0,
+      "longTaskTotalMs": 0,
+      "longTaskMaxMs": 0,
+      "cdp": {
+        "LayoutDuration": 0,
+        "RecalcStyleDuration": 0.02,
+        "ScriptDuration": 0.02,
+        "TaskDuration": 0.156,
+        "LayoutCount": 0,
+        "RecalcStyleCount": 241
+      }
+    },
+    "result_overlay_on": {
+      "frameCount": 242,
+      "durationMs": 4016.5,
+      "avgFps": 60,
+      "p50": 16.7,
+      "p95": 16.8,
+      "p99": 16.8,
+      "maxFrameMs": 16.9,
+      "droppedFrames": 0,
+      "droppedPct": 0,
+      "veryDroppedFrames": 0,
+      "longTasks": 0,
+      "longTaskTotalMs": 0,
+      "longTaskMaxMs": 0,
+      "cdp": {
+        "LayoutDuration": 0,
+        "RecalcStyleDuration": 0.003,
+        "ScriptDuration": 0.023,
+        "TaskDuration": 0.23,
+        "LayoutCount": 2,
+        "RecalcStyleCount": 19
+      }
+    }
+  },
+  "overlayProbe": {
+    "position": "fixed",
+    "mixBlendMode": "multiply",
+    "zIndex": "3",
+    "willChange": "auto",
+    "opacity": "0.16",
+    "pointerEvents": "none",
+    "backgroundSize": "320px 320px",
+    "hasFilter": "none"
+  },
+  "resultPageHeight": 7847
+}

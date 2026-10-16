@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>行纪 · 中国城市旅行攻略生成器</title>
-    <meta name="description" content="行纪 — 输入任意中国城市，AI 为你生成一份可执行的深度旅行攻略与精美海报。527 座城市数据库，个性化行程定制。">
+    <meta name="description" content="行纪：输入任意中国城市，AI 为你生成一份可执行的深度旅行攻略与精美海报。527 座城市数据库，个性化行程定制。">
     <meta name="theme-color" content="#C8553D">
 
     <!-- 安全修复 P1：CSP meta 兜底（即使部署时漏配服务器头也有浏览器层防护） -->
@@ -36,6 +36,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- v11.1 R2 无障碍：跳过导航（键盘 / 读屏用户可直达主内容，WCAG 2.4.1） -->
+    <a class="skip-link" href="#homePage">跳到主要内容</a>
     <!-- 顶部导航 -->
     <header class="site-header" id="siteHeader">
         <div class="wrap nav-inner">
@@ -43,32 +45,80 @@
                 <span class="brand-mark">行</span>
                 <span class="brand-name">行纪<span class="brand-en">XING&nbsp;JI</span></span>
             </a>
-            <nav class="nav-links">
+            <nav class="nav-links" aria-label="主导航">
                 <a href="#ranking" class="nav-link">热门榜单</a>
                 <a href="#search" class="nav-link">生成攻略</a>
                 <button class="nav-link ghost-btn" id="navFavoritesBtn">我的收藏 <span class="badge" id="navFavCount">0</span></button>
             </nav>
             <!-- P1-5: 移动端汉堡菜单（≤720px 显示），桌面隐藏 -->
-            <button class="nav-menu-btn" id="navMenuBtn" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="navMenu" aria-haspopup="menu">
+            <button class="nav-menu-btn" id="navMenuBtn" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="navMenu">
                 <svg class="nm-icon-open" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 <svg class="nm-icon-close" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             </button>
-            <div class="nav-menu" id="navMenu" role="menu" aria-label="主导航菜单" hidden>
-                <a href="#ranking" class="nav-menu-item" role="menuitem" data-nav-menu>热门榜单</a>
-                <a href="#search" class="nav-menu-item" role="menuitem" data-nav-menu>生成攻略</a>
-                <button class="nav-menu-item" id="navMenuFavBtn" role="menuitem" data-nav-menu>我的收藏 <span class="badge" id="navMenuFavCount">0</span></button>
-            </div>
+            <!-- v11.1 R2 无障碍：原用 role="menu"/"menuitem"，但这是一组普通导航链接，
+                 误用菜单语义会误导屏幕阅读器（要求方向键导航等）。改回 <nav> + 链接列表语义。 -->
+            <nav class="nav-menu" id="navMenu" aria-label="移动端导航" hidden>
+                <a href="#ranking" class="nav-menu-item" data-nav-menu>热门榜单</a>
+                <a href="#search" class="nav-menu-item" data-nav-menu>生成攻略</a>
+                <button class="nav-menu-item" id="navMenuFavBtn" data-nav-menu>我的收藏 <span class="badge" id="navMenuFavCount">0</span></button>
+            </nav>
         </div>
     </header>
 
     <!-- 首页 -->
-    <main id="homePage">
+    <main id="homePage" tabindex="-1">
         <!-- Hero -->
         <section class="hero" id="search">
             <div class="hero-bg" aria-hidden="true"></div>
             <div class="wrap hero-inner">
-                <p class="eyebrow">No.001 — 中国城市旅行手记</p>
-                <h1 class="hero-title">为每一座城，<br>写一份<em>值得出发</em>的攻略。</h1>
+                <!-- v11.1 东方编辑体：原创水墨「立轴」装置 + 落款印章 + 竖向栏线。
+                     插画为纯手绘 SVG path（无外部图片/字体，零额度），配色全部经 CSS 变量注入，
+                     与「旅行手记」呼应：三叠远山 / 云海 / 一条赭红行程线贯穿登顶。 -->
+                <div class="hero-aside" aria-hidden="true">
+                    <span class="hero-rule"></span>
+                    <div class="hero-aside-body">
+                        <figure class="ink-scroll">
+                            <svg class="ink-scroll-svg" viewBox="0 0 240 380" preserveAspectRatio="xMidYMid meet" role="presentation" focusable="false">
+                                <rect class="ink-paper" x="0" y="0" width="240" height="380"/>
+                                <circle class="ink-sun" cx="158" cy="112" r="27"/>
+                                <path class="ink-ridge ink-ridge-far" d="M-6 214 C 18 196 36 172 60 176 C 84 180 96 204 120 198 C 144 192 158 166 182 172 C 204 178 220 196 246 190 L 246 386 L -6 386 Z"/>
+                                <g class="ink-mist">
+                                    <ellipse cx="46" cy="228" rx="70" ry="13"/>
+                                    <ellipse cx="150" cy="236" rx="84" ry="15"/>
+                                    <ellipse cx="216" cy="226" rx="50" ry="11"/>
+                                </g>
+                                <path class="ink-ridge ink-ridge-mid" d="M-6 274 C 22 262 44 240 70 246 C 96 252 110 272 136 268 C 162 264 178 244 204 250 C 222 254 234 264 246 260 L 246 386 L -6 386 Z"/>
+                                <g class="ink-mist ink-mist-2">
+                                    <ellipse cx="66" cy="288" rx="78" ry="12"/>
+                                    <ellipse cx="178" cy="294" rx="66" ry="13"/>
+                                </g>
+                                <path class="ink-ridge ink-ridge-near" d="M-6 322 C 30 312 54 296 82 302 C 110 308 126 326 154 322 C 182 318 202 302 246 312 L 246 386 L -6 386 Z"/>
+                                <g class="ink-water">
+                                    <path d="M30 344 H78"/>
+                                    <path d="M104 352 H160"/>
+                                    <path d="M44 362 H82"/>
+                                    <path d="M132 368 H182"/>
+                                </g>
+                                <path class="ink-route" pathLength="1" d="M50 356 C 68 332 82 320 102 308 C 122 296 138 274 154 248 C 166 228 174 204 184 178"/>
+                                <g class="ink-nodes">
+                                    <circle cx="50" cy="356" r="3"/>
+                                    <circle cx="102" cy="308" r="3"/>
+                                    <circle cx="154" cy="248" r="3"/>
+                                </g>
+                                <!-- v11.2 R4：登顶节点单独成组，便于在行程线绘出后错峰淡入 -->
+                                <g class="ink-summit">
+                                    <circle class="ink-node-end" cx="184" cy="178" r="3.5"/>
+                                    <circle class="ink-node-ring" cx="184" cy="178" r="8.5"/>
+                                </g>
+                                <rect class="ink-frame" x="0.5" y="0.5" width="239" height="379" rx="3"/>
+                            </svg>
+                            <span class="ink-caption">行纪 · 山水</span>
+                        </figure>
+                        <span class="hero-seal"><i>行</i><i>纪</i></span>
+                    </div>
+                </div>
+                <p class="eyebrow"><span class="eyebrow-no">No.001</span><span class="eyebrow-sep" aria-hidden="true"></span><span class="eyebrow-text">中国城市旅行手记</span></p>
+                <h1 class="hero-title"><span class="ht-l">为每一座城，</span><span class="ht-l">写一份<em>值得出发</em>的攻略。</span></h1>
                 <p class="hero-lede">输入城市名，AI 即刻生成行程、美食、住宿、预算与避坑指南，并附一张可下载的旅行海报。</p>
 
                 <form class="search-card" id="searchForm" autocomplete="off" aria-label="旅行攻略生成表单">
@@ -149,7 +199,6 @@
             <div class="wrap">
                 <div class="section-head">
                     <div>
-                        <p class="eyebrow">编辑精选 · 季节热度</p>
                         <h2 class="section-title">本周值得一去的地方</h2>
                     </div>
                     <div class="section-aside">
@@ -166,7 +215,6 @@
             <div class="wrap">
                 <div class="section-head">
                     <div>
-                        <p class="eyebrow">足迹</p>
                         <h2 class="section-title">最近浏览</h2>
                     </div>
                     <div class="section-aside">
@@ -232,16 +280,32 @@
         </div>
     </section>
 
+    <!-- v11.1 R2 无障碍：页脚 landmark（contentinfo）。
+         原页面在榜单脚注处直接结束，缺少收束与 landmark。
+         置于结果页之后，保证首页/结果页两种视图下都在内容末尾。 -->
+    <footer class="site-footer">
+        <div class="wrap footer-inner">
+            <div class="footer-brand">
+                <span class="brand-mark" aria-hidden="true">行</span>
+                <span class="footer-brand-name">行纪<span class="brand-en">XING&nbsp;JI</span></span>
+            </div>
+            <p class="footer-note">行程与建议由 AI 结合 527 座城市数据库生成，出行前请核实景点开放时间与票务信息。</p>
+            <p class="footer-meta">中国城市旅行手记 · 仅供出行参考</p>
+        </div>
+    </footer>
+
     <!-- 收藏弹层 -->
+    <!-- v11.1 R2 无障碍：补 dialog 语义。role/aria-modal 放在内层对话框容器上，
+         遮罩层仅负责点击外部关闭（app.js 依赖 e.target === #favoritesModal）。 -->
     <div class="modal-overlay" id="favoritesModal" hidden>
-        <div class="modal favorites-modal">
+        <div class="modal favorites-modal" role="dialog" aria-modal="true" aria-labelledby="favoritesModalTitle">
             <div class="modal-head">
-                <h3>我的收藏</h3>
-                <button class="modal-close" id="closeFavoritesModal">×</button>
+                <h3 id="favoritesModalTitle">我的收藏</h3>
+                <button class="modal-close" id="closeFavoritesModal" aria-label="关闭收藏弹层">×</button>
             </div>
             <div class="modal-body">
                 <div class="fav-search" id="favSearchWrap" hidden>
-                    <input type="text" id="favSearchInput" class="fav-search-input" placeholder="搜索收藏的城市或标题…" autocomplete="off">
+                    <input type="text" id="favSearchInput" class="fav-search-input" placeholder="搜索收藏的城市或标题…" autocomplete="off" aria-label="搜索收藏的城市或标题">
                 </div>
                 <div class="favorites-list" id="favoritesList"></div>
                 <div class="empty-state" id="emptyFavorites" hidden>

@@ -1,0 +1,558 @@
+{
+  "ON_1": {
+    "meta": {
+      "animName": "inkRouteDraw",
+      "inkStart": 6182,
+      "asideStart": 6182,
+      "delay": 1.15,
+      "dur": 1.6,
+      "dcl": 6200,
+      "loadEnd": 7538,
+      "resources": [
+        {
+          "n": "css2?family=Noto+Sans+SC:wght@300;40",
+          "d": 6043,
+          "s": 34
+        },
+        {
+          "n": "html2canvas.min.js",
+          "d": 1090,
+          "s": 35
+        },
+        {
+          "n": "style.css",
+          "d": 26,
+          "s": 35
+        },
+        {
+          "n": "expandedCities.js",
+          "d": 26,
+          "s": 37
+        },
+        {
+          "n": "app.js",
+          "d": 26,
+          "s": 37
+        }
+      ]
+    },
+    "window_inkDraw": [
+      7332,
+      8932
+    ],
+    "n": 180,
+    "first": 6082,
+    "last": 9732,
+    "avgFps": 49,
+    "p95": 16.8,
+    "max": 466.7,
+    "dropped": 4,
+    "gaps": [
+      {
+        "atMs": 6082,
+        "gapMs": 100
+      },
+      {
+        "atMs": 6182,
+        "gapMs": 467
+      },
+      {
+        "atMs": 6716,
+        "gapMs": 50
+      },
+      {
+        "atMs": 7566,
+        "gapMs": 50
+      }
+    ],
+    "inWindow": 1,
+    "longTasks": [
+      {
+        "t": 6087,
+        "d": 99
+      },
+      {
+        "t": 6200,
+        "d": 58
+      },
+      {
+        "t": 7561,
+        "d": 58
+      }
+    ]
+  },
+  "ON_2": {
+    "meta": {
+      "animName": "inkRouteDraw",
+      "inkStart": 1091,
+      "asideStart": 1091,
+      "delay": 1.15,
+      "dur": 1.6,
+      "dcl": 1186,
+      "loadEnd": 2392,
+      "resources": [
+        {
+          "n": "html2canvas.min.js",
+          "d": 1162,
+          "s": 13
+        },
+        {
+          "n": "css2?family=Noto+Sans+SC:wght@300;40",
+          "d": 993,
+          "s": 12
+        },
+        {
+          "n": "pwa.js",
+          "d": 16,
+          "s": 14
+        },
+        {
+          "n": "app.js",
+          "d": 14,
+          "s": 14
+        },
+        {
+          "n": "expandedCities.js",
+          "d": 13,
+          "s": 14
+        }
+      ]
+    },
+    "window_inkDraw": [
+      2241,
+      3841
+    ],
+    "n": 213,
+    "first": 1007,
+    "last": 4641,
+    "avgFps": 58.3,
+    "p95": 16.8,
+    "max": 83.3,
+    "dropped": 1,
+    "gaps": [
+      {
+        "atMs": 1007,
+        "gapMs": 83
+      }
+    ],
+    "inWindow": 0,
+    "longTasks": [
+      {
+        "t": 1013,
+        "d": 86
+      }
+    ]
+  },
+  "ON_3": {
+    "meta": {
+      "animName": "inkRouteDraw",
+      "inkStart": 1108,
+      "asideStart": 1108,
+      "delay": 1.15,
+      "dur": 1.6,
+      "dcl": 1123,
+      "loadEnd": 2346,
+      "resources": [
+        {
+          "n": "html2canvas.min.js",
+          "d": 1058,
+          "s": 13
+        },
+        {
+          "n": "css2?family=Noto+Sans+SC:wght@300;40",
+          "d": 989,
+          "s": 13
+        },
+        {
+          "n": "pwa.js",
+          "d": 14,
+          "s": 15
+        },
+        {
+          "n": "app.js",
+          "d": 13,
+          "s": 15
+        },
+        {
+          "n": "expandedCities.js",
+          "d": 10,
+          "s": 15
+        }
+      ]
+    },
+    "window_inkDraw": [
+      2258,
+      3858
+    ],
+    "n": 211,
+    "first": 1008,
+    "last": 4658,
+    "avgFps": 57.5,
+    "p95": 16.8,
+    "max": 83.4,
+    "dropped": 2,
+    "gaps": [
+      {
+        "atMs": 1008,
+        "gapMs": 83
+      },
+      {
+        "atMs": 1092,
+        "gapMs": 83
+      }
+    ],
+    "inWindow": 0,
+    "longTasks": [
+      {
+        "t": 1011,
+        "d": 88
+      },
+      {
+        "t": 1123,
+        "d": 54
+      }
+    ]
+  },
+  "ON_4": {
+    "meta": {
+      "animName": "inkRouteDraw",
+      "inkStart": 1101,
+      "asideStart": 1101,
+      "delay": 1.15,
+      "dur": 1.6,
+      "dcl": 1211,
+      "loadEnd": 2302,
+      "resources": [
+        {
+          "n": "html2canvas.min.js",
+          "d": 1187,
+          "s": 14
+        },
+        {
+          "n": "css2?family=Noto+Sans+SC:wght@300;40",
+          "d": 1001,
+          "s": 13
+        },
+        {
+          "n": "pwa.js",
+          "d": 17,
+          "s": 15
+        },
+        {
+          "n": "app.js",
+          "d": 15,
+          "s": 15
+        },
+        {
+          "n": "expandedCities.js",
+          "d": 13,
+          "s": 15
+        }
+      ]
+    },
+    "window_inkDraw": [
+      2251,
+      3851
+    ],
+    "n": 212,
+    "first": 1018,
+    "last": 4651,
+    "avgFps": 58.1,
+    "p95": 16.8,
+    "max": 83.3,
+    "dropped": 2,
+    "gaps": [
+      {
+        "atMs": 1018,
+        "gapMs": 83
+      },
+      {
+        "atMs": 1201,
+        "gapMs": 50
+      }
+    ],
+    "inWindow": 0,
+    "longTasks": [
+      {
+        "t": 1022,
+        "d": 84
+      }
+    ]
+  },
+  "OFF_1": {
+    "meta": {
+      "animName": "none",
+      "inkStart": null,
+      "asideStart": 4014,
+      "delay": 1.15,
+      "dur": 1.6,
+      "dcl": 4036,
+      "loadEnd": 5276,
+      "resources": [
+        {
+          "n": "css2?family=Noto+Sans+SC:wght@300;40",
+          "d": 3885,
+          "s": 16
+        },
+        {
+          "n": "html2canvas.min.js",
+          "d": 787,
+          "s": 16
+        },
+        {
+          "n": "pwa.js",
+          "d": 17,
+          "s": 18
+        },
+        {
+          "n": "app.js",
+          "d": 14,
+          "s": 18
+        },
+        {
+          "n": "expandedCities.js",
+          "d": 12,
+          "s": 18
+        }
+      ]
+    },
+    "window_inkDraw": [
+      5164,
+      6764
+    ],
+    "n": 205,
+    "first": 3897,
+    "last": 7564,
+    "avgFps": 55.6,
+    "p95": 16.8,
+    "max": 116.7,
+    "dropped": 3,
+    "gaps": [
+      {
+        "atMs": 3897,
+        "gapMs": 117
+      },
+      {
+        "atMs": 4014,
+        "gapMs": 100
+      },
+      {
+        "atMs": 4131,
+        "gapMs": 66
+      }
+    ],
+    "inWindow": 0,
+    "longTasks": [
+      {
+        "t": 3910,
+        "d": 108
+      },
+      {
+        "t": 4035,
+        "d": 68
+      }
+    ]
+  },
+  "OFF_2": {
+    "meta": {
+      "animName": "none",
+      "inkStart": null,
+      "asideStart": 1096,
+      "delay": 1.15,
+      "dur": 1.6,
+      "dcl": 1254,
+      "loadEnd": 2411,
+      "resources": [
+        {
+          "n": "html2canvas.min.js",
+          "d": 1223,
+          "s": 19
+        },
+        {
+          "n": "css2?family=Noto+Sans+SC:wght@300;40",
+          "d": 986,
+          "s": 19
+        },
+        {
+          "n": "expandedCities.js",
+          "d": 14,
+          "s": 20
+        },
+        {
+          "n": "app.js",
+          "d": 14,
+          "s": 20
+        },
+        {
+          "n": "pwa.js",
+          "d": 14,
+          "s": 20
+        }
+      ]
+    },
+    "window_inkDraw": [
+      2246,
+      3846
+    ],
+    "n": 212,
+    "first": 1013,
+    "last": 4646,
+    "avgFps": 58.1,
+    "p95": 16.8,
+    "max": 83.2,
+    "dropped": 2,
+    "gaps": [
+      {
+        "atMs": 1013,
+        "gapMs": 83
+      },
+      {
+        "atMs": 1246,
+        "gapMs": 50
+      }
+    ],
+    "inWindow": 0,
+    "longTasks": [
+      {
+        "t": 1013,
+        "d": 86
+      }
+    ]
+  },
+  "OFF_3": {
+    "meta": {
+      "animName": "none",
+      "inkStart": null,
+      "asideStart": 1117,
+      "delay": 1.15,
+      "dur": 1.6,
+      "dcl": 1476,
+      "loadEnd": 3395,
+      "resources": [
+        {
+          "n": "html2canvas.min.js",
+          "d": 1450,
+          "s": 16
+        },
+        {
+          "n": "css2?family=Noto+Sans+SC:wght@300;40",
+          "d": 1006,
+          "s": 16
+        },
+        {
+          "n": "pwa.js",
+          "d": 16,
+          "s": 17
+        },
+        {
+          "n": "app.js",
+          "d": 15,
+          "s": 17
+        },
+        {
+          "n": "expandedCities.js",
+          "d": 14,
+          "s": 17
+        }
+      ]
+    },
+    "window_inkDraw": [
+      2267,
+      3867
+    ],
+    "n": 212,
+    "first": 1017,
+    "last": 4667,
+    "avgFps": 57.8,
+    "p95": 16.8,
+    "max": 83.3,
+    "dropped": 2,
+    "gaps": [
+      {
+        "atMs": 1017,
+        "gapMs": 83
+      },
+      {
+        "atMs": 1467,
+        "gapMs": 50
+      }
+    ],
+    "inWindow": 0,
+    "longTasks": [
+      {
+        "t": 1029,
+        "d": 85
+      }
+    ]
+  },
+  "OFF_4": {
+    "meta": {
+      "animName": "none",
+      "inkStart": null,
+      "asideStart": 2205,
+      "delay": 1.15,
+      "dur": 1.6,
+      "dcl": 5394,
+      "loadEnd": 5655,
+      "resources": [
+        {
+          "n": "html2canvas.min.js",
+          "d": 5366,
+          "s": 14
+        },
+        {
+          "n": "css2?family=Noto+Sans+SC:wght@300;40",
+          "d": 2092,
+          "s": 14
+        },
+        {
+          "n": "pwa.js",
+          "d": 15,
+          "s": 15
+        },
+        {
+          "n": "app.js",
+          "d": 13,
+          "s": 15
+        },
+        {
+          "n": "expandedCities.js",
+          "d": 12,
+          "s": 15
+        }
+      ]
+    },
+    "window_inkDraw": [
+      3355,
+      4955
+    ],
+    "n": 247,
+    "first": 2105,
+    "last": 6305,
+    "avgFps": 58.6,
+    "p95": 16.8,
+    "max": 83.3,
+    "dropped": 2,
+    "gaps": [
+      {
+        "atMs": 2105,
+        "gapMs": 83
+      },
+      {
+        "atMs": 5388,
+        "gapMs": 50
+      }
+    ],
+    "inWindow": 0,
+    "longTasks": [
+      {
+        "t": 2116,
+        "d": 87
+      },
+      {
+        "t": 5393,
+        "d": 50
+      }
+    ]
+  }
+}

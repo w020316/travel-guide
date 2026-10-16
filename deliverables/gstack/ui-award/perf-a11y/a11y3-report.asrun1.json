@@ -1,0 +1,259 @@
+{
+  "inputFocus": {
+    "id": "cityInput",
+    "outline": "none 3px",
+    "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px inset",
+    "borderColor": "rgb(216, 207, 192)",
+    "bg": "rgb(250, 247, 242)"
+  },
+  "contrast": [
+    {
+      "sel": ".cc-badge-官方",
+      "ratio": 5.3,
+      "size": 11,
+      "weight": "500",
+      "color": "rgb(158, 63, 44)",
+      "bg": "rgb(243,228,223)",
+      "text": "官方",
+      "need": 4.5,
+      "pass": true,
+      "label": "徽章·官方"
+    },
+    {
+      "sel": ".cc-badge-比价",
+      "ratio": 4.95,
+      "size": 11,
+      "weight": "500",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(242,237,228)",
+      "text": "比价",
+      "need": 4.5,
+      "pass": true,
+      "label": "徽章·比价"
+    },
+    {
+      "sel": ".cc-badge-本地",
+      "ratio": 4.95,
+      "size": 11,
+      "weight": "500",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(242,237,228)",
+      "text": "本地",
+      "need": 4.5,
+      "pass": true,
+      "label": "徽章·本地"
+    },
+    {
+      "sel": ".cc-badge-民宿",
+      "ratio": 4.95,
+      "size": 11,
+      "weight": "500",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(242,237,228)",
+      "text": "民宿",
+      "need": 4.5,
+      "pass": true,
+      "label": "徽章·民宿"
+    },
+    {
+      "sel": ".cc-badge",
+      "ratio": 5.3,
+      "size": 11,
+      "weight": "500",
+      "color": "rgb(158, 63, 44)",
+      "bg": "rgb(243,228,223)",
+      "text": "综合",
+      "need": 4.5,
+      "pass": true,
+      "label": "徽章(通用)"
+    },
+    {
+      "sel": ".compare-card .cc-platform",
+      "ratio": 17.08,
+      "size": 16,
+      "weight": "700",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(254,253,251)",
+      "text": "携程",
+      "need": 4.5,
+      "pass": true,
+      "label": "比价平台名"
+    },
+    {
+      "sel": ".gc-map-legend-item",
+      "missing": true
+    },
+    {
+      "sel": ".icon-btn",
+      "ratio": 5.4,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(250,247,242)",
+      "text": "收藏",
+      "need": 4.5,
+      "pass": true,
+      "label": "结果工具按钮"
+    },
+    {
+      "sel": ".back-btn",
+      "ratio": 11.37,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(58, 53, 46)",
+      "bg": "rgb(250,247,242)",
+      "text": "← 返回",
+      "need": 4.5,
+      "pass": true,
+      "label": "返回按钮"
+    },
+    {
+      "sel": ".style-pill",
+      "ratio": 16.25,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(250, 247, 242)",
+      "bg": "rgb(28,26,23)",
+      "text": "清新",
+      "need": 4.5,
+      "pass": true,
+      "label": "海报风格 pill"
+    },
+    {
+      "sel": ".ext-link",
+      "ratio": 5.67,
+      "size": 12,
+      "weight": "400",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(254,253,251)",
+      "text": "地图",
+      "need": 4.5,
+      "pass": true,
+      "label": "外链(地图/百科)"
+    },
+    {
+      "sel": ".hc-time",
+      "ratio": 5.49,
+      "size": 11,
+      "weight": "400",
+      "color": "rgb(110, 103, 94)",
+      "bg": "rgb(254,253,251)",
+      "text": "刚刚",
+      "need": 4.5,
+      "pass": true,
+      "label": "历史时间(等宽)"
+    },
+    {
+      "sel": ".empty-state p",
+      "ratio": 5.4,
+      "size": 16,
+      "weight": "400",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(250,247,242)",
+      "text": "还没有收藏任何城市。",
+      "need": 4.5,
+      "pass": true,
+      "label": "空状态文本"
+    },
+    {
+      "sel": ".gc-stat",
+      "ratio": 4.95,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(242,237,228)",
+      "text": "路线 成都",
+      "need": 4.5,
+      "pass": true,
+      "label": "统计标签"
+    },
+    {
+      "sel": ".budget-item .bi-val",
+      "ratio": 16.25,
+      "size": 16,
+      "weight": "600",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(250,247,242)",
+      "text": "276元",
+      "need": 4.5,
+      "pass": true,
+      "label": "预算项数值(等宽)"
+    },
+    {
+      "sel": ".wm-item strong",
+      "ratio": 16.25,
+      "size": 14,
+      "weight": "500",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(250,247,242)",
+      "text": "10月",
+      "need": 4.5,
+      "pass": true,
+      "label": "天气项数值(等宽)"
+    },
+    {
+      "sel": ".ts-time",
+      "ratio": 14.89,
+      "size": 14,
+      "weight": "600",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(242,237,228)",
+      "text": "09:00-12:00",
+      "need": 4.5,
+      "pass": true,
+      "label": "时刻(等宽)"
+    },
+    {
+      "sel": ".route-day-num",
+      "ratio": 6.45,
+      "size": 32,
+      "weight": "900",
+      "color": "rgb(158, 63, 44)",
+      "bg": "rgb(254,253,251)",
+      "text": "01",
+      "need": 3,
+      "pass": true,
+      "label": "行程天序号"
+    },
+    {
+      "sel": ".ac-pros",
+      "ratio": 11.95,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(58, 53, 46)",
+      "bg": "rgb(254,253,251)",
+      "text": "优点：下楼就是美食街，深",
+      "need": 4.5,
+      "pass": true,
+      "label": "住宿优点"
+    },
+    {
+      "sel": ".ac-cons",
+      "ratio": 5.67,
+      "size": 14,
+      "weight": "400",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(254,253,251)",
+      "text": "不足：旺季需提前一个月预",
+      "need": 4.5,
+      "pass": true,
+      "label": "住宿缺点"
+    },
+    {
+      "sel": ".ra-note",
+      "ratio": 5.67,
+      "size": 12,
+      "weight": "400",
+      "color": "rgb(107, 101, 92)",
+      "bg": "rgb(254,253,251)",
+      "text": "必须预约，每日限流",
+      "need": 4.5,
+      "pass": true,
+      "label": "备注"
+    },
+    {
+      "sel": ".fav-item",
+      "missing": true
+    }
+  ]
+}

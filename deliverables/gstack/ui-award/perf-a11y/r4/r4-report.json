@@ -1,0 +1,153 @@
+{
+  "entrance_animation": {
+    "frameCount": 300,
+    "durationMs": 5483.1,
+    "avgFps": 54.5,
+    "p95": 16.8,
+    "maxFrameMs": 433.3,
+    "dropped": 2,
+    "droppedPct": 0.7,
+    "longTasks": 2,
+    "longMax": 90,
+    "longTotal": 145
+  },
+  "inkAnimState": {
+    "route": {
+      "anim": "inkRouteDraw",
+      "dur": "1.6s",
+      "delay": "1.15s",
+      "offset": "0px",
+      "dash": "1px"
+    },
+    "node1": {
+      "anim": "inkFadeIn",
+      "dur": "0.45s",
+      "delay": "1.7s",
+      "offset": "0px",
+      "dash": "none"
+    },
+    "summit": {
+      "anim": "inkFadeIn",
+      "dur": "0.55s",
+      "delay": "2.35s",
+      "offset": "0px",
+      "dash": "none"
+    }
+  },
+  "scroll_1440": {
+    "frameCount": 559,
+    "durationMs": 9799.6,
+    "avgFps": 56.9,
+    "p95": 16.8,
+    "maxFrameMs": 433.3,
+    "dropped": 2,
+    "droppedPct": 0.4,
+    "longTasks": 2,
+    "longMax": 90,
+    "longTotal": 145
+  },
+  "aside768": {
+    "display": "flex",
+    "position": "static",
+    "order": "2",
+    "w": 190,
+    "h": 355,
+    "inViewportWidth": true,
+    "scrollWidth": 190,
+    "viewportW": 768
+  },
+  "scroll_768": {
+    "frames": -1
+  },
+  "scroll_768b": {
+    "frameCount": 181,
+    "durationMs": 3000,
+    "avgFps": 60,
+    "p95": 16.8,
+    "maxFrameMs": 16.9,
+    "dropped": 0,
+    "droppedPct": 0,
+    "longTasks": 0,
+    "longMax": 0,
+    "longTotal": 0
+  },
+  "overflow768": 0,
+  "reducedMotion_1440": {
+    "route": {
+      "anim": "none",
+      "dur": "1e-05s",
+      "opacity": "0.9",
+      "offset": "0px",
+      "dash": "1px"
+    },
+    "node1": {
+      "anim": "none",
+      "dur": "1e-05s",
+      "opacity": "1",
+      "offset": "0px",
+      "dash": "none"
+    },
+    "summit": {
+      "anim": "none",
+      "dur": "1e-05s",
+      "opacity": "1",
+      "offset": "0px",
+      "dash": "none"
+    },
+    "aside": {
+      "display": "flex",
+      "opacity": "1",
+      "w": 186,
+      "h": 334
+    },
+    "routeStrokeVisible": true
+  },
+  "reducedMotion_768": {
+    "route": {
+      "anim": "none",
+      "dur": "1e-05s",
+      "opacity": "0.9",
+      "offset": "0px",
+      "dash": "1px"
+    },
+    "node1": {
+      "anim": "none",
+      "dur": "1e-05s",
+      "opacity": "1",
+      "offset": "0px",
+      "dash": "none"
+    },
+    "summit": {
+      "anim": "none",
+      "dur": "1e-05s",
+      "opacity": "1",
+      "offset": "0px",
+      "dash": "none"
+    },
+    "aside": {
+      "display": "flex",
+      "opacity": "1",
+      "w": 190,
+      "h": 355
+    },
+    "routeStrokeVisible": true
+  },
+  "gcHead": {
+    "h2": {
+      "ratio": 16.25,
+      "size": 42,
+      "weight": "700",
+      "color": "rgb(28, 26, 23)",
+      "bg": "rgb(250,247,242)"
+    },
+    "motif": {
+      "content": "\"\"",
+      "opacity": "0.07",
+      "zIndex": "-1",
+      "background": "rgb(28, 26, 23)",
+      "hasMask": true,
+      "pointerEvents": "none"
+    },
+    "parentZ": "0"
+  }
+}

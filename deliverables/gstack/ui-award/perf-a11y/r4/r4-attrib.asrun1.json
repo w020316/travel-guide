@@ -1,0 +1,80 @@
+{
+  "entrance_anim_ON": {
+    "n": 311,
+    "avgFps": 55.2,
+    "p95": 16.8,
+    "max": 383.4,
+    "dropped": 2,
+    "long": 2,
+    "inkAnimationName": "inkRouteDraw",
+    "gapsOver33ms": [
+      {
+        "atMs": 3373,
+        "gapMs": 83
+      },
+      {
+        "atMs": 3457,
+        "gapMs": 383
+      }
+    ],
+    "longTasks": [
+      {
+        "atMs": 3373,
+        "durMs": 85
+      },
+      {
+        "atMs": 3472,
+        "durMs": 56
+      }
+    ],
+    "inAnimationWindow_1150_2900": 0,
+    "pureScroll": {
+      "n": 259,
+      "avgFps": 60,
+      "p95": 16.8,
+      "max": 17.1,
+      "dropped": 0,
+      "long": 0,
+      "gapsOver33ms": []
+    }
+  },
+  "entrance_anim_OFF": {
+    "n": 369,
+    "avgFps": 58.7,
+    "p95": 16.8,
+    "max": 83.5,
+    "dropped": 3,
+    "long": 1,
+    "inkAnimationName": "none",
+    "gapsOver33ms": [
+      {
+        "atMs": 1169,
+        "gapMs": 84
+      },
+      {
+        "atMs": 1352,
+        "gapMs": 50
+      },
+      {
+        "atMs": 3452,
+        "gapMs": 34
+      }
+    ],
+    "longTasks": [
+      {
+        "atMs": 1177,
+        "durMs": 88
+      }
+    ],
+    "inAnimationWindow_1150_2900": 2,
+    "pureScroll": {
+      "n": 259,
+      "avgFps": 60,
+      "p95": 16.8,
+      "max": 17.3,
+      "dropped": 0,
+      "long": 0,
+      "gapsOver33ms": []
+    }
+  }
+}

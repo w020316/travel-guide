@@ -1,0 +1,104 @@
+{
+  "entrance_anim_ON": {
+    "n": 607,
+    "avgFps": 57,
+    "p95": 16.8,
+    "max": 400.1,
+    "dropped": 4,
+    "long": 3,
+    "inkAnimationName": "inkRouteDraw",
+    "gapsOver33ms": [
+      {
+        "atMs": 1123,
+        "gapMs": 83
+      },
+      {
+        "atMs": 1240,
+        "gapMs": 400
+      },
+      {
+        "atMs": 6240,
+        "gapMs": 67
+      },
+      {
+        "atMs": 7790,
+        "gapMs": 50
+      }
+    ],
+    "longTasks": [
+      {
+        "atMs": 1126,
+        "durMs": 96
+      },
+      {
+        "atMs": 6245,
+        "durMs": 67
+      },
+      {
+        "atMs": 7779,
+        "durMs": 63
+      }
+    ],
+    "inAnimationWindow_1150_2900": 2,
+    "pureScroll": {
+      "n": 259,
+      "avgFps": 60,
+      "p95": 16.8,
+      "max": 17.4,
+      "dropped": 0,
+      "long": 0,
+      "gapsOver33ms": []
+    }
+  },
+  "entrance_anim_OFF": {
+    "n": 687,
+    "avgFps": 59.1,
+    "p95": 16.8,
+    "max": 83.3,
+    "dropped": 4,
+    "long": 3,
+    "inkAnimationName": "none",
+    "gapsOver33ms": [
+      {
+        "atMs": 1123,
+        "gapMs": 83
+      },
+      {
+        "atMs": 1540,
+        "gapMs": 67
+      },
+      {
+        "atMs": 1623,
+        "gapMs": 50
+      },
+      {
+        "atMs": 8756,
+        "gapMs": 50
+      }
+    ],
+    "longTasks": [
+      {
+        "atMs": 1125,
+        "durMs": 92
+      },
+      {
+        "atMs": 1550,
+        "durMs": 52
+      },
+      {
+        "atMs": 8758,
+        "durMs": 52
+      }
+    ],
+    "inAnimationWindow_1150_2900": 3,
+    "pureScroll": {
+      "n": 259,
+      "avgFps": 60,
+      "p95": 16.8,
+      "max": 17.1,
+      "dropped": 0,
+      "long": 0,
+      "gapsOver33ms": []
+    }
+  }
+}

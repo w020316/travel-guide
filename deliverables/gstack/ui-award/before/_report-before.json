@@ -1,0 +1,77 @@
+{
+  "label": "before",
+  "ts": "2026-10-16T11:51:34.758Z",
+  "pages": [
+    {
+      "vp": "desktop-1440",
+      "overflow": {
+        "scrollW": 1440,
+        "innerW": 1440,
+        "over": 0
+      },
+      "resOverflow": {
+        "scrollW": 1440,
+        "innerW": 1440,
+        "over": 0,
+        "gridCols": "360px 856px",
+        "posterW": 360
+      },
+      "resultOk": true
+    },
+    {
+      "vp": "laptop-1024",
+      "overflow": {
+        "scrollW": 1024,
+        "innerW": 1024,
+        "over": 0
+      },
+      "resOverflow": {
+        "scrollW": 1024,
+        "innerW": 1024,
+        "over": 0,
+        "gridCols": "320px 616px",
+        "posterW": 320
+      },
+      "resultOk": true
+    },
+    {
+      "vp": "mobile-375",
+      "overflow": {
+        "scrollW": 375,
+        "innerW": 375,
+        "over": 0
+      },
+      "resOverflow": {
+        "scrollW": 648,
+        "innerW": 375,
+        "over": 273,
+        "gridCols": "320px 280px",
+        "posterW": 316
+      },
+      "resultOk": true
+    }
+  ],
+  "errors": [
+    {
+      "vp": "desktop-1440",
+      "errs": [
+        "console.error: Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "console.error: Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "vp": "laptop-1024",
+      "errs": [
+        "console.error: Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "console.error: Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "vp": "mobile-375",
+      "errs": [
+        "console.error: Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "console.error: Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    }
+  ]
+}

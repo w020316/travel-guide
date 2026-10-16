@@ -1,0 +1,384 @@
+{
+  "base": "http://127.0.0.1:3001/index.html",
+  "ts": "2026-10-16T13:49:45.439Z",
+  "overflow": [
+    {
+      "w": 1920,
+      "home": {
+        "scrollW": 1920,
+        "innerW": 1920,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 1920,
+        "innerW": 1920,
+        "over": 0
+      }
+    },
+    {
+      "w": 1440,
+      "home": {
+        "scrollW": 1440,
+        "innerW": 1440,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 1440,
+        "innerW": 1440,
+        "over": 0
+      }
+    },
+    {
+      "w": 1024,
+      "home": {
+        "scrollW": 1024,
+        "innerW": 1024,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 1024,
+        "innerW": 1024,
+        "over": 0
+      }
+    },
+    {
+      "w": 768,
+      "home": {
+        "scrollW": 768,
+        "innerW": 768,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 768,
+        "innerW": 768,
+        "over": 0
+      }
+    },
+    {
+      "w": 414,
+      "home": {
+        "scrollW": 414,
+        "innerW": 414,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 414,
+        "innerW": 414,
+        "over": 0
+      }
+    },
+    {
+      "w": 375,
+      "home": {
+        "scrollW": 375,
+        "innerW": 375,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 375,
+        "innerW": 375,
+        "over": 0
+      }
+    }
+  ],
+  "touch": [
+    {
+      "mode": "fine",
+      "w": 768,
+      "media": {
+        "coarse": false,
+        "fine": true,
+        "hover": true,
+        "maxTouch": 0
+      },
+      "home": [],
+      "result": []
+    },
+    {
+      "mode": "fine",
+      "w": 414,
+      "media": {
+        "coarse": false,
+        "fine": true,
+        "hover": true,
+        "maxTouch": 0
+      },
+      "home": [],
+      "result": []
+    },
+    {
+      "mode": "fine",
+      "w": 375,
+      "media": {
+        "coarse": false,
+        "fine": true,
+        "hover": true,
+        "maxTouch": 0
+      },
+      "home": [],
+      "result": []
+    },
+    {
+      "mode": "coarse",
+      "w": 768,
+      "media": {
+        "coarse": true,
+        "fine": false,
+        "hover": false,
+        "maxTouch": 1
+      },
+      "home": [],
+      "result": []
+    },
+    {
+      "mode": "coarse",
+      "w": 414,
+      "media": {
+        "coarse": true,
+        "fine": false,
+        "hover": false,
+        "maxTouch": 1
+      },
+      "home": [],
+      "result": []
+    },
+    {
+      "mode": "coarse",
+      "w": 375,
+      "media": {
+        "coarse": true,
+        "fine": false,
+        "hover": false,
+        "maxTouch": 1
+      },
+      "home": [],
+      "result": []
+    }
+  ],
+  "touchMeta": {},
+  "functional": [
+    {
+      "name": "搜索联想下拉出现",
+      "ok": true,
+      "detail": {
+        "hidden": false,
+        "n": 5,
+        "first": "成都"
+      }
+    },
+    {
+      "name": "联想项可选择(回填)",
+      "ok": true,
+      "detail": {
+        "before": "成",
+        "after": "成都"
+      }
+    },
+    {
+      "name": "生成攻略→加载层出现",
+      "ok": true,
+      "detail": {
+        "sawLoading": true
+      }
+    },
+    {
+      "name": "结果页渲染",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "结果页 13 区块完整",
+      "ok": true,
+      "detail": {
+        "sections": 13,
+        "routeDays": 3,
+        "foodCards": 1,
+        "compareCards": 11,
+        "mapBox": true,
+        "poster": true
+      }
+    },
+    {
+      "name": "工具条·收藏",
+      "ok": true,
+      "detail": {
+        "pressed": "true",
+        "favCount": "1",
+        "toastText": "已加入收藏"
+      }
+    },
+    {
+      "name": "工具条·复制文本",
+      "ok": true,
+      "detail": {
+        "toastText": "已加入收藏 | 攻略已复制到剪贴板"
+      }
+    },
+    {
+      "name": "工具条·分享链接",
+      "ok": true,
+      "detail": {
+        "toastText": "已加入收藏 | 攻略已复制到剪贴板 | 攻略链接已复制，可粘贴给好友"
+      }
+    },
+    {
+      "name": "工具条·下载海报",
+      "ok": true,
+      "detail": {
+        "downloads": [
+          "成都-2026-10-16-海报.png"
+        ],
+        "toastText": ""
+      }
+    },
+    {
+      "name": "工具条·查天气",
+      "ok": true,
+      "detail": {
+        "popups": [
+          "https://www.weather.com.cn/other/weather_error_404.html?r=www.weather.com.cn"
+        ],
+        "toastText": "已打开「成都」天气查询"
+      }
+    },
+    {
+      "name": "收藏弹层 开/关",
+      "ok": true,
+      "detail": {
+        "open": true,
+        "closed": true
+      }
+    },
+    {
+      "name": "Toast 提示",
+      "ok": true,
+      "detail": {
+        "toastNodes": 1,
+        "toastText": "已取消收藏"
+      }
+    },
+    {
+      "name": "返回顶部",
+      "ok": true,
+      "detail": {
+        "shown": true,
+        "scrollYAfter": 0
+      }
+    },
+    {
+      "name": "工具条·再次生成",
+      "ok": true,
+      "detail": {
+        "home": true,
+        "city": "成都"
+      }
+    },
+    {
+      "name": "返回首页(backBtn)",
+      "ok": true,
+      "detail": {
+        "home": true,
+        "result": true
+      }
+    },
+    {
+      "name": "榜单渲染",
+      "ok": true,
+      "detail": {
+        "cards": 12
+      }
+    },
+    {
+      "name": "浏览历史",
+      "ok": true,
+      "detail": {
+        "hidden": false,
+        "n": 1
+      }
+    }
+  ],
+  "a11y": [
+    {
+      "name": "footer 渲染",
+      "ok": true,
+      "detail": {
+        "found": true,
+        "h": 139,
+        "txt": "行行纪XINGJI行程与建议由AI结合527座城市数据库生成"
+      }
+    },
+    {
+      "name": "favoritesModal dialog 语义",
+      "ok": true,
+      "detail": {
+        "role": "dialog",
+        "ariaModal": "true",
+        "labelledby": "favoritesModalTitle",
+        "labelExists": true
+      }
+    },
+    {
+      "name": "skip-link 可聚焦并跳转",
+      "ok": true,
+      "detail": {
+        "firstTabStop": {
+          "tag": "A",
+          "cls": "skip-link",
+          "href": "#homePage"
+        },
+        "afterEnter": {
+          "hash": "#homePage",
+          "activeId": "homePage"
+        }
+      }
+    }
+  ],
+  "console": [
+    {
+      "w": 1920,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": 1440,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": 1024,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": 768,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": 414,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": 375,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": "functional-1440",
+      "errs": []
+    }
+  ]
+}

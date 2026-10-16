@@ -1,0 +1,579 @@
+{
+  "ts": "2026-10-16T14:15:28.615Z",
+  "overflow": [
+    {
+      "w": 1920,
+      "home": {
+        "scrollW": 1920,
+        "innerW": 1920,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 1920,
+        "innerW": 1920,
+        "over": 0
+      }
+    },
+    {
+      "w": 1440,
+      "home": {
+        "scrollW": 1440,
+        "innerW": 1440,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 1440,
+        "innerW": 1440,
+        "over": 0
+      }
+    },
+    {
+      "w": 1024,
+      "home": {
+        "scrollW": 1024,
+        "innerW": 1024,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 1024,
+        "innerW": 1024,
+        "over": 0
+      }
+    },
+    {
+      "w": 768,
+      "home": {
+        "scrollW": 768,
+        "innerW": 768,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 768,
+        "innerW": 768,
+        "over": 0
+      }
+    },
+    {
+      "w": 414,
+      "home": {
+        "scrollW": 414,
+        "innerW": 414,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 414,
+        "innerW": 414,
+        "over": 0
+      }
+    },
+    {
+      "w": 375,
+      "home": {
+        "scrollW": 375,
+        "innerW": 375,
+        "over": 0
+      },
+      "result": {
+        "scrollW": 375,
+        "innerW": 375,
+        "over": 0
+      }
+    }
+  ],
+  "ink": [
+    {
+      "w": 1920,
+      "vw": 1920,
+      "asideDisplay": "flex",
+      "asideVisible": true,
+      "asideRect": {
+        "x": 1403,
+        "y": 173,
+        "right": 1616,
+        "bottom": 550,
+        "w": 213,
+        "h": 377
+      },
+      "inkRect": {
+        "x": 1416,
+        "y": 173,
+        "right": 1616,
+        "bottom": 490,
+        "w": 200,
+        "h": 317
+      },
+      "inkDisplay": "block",
+      "cardRect": {
+        "x": 340,
+        "y": 533,
+        "right": 1220,
+        "bottom": 906,
+        "w": 880,
+        "h": 374
+      },
+      "ctaRect": {
+        "x": 1068,
+        "y": 562,
+        "right": 1191,
+        "bottom": 624,
+        "w": 123,
+        "h": 62
+      },
+      "heroInnerDisplay": "block",
+      "asideAfterCard": false,
+      "asideCentered": false
+    },
+    {
+      "w": 1440,
+      "vw": 1440,
+      "asideDisplay": "flex",
+      "asideVisible": true,
+      "asideRect": {
+        "x": 1190,
+        "y": 173,
+        "right": 1376,
+        "bottom": 507,
+        "w": 186,
+        "h": 334
+      },
+      "inkRect": {
+        "x": 1203,
+        "y": 173,
+        "right": 1376,
+        "bottom": 447,
+        "w": 173,
+        "h": 274
+      },
+      "inkDisplay": "block",
+      "cardRect": {
+        "x": 100,
+        "y": 533,
+        "right": 980,
+        "bottom": 906,
+        "w": 880,
+        "h": 374
+      },
+      "ctaRect": {
+        "x": 828,
+        "y": 562,
+        "right": 951,
+        "bottom": 624,
+        "w": 123,
+        "h": 62
+      },
+      "heroInnerDisplay": "block",
+      "asideAfterCard": false,
+      "asideCentered": false
+    },
+    {
+      "w": 1024,
+      "vw": 1024,
+      "asideDisplay": "flex",
+      "asideVisible": true,
+      "asideRect": {
+        "x": 888,
+        "y": 146,
+        "right": 1024,
+        "bottom": 400,
+        "w": 136,
+        "h": 255
+      },
+      "inkRect": {
+        "x": 901,
+        "y": 146,
+        "right": 1024,
+        "bottom": 340,
+        "w": 123,
+        "h": 195
+      },
+      "inkDisplay": "block",
+      "cardRect": {
+        "x": 28,
+        "y": 477,
+        "right": 908,
+        "bottom": 851,
+        "w": 880,
+        "h": 374
+      },
+      "ctaRect": {
+        "x": 756,
+        "y": 506,
+        "right": 879,
+        "bottom": 568,
+        "w": 123,
+        "h": 62
+      },
+      "heroInnerDisplay": "block",
+      "asideAfterCard": false,
+      "asideCentered": false
+    },
+    {
+      "w": 768,
+      "vw": 768,
+      "asideDisplay": "flex",
+      "asideVisible": true,
+      "asideRect": {
+        "x": 289,
+        "y": 1014,
+        "right": 479,
+        "bottom": 1368,
+        "w": 190,
+        "h": 355
+      },
+      "inkRect": {
+        "x": 289,
+        "y": 1014,
+        "right": 479,
+        "bottom": 1314,
+        "w": 190,
+        "h": 301
+      },
+      "inkDisplay": "block",
+      "cardRect": {
+        "x": 28,
+        "y": 413,
+        "right": 740,
+        "bottom": 974,
+        "w": 712,
+        "h": 561
+      },
+      "ctaRect": {
+        "x": 588,
+        "y": 442,
+        "right": 711,
+        "bottom": 504,
+        "w": 123,
+        "h": 62
+      },
+      "heroInnerDisplay": "flex",
+      "asideAfterCard": true,
+      "asideCentered": true
+    },
+    {
+      "w": 414,
+      "vw": 414,
+      "asideDisplay": "flex",
+      "asideVisible": true,
+      "asideRect": {
+        "x": 112,
+        "y": 1422,
+        "right": 302,
+        "bottom": 1777,
+        "w": 190,
+        "h": 355
+      },
+      "inkRect": {
+        "x": 112,
+        "y": 1422,
+        "right": 302,
+        "bottom": 1723,
+        "w": 190,
+        "h": 301
+      },
+      "inkDisplay": "block",
+      "cardRect": {
+        "x": 20,
+        "y": 429,
+        "right": 394,
+        "bottom": 1382,
+        "w": 374,
+        "h": 953
+      },
+      "ctaRect": {
+        "x": 49,
+        "y": 532,
+        "right": 365,
+        "bottom": 588,
+        "w": 316,
+        "h": 56
+      },
+      "heroInnerDisplay": "flex",
+      "asideAfterCard": true,
+      "asideCentered": true
+    },
+    {
+      "w": 375,
+      "vw": 375,
+      "asideDisplay": "flex",
+      "asideVisible": true,
+      "asideRect": {
+        "x": 98,
+        "y": 1452,
+        "right": 278,
+        "bottom": 1791,
+        "w": 180,
+        "h": 339
+      },
+      "inkRect": {
+        "x": 98,
+        "y": 1452,
+        "right": 278,
+        "bottom": 1737,
+        "w": 180,
+        "h": 285
+      },
+      "inkDisplay": "block",
+      "cardRect": {
+        "x": 20,
+        "y": 459,
+        "right": 355,
+        "bottom": 1412,
+        "w": 335,
+        "h": 953
+      },
+      "ctaRect": {
+        "x": 49,
+        "y": 562,
+        "right": 326,
+        "bottom": 618,
+        "w": 277,
+        "h": 56
+      },
+      "heroInnerDisplay": "flex",
+      "asideAfterCard": true,
+      "asideCentered": true
+    }
+  ],
+  "touch": [
+    {
+      "mode": "fine",
+      "w": 768,
+      "homeCount": 0,
+      "resultCount": 0,
+      "offenders": []
+    },
+    {
+      "mode": "fine",
+      "w": 414,
+      "homeCount": 0,
+      "resultCount": 0,
+      "offenders": []
+    },
+    {
+      "mode": "fine",
+      "w": 375,
+      "homeCount": 0,
+      "resultCount": 0,
+      "offenders": []
+    },
+    {
+      "mode": "coarse",
+      "w": 768,
+      "homeCount": 0,
+      "resultCount": 0,
+      "offenders": []
+    },
+    {
+      "mode": "coarse",
+      "w": 414,
+      "homeCount": 0,
+      "resultCount": 0,
+      "offenders": []
+    },
+    {
+      "mode": "coarse",
+      "w": 375,
+      "homeCount": 0,
+      "resultCount": 0,
+      "offenders": []
+    }
+  ],
+  "functional": [
+    {
+      "name": "搜索联想",
+      "ok": true,
+      "detail": {
+        "hidden": false,
+        "n": 5
+      }
+    },
+    {
+      "name": "联想回填",
+      "ok": true,
+      "detail": {
+        "b": "成",
+        "a": "成都"
+      }
+    },
+    {
+      "name": "加载层出现",
+      "ok": true,
+      "detail": {
+        "sawLoading": true
+      }
+    },
+    {
+      "name": "结果页渲染",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "13 区块完整",
+      "ok": true,
+      "detail": {
+        "sections": 13,
+        "routeDays": 3,
+        "foodCards": 1,
+        "compareCards": 11,
+        "mapBox": true,
+        "poster": true
+      }
+    },
+    {
+      "name": "收藏",
+      "ok": true,
+      "detail": {
+        "p": "true",
+        "c": "1",
+        "toast": "已加入收藏"
+      }
+    },
+    {
+      "name": "复制",
+      "ok": true,
+      "detail": {
+        "toast": "已加入收藏 | 攻略已复制到剪贴板"
+      }
+    },
+    {
+      "name": "分享链接",
+      "ok": true,
+      "detail": {
+        "toast": "已加入收藏 | 攻略已复制到剪贴板 | 攻略链接已复制，可粘贴给好友"
+      }
+    },
+    {
+      "name": "下载海报",
+      "ok": true,
+      "detail": {
+        "downloads": [
+          "成都-2026-10-16-海报.png"
+        ]
+      }
+    },
+    {
+      "name": "查天气",
+      "ok": true,
+      "detail": {
+        "popups": [
+          "https://www.weather.com.cn/other/weather_error_404.html?r=www.weather.com.cn"
+        ]
+      }
+    },
+    {
+      "name": "收藏弹层开/关",
+      "ok": true,
+      "detail": {
+        "o": true,
+        "c": true
+      }
+    },
+    {
+      "name": "Toast",
+      "ok": true,
+      "detail": {
+        "n": 1,
+        "toast": "已取消收藏"
+      }
+    },
+    {
+      "name": "返回顶部",
+      "ok": true,
+      "detail": {
+        "sh": true,
+        "y": 0
+      }
+    },
+    {
+      "name": "再次生成",
+      "ok": true,
+      "detail": {
+        "home": true,
+        "city": "成都"
+      }
+    },
+    {
+      "name": "返回首页",
+      "ok": true,
+      "detail": {
+        "home": true,
+        "res": true
+      }
+    },
+    {
+      "name": "榜单",
+      "ok": true,
+      "detail": {
+        "cards": 12
+      }
+    },
+    {
+      "name": "浏览历史",
+      "ok": true,
+      "detail": {
+        "hidden": false,
+        "n": 1
+      }
+    }
+  ],
+  "rm": {
+    "routeAnim": "none",
+    "routeDashoffset": "0px",
+    "routeDasharray": "1px",
+    "nodeOpacity": "1",
+    "summitOpacity": "1",
+    "inkScrollDisplay": "block"
+  },
+  "console": [
+    {
+      "w": 1920,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": 1440,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": 1024,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": 768,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": 414,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    },
+    {
+      "w": 375,
+      "errs": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))",
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ]
+    }
+  ],
+  "np": {
+    "routeAnim": "inkRouteDraw",
+    "routeDashoffset": "0px",
+    "routeDasharray": "1px",
+    "nodeOpacity": "1",
+    "summitOpacity": "1",
+    "inkScrollDisplay": "block"
+  }
+}
