@@ -68,8 +68,10 @@ async function getCityLocationId(cityName) {
   try {
     const response = await axios.get(`${QWEATHER_GEO_URL}/city/lookup`, {
       params: {
-        location: cityName,
-        adm: 'China'
+        location: cityName
+        // v11.1 修复：移除 adm: 'China'。GeoAPI 的 adm 参数期望省级名称
+        // （如「四川省」），传国家级 "China" 会过滤掉全部候选 → 400
+        // "No Such Location"（线上 Render 实测定位）。
       },
       headers: buildAuthHeaders(),
       timeout: QWEATHER_TIMEOUT_MS

@@ -206,9 +206,10 @@ describe('weatherSync', () => {
       expect(nowCfg.params.key).toBeUndefined();
       expect(fcCfg.params.key).toBeUndefined();
 
-      // 业务参数仍应完整
+      // 业务参数仍应完整（v11.1：adm 已移除 —— GeoAPI 的 adm 期望省级名称，
+      // 传 "China" 会过滤掉全部候选 → 400 "No Such Location"）
       expect(geoCfg.params.location).toBe('成都');
-      expect(geoCfg.params.adm).toBe('China');
+      expect(geoCfg.params.adm).toBeUndefined();
       expect(nowCfg.params.location).toBe('CTU_001');
       expect(fcCfg.params.location).toBe('CTU_001');
 
