@@ -169,7 +169,7 @@ describe('weatherSync', () => {
       }
     });
 
-    it('三个请求均应走正确路径（/geo/v2/city/lookup、/v7/weather/now、/v7/weather/3d）并附带 key 认证', async () => {
+    it('三个请求均应走正确路径（/geo/v2/city/lookup、/v7/weather/now、/v7/weather/3d）并附带 X-QW-Api-Key 认证头', async () => {
       process.env.QWEATHER_API_KEY = 'test-key-123';
 
       // geo lookup → weather/now → weather/3d 依次 mock
@@ -196,10 +196,15 @@ describe('weatherSync', () => {
       expect(nowUrl).toContain('/v7/weather/now');
       expect(fcUrl).toContain('/v7/weather/3d');
 
-      // 认证：和风所有接口都需要 key 查询参数（修复前完全未携带 → 401/403）
-      expect(geoCfg.params.key).toBe('test-key-123');
-      expect(nowCfg.params.key).toBe('test-key-123');
-      expect(fcCfg.params.key).toBe('test-key-123');
+      // 认证：和风 2024 改版后 key 查询参数已废弃，认证统一放请求头
+      // X-QW-Api-Key（key 参数方式即使 key 有效也返回 401/403）
+      expect(geoCfg.headers['X-QW-Api-Key']).toBe('test-key-123');
+      expect(nowCfg.headers['X-QW-Api-Key']).toBe('test-key-123');
+      expect(fcCfg.headers['X-QW-Api-Key']).toBe('test-key-123');
+      // 不应再使用废弃的 key 查询参数
+      expect(geoCfg.params.key).toBeUndefined();
+      expect(nowCfg.params.key).toBeUndefined();
+      expect(fcCfg.params.key).toBeUndefined();
 
       // 业务参数仍应完整
       expect(geoCfg.params.location).toBe('成都');
@@ -211,7 +216,7 @@ describe('weatherSync', () => {
       expect(result.source).toBe('qweather');
     });
 
-    it('未配置 QWEATHER_API_KEY 时不应附加 key 参数', async () => {
+    it('未配置 QWEATHER_API_KEY 时不应附加 X-QW-Api-Key 认证头', async () => {
       delete process.env.QWEATHER_API_KEY;
 
       mockGet.mockResolvedValueOnce({ data: { code: '200', location: [{ id: 'CTU_001' }] } });
@@ -226,6 +231,7 @@ describe('weatherSync', () => {
       await weatherSync.getRealWeather('成都');
 
       for (const [, cfg] of mockGet.mock.calls) {
+        expect(cfg.headers['X-QW-Api-Key']).toBeUndefined();
         expect(cfg.params.key).toBeUndefined();
       }
     });

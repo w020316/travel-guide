@@ -20,9 +20,11 @@ const LRUCache = require('../utils/lruCache');
 // 1. geo 路径错误：和风专属端点的城市查询路径是 /geo/v2/city/lookup，
 //    原默认值 `.../v2` 拼出 /v2/city/lookup → 404（日志「获取XX城市ID失败: 404」）。
 //    现默认值改为 `.../geo/v2`。
-// 2. 认证缺失：和风所有 API 都需要认证（key 查询参数或 JWT），
-//    原注释「不需要key参数」有误 —— 未带 key 即使路径正确也会 401/403。
-//    现所有请求统一通过 buildAuthParams() 附加 key（未配置 QWEATHER_API_KEY 时不加）。
+// 2. 认证方式：和风 2024 改版后 key 查询参数已废弃，所有 API 认证统一放
+//    请求头 X-QW-Api-Key（官方文档 dev.qweather.com/docs/configuration/api-config/），
+//    老方式即使 key 有效也返回 401/403 —— 401 与 key 有效性无关。
+//    原注释「不需要key参数」有误；现所有请求统一经 buildAuthHeaders()
+//    附加认证头（未配置 QWEATHER_API_KEY 时不加）。
 // 3. v7 停服风险：控制台公告「天气预报 Web API v7 将停止服务」，
 //    版本段抽为 QWEATHER_API_VERSION 环境变量（默认 v7），将来停服可无代码切换。
 //    QWEATHER_API_URL 语义保持向后兼容：显式配置时按原样使用（含版本段），
@@ -32,19 +34,15 @@ const QWEATHER_FREE_API_URL = (process.env.QWEATHER_API_URL || `https://kp3h2rh7
 const QWEATHER_GEO_URL = (process.env.QWEATHER_GEO_URL || 'https://kp3h2rh7ab.re.qweatherapi.com/geo/v2').replace(/\/+$/, '');
 
 /**
- * 构造和风 API 认证查询参数。
- * 和风所有接口均需认证：key 查询参数（或 JWT，本服务暂用 key 方案）。
+ * 构造和风 API 认证请求头。
+ * 和风 2024 改版后 key 查询参数已废弃：认证统一放请求头 X-QW-Api-Key
+ * （key 查询参数方式即使 key 有效也返回 401/403）。
  * 运行时读取环境变量（而非模块加载时），便于单测动态切换。
- * @param {Record<string, string|number>} [extra] 额外业务参数
- * @returns {Record<string, string|number>} 含业务参数与认证参数（如有）的对象
+ * @returns {Record<string, string>} 含认证头的对象（未配置 key 时为空对象）
  */
-function buildAuthParams(extra = {}) {
-  const params = { ...extra };
+function buildAuthHeaders() {
   const apiKey = process.env.QWEATHER_API_KEY;
-  if (apiKey) {
-    params.key = apiKey;
-  }
-  return params;
+  return apiKey ? { 'X-QW-Api-Key': apiKey } : {};
 }
 
 // v10.10 修复 P1-9：外部请求统一超时。
@@ -69,10 +67,11 @@ async function getCityLocationId(cityName) {
 
   try {
     const response = await axios.get(`${QWEATHER_GEO_URL}/city/lookup`, {
-      params: buildAuthParams({
+      params: {
         location: cityName,
         adm: 'China'
-      }),
+      },
+      headers: buildAuthHeaders(),
       timeout: QWEATHER_TIMEOUT_MS
     });
 
@@ -97,19 +96,21 @@ async function getRealWeather(cityName) {
       return null;
     }
 
-    // 获取实时天气（v10.11：所有和风请求统一附加 key 认证）
+    // 获取实时天气（v10.11：认证统一放请求头 X-QW-Api-Key，key 查询参数已废弃）
     const weatherResponse = await axios.get(`${QWEATHER_FREE_API_URL}/weather/now`, {
-      params: buildAuthParams({
+      params: {
         location: locationId
-      }),
+      },
+      headers: buildAuthHeaders(),
       timeout: QWEATHER_TIMEOUT_MS
     });
 
     // 获取天气预报
     const forecastResponse = await axios.get(`${QWEATHER_FREE_API_URL}/weather/3d`, {
-      params: buildAuthParams({
+      params: {
         location: locationId
-      }),
+      },
+      headers: buildAuthHeaders(),
       timeout: QWEATHER_TIMEOUT_MS
     });
 
