@@ -2144,6 +2144,10 @@
                 return;
             }
             const AMap = await loadAMapScript(cfg.key, cfg.secret || '');
+            // 先显示容器再建图：hidden 状态下容器尺寸为 0，引擎会以 0x0 初始化，
+            // 之后不再自动 resize（实测 WebGL canvas 0x0、底图全灰）。
+            if (loading) loading.hidden = true;
+            canvas.hidden = false;
             // PlaceSearch 插件用官方异步加载器确保注册完成（URL plugin 参数
             // 在部分网络环境下不生效，实测 AMap.PlaceSearch undefined）
             await new Promise((resolve, reject) => {
