@@ -15,7 +15,9 @@ const PORT = process.env.PORT || 3001;
 
 // 安全修复 P0-2：信任反代，使 req.ip 与限流在 Render/Nginx/Cloudflare 后正确工作
 // 单层反代用 1，多层用具体数量或 'loopback, linklocal, uniquelocal'
-app.set('trust proxy', process.env.TRUST_PROXY_HOPS ? Number(process.env.TRUST_PROXY_HOPS) : 1);
+// v11.4（Q-1）：保持原有反代语义（已是 env 可配），仅提取生效值以便启动日志打印。
+const trustProxyHops = process.env.TRUST_PROXY_HOPS ? Number(process.env.TRUST_PROXY_HOPS) : 1;
+app.set('trust proxy', trustProxyHops);
 
 // 安全中间件
 // v11.2：CSP 指令必须与 index.html 的 meta CSP 保持一致 —— 浏览器对
@@ -232,6 +234,7 @@ async function initializeServer() {
       console.log('═══════════════════════════════════════');
       console.log(`  端口: ${PORT}`);
       console.log(`  环境: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`  信任反代跳数(trust proxy): ${trustProxyHops}${process.env.TRUST_PROXY_HOPS ? ' (来自 TRUST_PROXY_HOPS)' : ' (默认值)'}`);
       console.log(`  城市数据: ${storage.getCityCount ? storage.getCityCount() : 0} 个`);
       console.log(`  AI服务: ${process.env.AGNES_API_KEY || process.env.TONGYI_API_KEY || process.env.WENXIN_API_KEY || process.env.OPENAI_API_KEY ? '已配置' : '本地模式'}`);
       console.log(`  认证服务: ${process.env.FIREBASE_API_KEY ? '已配置' : '本地模式'}`);
