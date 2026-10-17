@@ -2354,7 +2354,7 @@
         } catch (err) {
             // v11.5 UX-7：失败态加「重试」按钮 + 收缩空白（is-degraded 令容器高度自适应）
             box.classList.add('is-degraded');
-            showHint('<div class="gn-title">地图加载失败</div><div class="gn-desc">' + escapeHtml(String((err && err.message) || err)) + '。不影响攻略内容。</div><button type="button" class="gc-map-retry">重试</button>');
+            showHint('<div class="gn-title">地图加载失败</div><div class="gn-desc">' + escapeHtml(String((err && err.message) || err)) + '。不影响攻略内容。</div><button type="button" class="gc-map-retry btn-secondary">重试</button>');
             const retryBtn = hint && hint.querySelector('.gc-map-retry');
             if (retryBtn) {
                 retryBtn.addEventListener('click', () => {

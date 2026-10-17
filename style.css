@@ -2087,7 +2087,10 @@ input[type="date"].input-ghost:focus {
 .gc-map-hint a { color: var(--accent, #9e3f2c); }
 .gc-map-info {
     max-width: 240px;
-    padding: var(--space-6) var(--space-10);
+    /* v11.5：原为 var(--space-6) var(--space-10)，这两个令牌在现令牌体系（像素命名 --space-4/8/12…）
+       中不存在，无 fallback 的 var() 在计算值阶段失效 → 气泡实际 padding=0（文字贴边）。
+       改为存在令牌 --space-8 / --space-12。根因为旧序号制令牌改名时漏迁移。 */
+    padding: var(--space-8) var(--space-12);
     font-size: var(--fs-2xs, 12px);
     font-weight: 600;
     line-height: 1.5;
@@ -2688,21 +2691,12 @@ body::after {
 .gc-map-box.is-degraded .gc-map-hint {
     position: static;
 }
+/* 布局微调：靠左、与描述留白；外观/尺寸复用 .btn-secondary（该按钮在 ≤768px 有 --tap-min=48px 保障，
+   此处不硬编码高度/颜色，遵循设计规范）。 */
 .gc-map-hint .gc-map-retry {
     align-self: flex-start;
     margin-top: 4px;
-    padding: 6px 16px;
-    font-size: var(--fs-2xs, 12px);
-    font-weight: 600;
-    color: var(--accent, #9e3f2c);
-    background: transparent;
-    border: 1px solid var(--accent, #9e3f2c);
-    border-radius: 999px;
-    cursor: pointer;
-    transition: background .2s, color .2s;
 }
-.gc-map-hint .gc-map-retry:hover { background: var(--accent, #9e3f2c); color: #fff; }
-.gc-map-hint .gc-map-retry:focus-visible { outline: 2px solid var(--accent, #9e3f2c); outline-offset: 2px; }
 
 /* =========================================================
    v11.5 UX-9 · 加载卡「取消」按钮
