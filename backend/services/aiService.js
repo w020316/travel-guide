@@ -77,12 +77,16 @@ class AIService {
    */
   async generateTravelGuide(city, preferences = {}, _budget = null) {
     const cacheKey = `${city}-${JSON.stringify(preferences)}`;
+    // v11.5 UX-8：refresh 时跳过缓存，强制重新请求 AI（规避 30 分钟内反复拿回坏结果）
+    const skipCache = Boolean(_budget && _budget.skipCache);
 
     // 检查缓存（LRU 内部处理 TTL）
-    const cached = this.cache.get(cacheKey);
-    if (cached !== undefined) {
-      console.log(`✅ 命中缓存: ${city}`);
-      return cached;
+    if (!skipCache) {
+      const cached = this.cache.get(cacheKey);
+      if (cached !== undefined) {
+        console.log(`✅ 命中缓存: ${city}`);
+        return cached;
+      }
     }
 
     // v11.0：整体预算锚点 —— 仅在最外层调用时创建，递归复用同一 deadline
@@ -90,7 +94,7 @@ class AIService {
     // v11.4 修复 Q-3（降级方案）：透传「客户端断开」信号。客户端提前断开时，
     // 尽快终止上游等待并跳过缓存写入（见下方 catch 与 cache.set 守卫）。
     const signal = (_budget && _budget.signal) || null;
-    const budget = { deadline, signal };
+    const budget = { deadline, signal, skipCache };
 
     try {
       const provider = this.providers[this.currentProvider];
@@ -137,9 +141,13 @@ class AIService {
       // 解析AI响应为结构化攻略数据
       const guideData = this.parseAIResponse(response, city, preferences);
 
-      // v11.4 Q-3：客户端已断开则不写缓存（避免「用户已离开却仍缓存付费结果」的竞态）
+      // v11.4 Q-3：客户端已断开则不写缓存；v11.5 UX-8：仅结构合格才写缓存（避免缓存坏结果）
       if (!(signal && signal.aborted)) {
-        this.cache.set(cacheKey, guideData);
+        if (this._isCacheableGuide(guideData)) {
+          this.cache.set(cacheKey, guideData);
+        } else {
+          console.warn(`⚠️ 攻略结构不合格（routes/foods 缺失），跳过缓存写入：${city}`);
+        }
       }
 
       return guideData;
@@ -264,6 +272,27 @@ class AIService {
         `熔断进入冷却 ${Math.round(cooldownMs / 1000)}s，冷却期内跳过该 provider`
       );
     }
+  }
+
+  /**
+   * v11.5 UX-8：攻略结构是否「值得缓存」
+   * 仅当 routes 为非空且至少 1 条非空（字符串或含 routeLine/route/spots）、
+   * foods 为非空且至少 1 个有有效 name 时，才允许写入缓存，避免缓存空壳结果。
+   * @param {Object} g - 解析后的攻略数据
+   * @returns {boolean}
+   */
+  _isCacheableGuide(g) {
+    if (!g || typeof g !== 'object') return false;
+    const routes = Array.isArray(g.routes) ? g.routes : [];
+    const hasRoute = routes.some(r => {
+      if (typeof r === 'string') return r.trim().length > 0;
+      if (!r || typeof r !== 'object') return false;
+      if ((r.routeLine && String(r.routeLine).trim()) || (r.route && String(r.route).trim())) return true;
+      return Array.isArray(r.spots) && r.spots.length > 0;
+    });
+    const foods = Array.isArray(g.foods) ? g.foods : [];
+    const hasFood = foods.some(f => f && typeof f.name === 'string' && f.name.trim().length > 0);
+    return hasRoute && hasFood;
   }
 
   buildPrompt(city, preferences) {

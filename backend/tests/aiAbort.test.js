@@ -102,7 +102,8 @@ describe('Q-3：客户端提前断开', () => {
     agnes.recordSuccess();
     aiService.currentProvider = 'agnes';
     aiService.cache.clear();
-    agnes.chat = vi.fn(() => Promise.resolve('{"routes":[]}'));
+    // v11.5：结构合格才写缓存（V-6 守卫），故这里用「含 routes+foods 的合格数据」作为正常完成样本
+    agnes.chat = vi.fn(() => Promise.resolve('{"routes":[{"routeLine":"A→B"}],"foods":[{"name":"小吃"}]}'));
 
     const setSpy = vi.spyOn(aiService.cache, 'set');
 

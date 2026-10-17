@@ -42,6 +42,8 @@
         currentGuide: null,
         currentCity: null,
         posterStyle: 'fresh',
+        // v11.5 UX-8：一次性「跳过缓存」标记——「再次生成」置 true，下次生成请求带 refresh:true
+        skipCacheOnce: false,
         favorites: loadFavorites(),
         history: loadHistory()
     };
@@ -134,11 +136,14 @@
             canceledByUser = false;
             try {
                 activeGenerateCtrl = new AbortController();
+                // v11.5 UX-8：一次性 refresh —— 「再次生成」后首次请求跳过缓存，强制重新请求 AI
+                const refresh = !!state.skipCacheOnce;
+                if (refresh) state.skipCacheOnce = false;
                 const timer = setTimeout(() => { timedOut = true; activeGenerateCtrl.abort(); }, AI_REQUEST_TIMEOUT_MS);
                 const res = await fetch(`${this.base}/api/ai/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ city, preferences: prefs }),
+                    body: JSON.stringify({ city, preferences: prefs, refresh }),
                     signal: activeGenerateCtrl.signal
                 });
                 clearTimeout(timer);
@@ -1107,6 +1112,8 @@
             dom.regenerateBtn.onclick = () => {
                 const city = state.currentGuide?.city || state.currentCity;
                 if (!city) { toast('请先生成攻略'); return; }
+                // v11.5 UX-8：置一次性跳过缓存标记，并提示用户下次生成会重新请求 AI
+                state.skipCacheOnce = true;
                 dom.cityInput.value = city;
                 showHome();
                 // 滚动到搜索区
@@ -1114,7 +1121,7 @@
                     dom.cityInput.focus();
                     dom.cityInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 100);
-                toast(`已填入「${city}」，调整参数后重新生成`);
+                toast(`已填入「${city}」，已跳过缓存，下次生成将重新请求 AI`);
             };
         }
 
@@ -1337,10 +1344,12 @@
         }
     }
 
-    // 检测攻略数据质量：routes/foods 至少有一项有效内容
+    // 检测攻略数据质量（v11.5 V-6：routes 与 foods 双必需）
+    // 原为「routes 或 foods 任一有效」，导致只有一半内容时也判合格、页面出现空块；
+    // 改为 routes>0 且 foods>0 双必需，保留原有「→ 分隔」与占位词排除。不通过 → 回退本地 + toast。
     function isGuideDataValid(g, city) {
         if (!g) return false;
-        // routes 必须至少有 1 条有效路线（含 → 分隔的景点）
+        // routes 必须至少有 1 条有效路线（含 → 分隔的景点，且非占位词）
         const validRoutes = (g.routes || []).filter(r => {
             const line = (typeof r === 'string') ? r : (r.routeLine || r.route || '');
             return line && line.includes('→') && !/^(精选行程|主要景点|行程安排|今日行程)$/i.test(line.trim());
@@ -1348,8 +1357,8 @@
         // foods 必须至少有 1 个有效美食（name 是正常字符串）
         const validFoods = (g.foods || []).filter(f => f && f.name && typeof f.name === 'string'
             && !f.name.startsWith('{') && !f.name.startsWith('[') && f.name.length >= 2);
-        // 至少 routes 或 foods 有一项有效
-        return validRoutes.length > 0 || validFoods.length > 0;
+        // v11.5 V-6：routes 与 foods 均需有效（原为「或」，会放过半空数据）
+        return validRoutes.length > 0 && validFoods.length > 0;
     }
 
     // ---------- 渲染结果 ----------

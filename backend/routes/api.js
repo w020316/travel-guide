@@ -104,7 +104,11 @@ router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
     }
 
     // 调用AI服务生成攻略
-    const guideData = await aiService.generateTravelGuide(cityName, preferences || {}, { signal: upstreamAbort.signal });
+    // v11.5 UX-8：前端「再次生成」置 refresh=true → skipCache，跳过 30min 缓存强制重新请求 AI
+    const guideData = await aiService.generateTravelGuide(cityName, preferences || {}, {
+      signal: upstreamAbort.signal,
+      skipCache: req.body.refresh === true
+    });
 
     // 合并实时数据
     // v10.10 修复 P0-5：getCityWeather 自 weatherSync.js 起为 async 函数，
