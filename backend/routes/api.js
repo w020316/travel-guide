@@ -37,6 +37,14 @@ router.get('/config/map', (req, res) => {
 
 // 生成旅游攻略（使用AI）
 router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
+  // v11.4 修复 Q-3（降级方案）：监听客户端连接断开。客户端提前断开（如前端超时 abort）时，
+  // 通过 AbortController 让 aiService 尽快终止上游等待并跳过缓存写入，避免「付费额度照常消耗、
+  // 结果因连接已断被丢弃」的浪费。注：未把 signal 透传到底层 axios（跨 aiService/多 provider
+  // 改造成本高），故为「尽早终止 + 跳过缓存」的降级实现，彻底省额度需后续全链路 signal 透传。
+  const upstreamAbort = new AbortController();
+  res.on('close', () => {
+    if (!res.writableEnded) upstreamAbort.abort();
+  });
   try {
     const { city, preferences } = req.body;
 
@@ -96,7 +104,7 @@ router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
     }
 
     // 调用AI服务生成攻略
-    const guideData = await aiService.generateTravelGuide(cityName, preferences || {});
+    const guideData = await aiService.generateTravelGuide(cityName, preferences || {}, { signal: upstreamAbort.signal });
 
     // 合并实时数据
     // v10.10 修复 P0-5：getCityWeather 自 weatherSync.js 起为 async 函数，
@@ -108,6 +116,11 @@ router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
 
     guideData.seasonalTags = getSeasonalTags(cityName);
     guideData.lastUpdated = new Date().toISOString();
+
+    // v11.4 Q-3：客户端已断开则无需回写响应（跳过写已关闭的 socket）
+    if (upstreamAbort.signal.aborted) {
+      return;
+    }
 
     res.json({
       success: true,

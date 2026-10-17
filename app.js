@@ -122,9 +122,14 @@
 
         async generateGuide(city, prefs) {
             if (this.mode === 'local') return buildLocalGuide(city, prefs);
+            // v11.4 修复 Q-3：前端 abort 预算须 ≥ 后端 AI_TOTAL_BUDGET_MS(60s) + 缓冲，
+            // 否则前端先 abort 而后端仍在生成（付费额度照常消耗、结果因连接已断被丢弃）。
+            // 65s = 后端 AI_TOTAL_BUDGET_MS 60s + 5s 缓冲。
+            const AI_REQUEST_TIMEOUT_MS = 65000;
+            let timedOut = false;
             try {
                 const ctrl = new AbortController();
-                const timer = setTimeout(() => ctrl.abort(), 45000);
+                const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, AI_REQUEST_TIMEOUT_MS);
                 const res = await fetch(`${this.base}/api/ai/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -137,7 +142,16 @@
                 if (json.success && json.data) return json.data;
                 throw new Error(json.error || '生成失败');
             } catch (e) {
-                console.warn('后端生成失败，回退本地数据:', e.message);
+                // v11.4 修复 Q-3③：区分「超时/取消 abort」与「生成失败」，提示更准确
+                const aborted = e && e.name === 'AbortError';
+                if (aborted) {
+                    console.warn('后端生成超时/取消，回退本地数据');
+                    if (window.__toast) {
+                        window.__toast(timedOut ? '生成超时，已切换本地数据' : '请求已取消，已切换本地数据', { duration: 4000 });
+                    }
+                } else {
+                    console.warn('后端生成失败，回退本地数据:', e.message);
+                }
                 return buildLocalGuide(city, prefs);
             }
         },

@@ -87,7 +87,10 @@ class AIService {
 
     // v11.0：整体预算锚点 —— 仅在最外层调用时创建，递归复用同一 deadline
     const deadline = (_budget && _budget.deadline) || (Date.now() + this.totalBudgetMs);
-    const budget = { deadline };
+    // v11.4 修复 Q-3（降级方案）：透传「客户端断开」信号。客户端提前断开时，
+    // 尽快终止上游等待并跳过缓存写入（见下方 catch 与 cache.set 守卫）。
+    const signal = (_budget && _budget.signal) || null;
+    const budget = { deadline, signal };
 
     try {
       const provider = this.providers[this.currentProvider];
@@ -123,8 +126,8 @@ class AIService {
       // v11.0：单次请求超时 = min(单 provider 上限 8s, 剩余预算)，禁止超长超时叠加
       const attemptTimeout = Math.min(provider.getTimeout(), remaining);
 
-      // v10.8：统一调用 provider.chat()；v11.0：外包预算竞速裁剪
-      const response = await this._chatWithBudget(provider, prompt, attemptTimeout);
+      // v10.8：统一调用 provider.chat()；v11.0：外包预算竞速裁剪；v11.4：透传断开信号
+      const response = await this._chatWithBudget(provider, prompt, attemptTimeout, signal);
 
       // v11.0：成功即重置该 provider 的熔断计数
       provider.recordSuccess();
@@ -134,12 +137,20 @@ class AIService {
       // 解析AI响应为结构化攻略数据
       const guideData = this.parseAIResponse(response, city, preferences);
 
-      // 缓存结果（LRU 自动管理上限与过期）
-      this.cache.set(cacheKey, guideData);
+      // v11.4 Q-3：客户端已断开则不写缓存（避免「用户已离开却仍缓存付费结果」的竞态）
+      if (!(signal && signal.aborted)) {
+        this.cache.set(cacheKey, guideData);
+      }
 
       return guideData;
 
     } catch (error) {
+      // v11.4 Q-3：客户端已断开 → 不再尝试其它 provider、不记录熔断、不写缓存，直接回退本地
+      if (signal && signal.aborted) {
+        console.warn('⏹️ 客户端已断开，取消上游等待并回退本地（不写缓存）');
+        return this.generateLocalGuide(city, preferences);
+      }
+
       // v11.0：记录失败（可能触发熔断冷却）
       this._recordProviderFailure(this.providers[this.currentProvider], error);
       console.error('❌ AI生成失败:', error.message);
@@ -186,26 +197,52 @@ class AIService {
    * @param {Object} provider - BaseAIProvider 实例
    * @param {string} prompt - 提示词
    * @param {number} timeoutMs - 本次尝试的超时上限（毫秒）
+   * @param {AbortSignal|null} [signal] - v11.4 Q-3：客户端断开信号，触发即提前终止等待
    * @returns {Promise<string>} AI 返回文本
    */
-  _chatWithBudget(provider, prompt, timeoutMs) {
+  _chatWithBudget(provider, prompt, timeoutMs, signal = null) {
     return new Promise((resolve, reject) => {
+      let settled = false;
+      const cleanup = () => {
+        clearTimeout(timer);
+        if (signal && typeof signal.removeEventListener === 'function') {
+          signal.removeEventListener('abort', onAbort);
+        }
+      };
+      const finish = (fn, arg) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        fn(arg);
+      };
+
       const timer = setTimeout(() => {
-        reject(new Error(`${provider.name} 请求超出时间上限 ${timeoutMs}ms`));
+        finish(reject, new Error(`${provider.name} 请求超出时间上限 ${timeoutMs}ms`));
       }, timeoutMs);
       if (typeof timer.unref === 'function') {
         timer.unref(); // 不阻止进程退出
       }
 
-      provider.chat(prompt, undefined, timeoutMs).then(
-        result => {
-          clearTimeout(timer);
-          resolve(result);
-        },
-        err => {
-          clearTimeout(timer);
-          reject(err);
+      // v11.4 Q-3：客户端断开 → 立即终止等待（降级方案：无法真正 abort 底层 axios，
+      // 但可让调用方尽早返回、跳过后续 provider 尝试与缓存写入）。
+      const onAbort = () => {
+        const err = new Error('客户端已断开，取消上游等待');
+        err.name = 'AbortError';
+        finish(reject, err);
+      };
+      if (signal) {
+        if (signal.aborted) {
+          onAbort();
+          return;
         }
+        if (typeof signal.addEventListener === 'function') {
+          signal.addEventListener('abort', onAbort, { once: true });
+        }
+      }
+
+      provider.chat(prompt, undefined, timeoutMs, signal).then(
+        result => finish(resolve, result),
+        err => finish(reject, err)
       );
     });
   }
