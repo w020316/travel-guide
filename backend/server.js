@@ -23,6 +23,9 @@ app.set('trust proxy', trustProxyHops);
 // v11.2：CSP 指令必须与 index.html 的 meta CSP 保持一致 —— 浏览器对
 // 响应头 CSP 与 meta CSP 取交集执行，只改一边会导致另一边被静默拦截
 // （实测：meta 放行 map.qq.com 后 SDK 仍被 helmet 头的 CSP 拦截，报 csp）。
+// v11.6：isProd 提前定义，供 helmet 的 hsts 分支判断（原定义在 CORS 段，位置靠后）
+const isProd = process.env.NODE_ENV === 'production';
+
 app.use(helmet({
   // 修复 P1-2：启用 CSP（允许同源 + 已知外部资源）
   contentSecurityPolicy: {
@@ -32,9 +35,9 @@ app.use(helmet({
       // 'unsafe-eval'（引擎内部 eval）、worker-src blob:（矢量渲染 Worker）
       // v11.3 修复线上底图不渲染：jsapi-service.amap.com 是高德 JS API 2.0 的 WebGL 渲染器模块宿主，
       // 被 script-src 拦截会导致底图全灰、画布 0×0。script-src 属最高风险资源类型，故用精确域名而非通配。
-      scriptSrc: ["'self'", 'https://html2canvas.hertzen.com', 'https://webapi.amap.com', 'https://restapi.amap.com', 'https://jsapi-service.amap.com', "'unsafe-eval'"],
-      styleSrc: ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      scriptSrc: ["'self'", 'https://webapi.amap.com', 'https://restapi.amap.com', 'https://jsapi-service.amap.com', "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'"],
       // v11.3：logo@2x.png 在 webapi.amap.com、POI 图标在 o4.amap.com 等子域，img-src 放行高德图片子域。
       imgSrc: ["'self'", 'data:', 'blob:', 'https://*.is.autonavi.com', 'https://autnapi.amap.com', 'https://vdata.amap.com', 'https://webapi.amap.com', 'https://*.amap.com'],
       connectSrc: ["'self'", 'https://restapi.amap.com', 'https://*.amap.com'],
@@ -44,6 +47,11 @@ app.use(helmet({
       formAction: ["'self'"]
     }
   },
+  // v11.6：HSTS 仅在 HTTPS（生产）下发送。
+  // 原配置在 HTTP 开发环境也下发 Strict-Transport-Security，WebKit 会据此把后续
+  // http 请求强制升级为 https，导致本地开发时全部静态资源 SSL connect error（实测）。
+  // 规范上 HTTP 响应的 HSTS 应被忽略，但依赖浏览器行为不可靠，按环境分流更稳。
+  hsts: isProd ? { maxAge: 15552000, includeSubDomains: true } : false,
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: { policy: 'same-origin' },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
@@ -59,7 +67,7 @@ if (rawOrigins.includes('*')) {
   console.error('❌ CORS_ORIGIN 不允许使用通配符 "*"（精确匹配下无效且危险），已忽略该项，请配置明确的域名白名单');
 }
 const allowedOrigins = rawOrigins.filter(o => o !== '*');
-const isProd = process.env.NODE_ENV === 'production';
+// isProd 已在文件上方定义（供 helmet hsts 判断使用）
 if (isProd && allowedOrigins.length === 0) {
   console.error('❌ 生产环境必须显式配置 CORS_ORIGIN 白名单，当前未配置 → 拒绝所有跨源请求');
 }
