@@ -19,6 +19,18 @@ const expandedCitiesLoader = require('../data/expandedCitiesLoader');
 // 应用限流中间件（修复 P1-1：收紧为 100 次/分钟）
 router.use(rateLimiter(100, 60000));
 
+// v11.6 修复 SEC-1（P1）：POST /ai/generate 此前仅受全局限流（100 次/分钟/IP）约束，
+// 匿名用户可反复触发单次耗时 15-30s、且消耗付费 AI 额度的生成请求。
+// 处置：匿名用户单独收紧到 3 次/分钟/IP；已登录用户仍走全局限流（保留「匿名可用」的产品特性，
+// 不改鉴权策略）。bucket 隔离计数，避免城市列表/天气等普通请求消耗本端点额度。
+// 注：登录态可被低成本绕过（注册即用），后续如需按 uid 细化，应改为「按 uid 计数」而非 IP。
+const anonymousAiGenerateLimiter = rateLimiter(3, 60000, { bucket: 'ai-generate-anon' });
+function aiGenerateRateLimit(req, res, next) {
+  // 本中间件必须挂在 optionalAuth 之后：req.user 有值 → 已登录，交给全局限流
+  if (req.user) return next();
+  return anonymousAiGenerateLimiter(req, res, next);
+}
+
 // ==================== 前端配置接口 ====================
 
 // v11.2: 地图功能配置 — 返回高德地图前端 Key 与安全密钥（JS API 2.0 必须成对使用）。
@@ -45,7 +57,7 @@ router.get('/config/map', (req, res) => {
 // ==================== AI攻略生成接口 ====================
 
 // 生成旅游攻略（使用AI）
-router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
+router.post('/ai/generate', authService.optionalAuth, aiGenerateRateLimit, async (req, res) => {
   // v11.4 修复 Q-3（降级方案）：监听客户端连接断开。客户端提前断开（如前端超时 abort）时，
   // 通过 AbortController 让 aiService 尽快终止上游等待并跳过缓存写入，避免「付费额度照常消耗、
   // 结果因连接已断被丢弃」的浪费。注：未把 signal 透传到底层 axios（跨 aiService/多 provider

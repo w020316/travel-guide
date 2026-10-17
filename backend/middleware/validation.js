@@ -288,29 +288,44 @@ function validatePagination(req, res, next) {
 // 限流中间件（修复 P1-1：收紧默认阈值 + Map 上限保护，避免内存无限增长）
 const RATE_LIMIT_MAX_ENTRIES = 10000;
 const requestCounts = new Map();
+// v11.6（SEC-1）：按 bucket 隔离的计数存储。若不隔离，全局 100 次/分钟限流与单端点
+// 严格限流会共用同一份 IP 计数 —— 用户浏览城市列表/天气等普通请求也会消耗 AI 生成额度，
+// 造成正常功能被误伤。传入 options.bucket 即使用独立计数桶。
+const bucketCounts = new Map();
 
-function rateLimiter(maxRequests = 60, windowMs = 60000) {
+function getRateLimitStore(bucket) {
+  if (!bucket) return requestCounts;
+  let store = bucketCounts.get(bucket);
+  if (!store) {
+    store = new Map();
+    bucketCounts.set(bucket, store);
+  }
+  return store;
+}
+
+function rateLimiter(maxRequests = 60, windowMs = 60000, options = {}) {
+  const store = getRateLimitStore(options.bucket);
   return (req, res, next) => {
     const ip = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
     const now = Date.now();
     
     // Map 上限保护：超过阈值时清空最旧的一半记录，防止 IPv6 攻击下内存爆炸
-    if (requestCounts.size > RATE_LIMIT_MAX_ENTRIES) {
-      const entries = [...requestCounts.entries()].sort((a, b) => a[1].startTime - b[1].startTime);
+    if (store.size > RATE_LIMIT_MAX_ENTRIES) {
+      const entries = [...store.entries()].sort((a, b) => a[1].startTime - b[1].startTime);
       for (let i = 0; i < entries.length / 2; i++) {
-        requestCounts.delete(entries[i][0]);
+        store.delete(entries[i][0]);
       }
     }
     
-    if (!requestCounts.has(ip)) {
-      requestCounts.set(ip, { count: 1, startTime: now });
+    if (!store.has(ip)) {
+      store.set(ip, { count: 1, startTime: now });
       return next();
     }
     
-    const record = requestCounts.get(ip);
+    const record = store.get(ip);
     
     if (now - record.startTime > windowMs) {
-      requestCounts.set(ip, { count: 1, startTime: now });
+      store.set(ip, { count: 1, startTime: now });
       return next();
     }
     
@@ -324,12 +339,15 @@ function rateLimiter(maxRequests = 60, windowMs = 60000) {
   };
 }
 
-// 定期清理限流记录
+// 定期清理限流记录（含各 bucket）
 const cleanupTimer = setInterval(() => {
   const now = Date.now();
-  for (const [ip, record] of requestCounts.entries()) {
-    if (now - record.startTime > 60000) {
-      requestCounts.delete(ip);
+  const stores = [requestCounts, ...bucketCounts.values()];
+  for (const store of stores) {
+    for (const [ip, record] of store.entries()) {
+      if (now - record.startTime > 60000) {
+        store.delete(ip);
+      }
     }
   }
 }, 60000);
