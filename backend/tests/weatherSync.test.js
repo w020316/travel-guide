@@ -9,7 +9,13 @@
  * 注意：getRealWeather 调用真实和风天气 API，此处通过 __setAxiosForTest 注入 mock
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import weatherSync from '../services/weatherSync';
+import { createRequire } from 'node:module';
+
+// 用 CJS require 加载，保证与 routes/api.js 内部 require 的是同一模块实例。
+// ESM import 会生成第二个实例，覆盖率按不同模块 ID 统计并互相覆盖，
+// 导致本文件已覆盖的分支在 lcov 中仍显示未覆盖。
+const requireCjs = createRequire(import.meta.url);
+const weatherSync = requireCjs('../services/weatherSync');
 
 describe('weatherSync', () => {
   let mockGet;
