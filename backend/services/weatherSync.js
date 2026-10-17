@@ -74,7 +74,9 @@ async function getCityLocationId(cityName) {
         // "No Such Location"（线上 Render 实测定位）。
       },
       headers: buildAuthHeaders(),
-      timeout: QWEATHER_TIMEOUT_MS
+      timeout: QWEATHER_TIMEOUT_MS,
+      // v11.4 修复 Q-2：外部请求不跟随重定向（规避 axios redirect ReDoS 等公告）
+      maxRedirects: 0
     });
 
     if (response.data.code === '200' && response.data.location && response.data.location.length > 0) {
@@ -104,7 +106,9 @@ async function getRealWeather(cityName) {
         location: locationId
       },
       headers: buildAuthHeaders(),
-      timeout: QWEATHER_TIMEOUT_MS
+      timeout: QWEATHER_TIMEOUT_MS,
+      // v11.4 修复 Q-2：外部请求不跟随重定向（规避 axios redirect ReDoS 等公告）
+      maxRedirects: 0
     });
 
     // 获取天气预报
@@ -113,7 +117,9 @@ async function getRealWeather(cityName) {
         location: locationId
       },
       headers: buildAuthHeaders(),
-      timeout: QWEATHER_TIMEOUT_MS
+      timeout: QWEATHER_TIMEOUT_MS,
+      // v11.4 修复 Q-2：外部请求不跟随重定向（规避 axios redirect ReDoS 等公告）
+      maxRedirects: 0
     });
 
     if (weatherResponse.data.code !== '200' || !weatherResponse.data.now) {

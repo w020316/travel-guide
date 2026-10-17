@@ -66,6 +66,8 @@ class BaseAIProvider {
     const extra = this.extra.axiosConfig || {};
     const response = await axios.post(this.getRequestUrl(), body, {
       timeout,
+      // v11.4 修复 Q-2：不跟随重定向，规避 axios「不可信 redirect Location 触发 ReDoS」等公告
+      maxRedirects: 0,
       ...extra,
       headers: { ...headers, ...(extra.headers || {}) }
     });
@@ -318,7 +320,9 @@ class WenxinProvider extends BaseAIProvider {
       }).toString(),
       {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        timeout: 15000
+        timeout: 15000,
+        // v11.4 修复 Q-2：OAuth 请求不跟随重定向
+        maxRedirects: 0
       }
     );
 
@@ -354,7 +358,9 @@ class WenxinProvider extends BaseAIProvider {
       {
         headers: { 'Content-Type': 'application/json' },
         // v11.4：尊重调用方传入的 timeoutMs（预算裁剪），未传则回退 60s
-        timeout: timeoutMs || 60000
+        timeout: timeoutMs || 60000,
+        // v11.4 修复 Q-2：补全请求不跟随重定向
+        maxRedirects: 0
       }
     );
 
