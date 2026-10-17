@@ -96,39 +96,8 @@ startWeatherSync(10);
 // API路由
 app.use('/api', require('./routes/api'));
 
-// 托管前端静态资源（统一部署：后端同时提供 API 与前端页面）
-// 修复 P0 安全漏洞：原代码暴露整个项目根目录（含 .env、backend/、node_modules/）
-const frontendRoot = path.join(__dirname, '..');
-
-// 安全防护：禁止访问敏感路径（放行前端所需的 data/expandedCities.js）
-app.use((req, res, next) => {
-  const sensitivePaths = ['/backend', '/node_modules', '/.env', '/.git', '/.trae', '/package.json', '/package-lock.json', '/render.yaml'];
-  // /data 目录只允许访问 expandedCities.js（前端城市数据库）
-  if (req.path === '/data' || req.path.startsWith('/data/')) {
-    if (req.path !== '/data/expandedCities.js') {
-      return res.status(403).json({ success: false, error: '访问被禁止' });
-    }
-    return next();
-  }
-  if (sensitivePaths.some(p => req.path === p || req.path.startsWith(p + '/'))) {
-    return res.status(403).json({ success: false, error: '访问被禁止' });
-  }
-  next();
-});
-
-app.use(express.static(frontendRoot, {
-  index: 'index.html',
-  maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0,
-  // 限制可访问的扩展名
-  setHeaders: (res, filePath) => {
-    // 阻止 .env、.js（非前端）等敏感文件被直接访问
-    if (/\.(env|md|log|txt)$/i.test(filePath)) {
-      res.setHeader('Cache-Control', 'no-store');
-    }
-  }
-}));
-
 // 健康检查接口（修复 P1-7：生产环境仅返回最小化状态，避免暴露服务配置指纹）
+// 注意：注册顺序须在「静态资源白名单网关」之前，否则会被白名单网关拦截为 404。
 app.get('/health', (req, res) => {
   const isProd = process.env.NODE_ENV === 'production';
   const base = {
@@ -152,11 +121,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// 根路径 - 返回前端首页（API 信息可通过 /health 与 /api 查看）
-app.get('/', (req, res) => {
-  res.sendFile(path.join(frontendRoot, 'index.html'));
-});
-
 // API 元信息接口
 app.get('/api-info', (req, res) => {
   res.json({
@@ -174,6 +138,62 @@ app.get('/api-info', (req, res) => {
     },
     documentation: 'https://github.com/w020316/travel-guide'
   });
+});
+
+// 托管前端静态资源（统一部署：后端同时提供 API 与前端页面）
+const frontendRoot = path.join(__dirname, '..');
+
+// 修复 SEC-1（P1）：原实现以仓库根目录为静态根，仅靠「敏感路径黑名单」防护，而黑名单
+// 未覆盖根目录其余文档（*.md）与过程产物（deliverables/**、start.bat、render.yaml 等），
+// 实测可被匿名下载，造成信息泄露。改为「显式白名单托管」：仅放行前端页面/PWA 真实引用的
+// 根级资源，其余路径一律返回 404（而非 403，避免通过状态码差异探测文件是否存在）。
+// 下方 sensitivePaths 黑名单保留，作为纵深防御（对明确敏感路径显式拒绝）。
+const STATIC_ASSET_WHITELIST = new Set([
+  '/index.html',            // 首页文档
+  '/app.js',                // 主应用脚本（index.html 引用）
+  '/style.css',             // 样式（index.html 引用）
+  '/pwa.js',                // SW 注册与网络状态（index.html 引用）
+  '/sw.js',                 // Service Worker（pwa.js 注册）
+  '/offline.js',            // 离线页脚本（offline.html 引用）
+  '/offline.html',          // 离线回退页
+  '/manifest.json',         // PWA 清单（index.html 引用）
+  '/icon.svg',              // 站点图标（index.html 引用）
+  '/data/expandedCities.js' // 前端城市数据库（index.html / sw.js CORE_ASSETS 引用）
+]);
+
+// 敏感路径黑名单（纵深防御：显式拒绝并返回 403）
+const SENSITIVE_PATHS = ['/backend', '/node_modules', '/.env', '/.git', '/.trae', '/package.json', '/package-lock.json', '/render.yaml'];
+app.use((req, res, next) => {
+  if (SENSITIVE_PATHS.some(p => req.path === p || req.path.startsWith(p + '/'))) {
+    return res.status(403).json({ success: false, error: '访问被禁止' });
+  }
+  next();
+});
+
+// 静态资源白名单网关：仅放行白名单资源与根路径，其余一律 404（杜绝文件存在性探测）
+app.use((req, res, next) => {
+  if (req.path === '/' || STATIC_ASSET_WHITELIST.has(req.path)) {
+    return next();
+  }
+  return res.status(404).json({ success: false, error: '资源不存在' });
+});
+
+app.use(express.static(frontendRoot, {
+  index: 'index.html',
+  maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0,
+  // 修复 SEC-1：原注释称此处「阻止 .env/.md 等被直接访问」，但 setHeaders 只负责设置
+  // 响应头，不具备拦截语义（无法阻止文件被访问）。真正的访问控制已上移为「白名单网关」。
+  // 此处仅作为纵深防御：若未来白名单误加敏感扩展名文件，对其禁用缓存，降低泄露窗口。
+  setHeaders: (res, filePath) => {
+    if (/\.(env|md|log|txt|bat)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-store');
+    }
+  }
+}));
+
+// 根路径 - 返回前端首页（API 信息可通过 /health 与 /api 查看）
+app.get('/', (req, res) => {
+  res.sendFile(path.join(frontendRoot, 'index.html'));
 });
 
 // 错误处理中间件顺序修复：业务路由 → 404 → errorHandler
@@ -267,6 +287,11 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-initializeServer();
+// 修复 SEC-1 可测化：仅当以 `node server.js` 直接运行时才启动监听，
+// 被测试 require 时只导出 app（不启动 HTTP 服务、不连库），便于针对 server.js
+// 静态托管/中间件做集成测试。生产启动行为完全不变。
+if (require.main === module) {
+  initializeServer();
+}
 
 module.exports = app;
