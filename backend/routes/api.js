@@ -128,7 +128,10 @@ router.post('/ai/generate', authService.optionalAuth, async (req, res) => {
 });
 
 // 批量生成多个城市的攻略
-router.post('/ai/generate-batch', authService.verifyCustomToken, validateCitiesArray, async (req, res) => {
+// v11.4 修复 SEC-2（P2）：原仅 verifyCustomToken，任意登录用户即可单请求并行触发最多 5 次
+// 付费 AI 生成（叠加限流单 IP 可达 ~500 次/分），与 /ai/edit-photo、/cities/sync 等同族端点
+// （均为「认证 + 管理员」）不一致。此处补齐 requireAdmin，收敛付费额度滥用面。
+router.post('/ai/generate-batch', authService.verifyCustomToken, authService.requireAdmin, validateCitiesArray, async (req, res) => {
   try {
     const { cities, preferences } = req.body;
 

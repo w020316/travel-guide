@@ -49,6 +49,16 @@ class AuthService {
       this.jwtSecret = secret;
     }
     this.tokenExpiry = process.env.JWT_TOKEN_EXPIRY || '7d';
+
+    // v11.4 修复（严重，随 SEC-2 集成测试发现）：中间件方法以「裸函数引用」传给 express
+    // （如 router.post(path, authService.verifyCustomToken)），express 以 fn(req,res,next)
+    // 调用，this 不再指向实例 → this.jwtSecret 为 undefined → jwt.verify 抛
+    // 「secret or public key must be provided」→ 所有携带有效 token 的请求被判「无效」401。
+    // 由于生产未配置 Firebase（无法签发 token），该缺陷长期被掩盖（auth 整体不可用）。
+    // 绑定实例上下文后，认证与管理员角色在真实请求中方可生效（SEC-2/SEC-3 闭环的前提）。
+    this.verifyCustomToken = this.verifyCustomToken.bind(this);
+    this.optionalAuth = this.optionalAuth.bind(this);
+    this.requireAdmin = this.requireAdmin.bind(this);
   }
 
   // 验证Firebase ID Token并生成自定义JWT
