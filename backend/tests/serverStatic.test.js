@@ -184,3 +184,81 @@ describe('SEC-2：/api/ai/generate-batch 需管理员权限（v11.4）', () => {
     expect(status).not.toBe(403);
   }, 30000);
 });
+
+describe('Q-4：鉴权边界（更多 requireAdmin 端点）', () => {
+  function userToken() {
+    return requireCjs('../services/authService.js').createTestToken({ uid: 'q4-user', role: 'user' });
+  }
+
+  it('普通用户调 /ai/edit-photo → 403', async () => {
+    const res = await fetch(baseUrl + '/api/ai/edit-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userToken()}` },
+      body: JSON.stringify({ city: '北京' })
+    });
+    expect(res.status).toBe(403);
+  }, 20000);
+
+  it('普通用户调 /weather/sync → 403', async () => {
+    const res = await fetch(baseUrl + '/api/weather/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userToken()}` },
+      body: JSON.stringify({ city: '北京' })
+    });
+    expect(res.status).toBe(403);
+  }, 20000);
+
+  it('无 token 调 /ai/edit-photo → 401（认证前置）', async () => {
+    const res = await fetch(baseUrl + '/api/ai/edit-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ city: '北京' })
+    });
+    expect(res.status).toBe(401);
+  }, 20000);
+});
+
+// 注意：本 describe 会 reload（清 require 缓存 + 切 NODE_ENV=production），
+// 必须置于文件最后，避免影响前面依赖主实例（test 环境 authService）的用例。
+describe('Q-4：生产环境 CORS 拒绝 与 /health 最小化', () => {
+  let prodServer;
+  let prodBase;
+  const prevNodeEnv = process.env.NODE_ENV;
+  const prevCors = process.env.CORS_ORIGIN;
+
+  beforeAll(async () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.CORS_ORIGIN; // 生产未配置白名单 → 拒绝所有跨源（保留无 Origin 放行）
+    const prodApp = loadApp();
+    const started = await startServer(prodApp);
+    prodServer = started.server;
+    prodBase = started.baseUrl;
+  }, 60000);
+
+  afterAll(async () => {
+    if (prodServer) await new Promise(resolve => prodServer.close(resolve));
+    process.env.NODE_ENV = prevNodeEnv;
+    if (prevCors === undefined) delete process.env.CORS_ORIGIN;
+    else process.env.CORS_ORIGIN = prevCors;
+  });
+
+  it('生产未配 CORS_ORIGIN 时，带 Origin 的跨源请求应被拒绝（≥400）', async () => {
+    const res = await fetch(prodBase + '/health', {
+      headers: { Origin: 'https://evil.example.com' }
+    });
+    expect(res.status).toBeGreaterThanOrEqual(400);
+  }, 20000);
+
+  it('无 Origin 的请求（同源/服务端调用）应放行 200', async () => {
+    const res = await fetch(prodBase + '/health');
+    expect(res.status).toBe(200);
+  }, 20000);
+
+  it('/health 生产环境应最小化（不含 cityCount / services 指纹）', async () => {
+    const res = await fetch(prodBase + '/health');
+    const body = await res.json();
+    expect(body.status).toBe('healthy');
+    expect(body).not.toHaveProperty('cityCount');
+    expect(body).not.toHaveProperty('services');
+  }, 20000);
+});
