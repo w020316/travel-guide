@@ -2023,7 +2023,7 @@ input[type="date"].input-ghost:focus {
     border-color: var(--warn-line);
 }
 
-/* ---------- 8. 行程地图（v11.2 腾讯地图 GL JS） ---------- */
+/* ---------- 8. 行程地图（v11.2 高德地图 AMap JS API 2.0） ---------- */
 /* 设计意图：地图是行程的空间视图，容器必须固定高度（GL JS 在高度不固定时不渲染）。
    加载态用攻略页统一的 loading 视觉；引导/失败态复用 gc-notice 的排版语言。 */
 .gc-map-section .gc-map-sub {
@@ -2658,20 +2658,20 @@ body::after {
    ========================================================= */
 @media (max-width: 480px) {
     .result-topbar {
-        row-gap: 8px;
-        padding-bottom: var(--space-16);
+        row-gap: 6px;
+        padding-bottom: var(--space-12);
         margin-bottom: var(--space-24);
     }
     .result-topbar .result-actions {
         grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
+        gap: 4px;
     }
     .result-topbar .result-actions .icon-btn {
-        min-height: 44px;              /* 触控目标 ≥44px */
+        min-height: var(--tap-min);    /* 48px：守住 --tap-min 触控底线（原 44px 破坏基线） */
         padding: 6px 8px;
-        font-size: var(--fs-2xs);      /* 12px */
+        font-size: var(--fs-sm);       /* 14px：控件最小字号（原 12px 偏低且易折行） */
         line-height: 1.2;
-        white-space: normal;           /* 「分享链接/下载海报/再次生成」允许在窄格内换行 */
+        white-space: nowrap;           /* 14px×(≤4字)+padding 仍在列宽内，禁止折行 */
     }
     /* 网格中「下载海报」主按钮原带 margin-left，会在 3 列网格内造成 4px 错位，此处归零对齐 */
     .result-topbar .result-actions .icon-btn-primary { margin-left: 0; }

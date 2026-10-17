@@ -1884,7 +1884,7 @@
             `);
         }
 
-        // v11.2: 行程地图（腾讯地图 GL JS）— 展示目的地与每日行程景点分布。
+        // v11.2: 行程地图（高德地图 AMap JS API 2.0）— 展示目的地与每日行程景点分布。
         // 景点名从 routes 归一化提取（与上方行程渲染同源），上限 12 个防 QPS 超限；
         // city/spots 通过 data-* 传给 initGuideMap()，避免 innerHTML 注入风险。
         if (g.routes && g.routes.length) {
