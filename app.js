@@ -119,7 +119,15 @@
     // ---------- API 客户端 ----------
     // v11.5 UX-9：当前进行中的生成请求控制器（供加载层「取消」按钮 abort）与「用户主动取消」标记
     let activeGenerateCtrl = null;
+    // v11.6 P1：原实现只用单例 controller —— 新请求覆盖旧引用，且任一请求的 finally
+    // 都无条件清空它。结果：取消只能中止最后一个请求；旧请求结束时会把新请求的
+    // controller 置空，取消按钮随后完全失效，且新请求被 abort 时会被误判成「超时」。
+    // 改为 Set 持有全部进行中请求 + 序号守卫 finally 清理。
+    const activeCtrls = new Set();
+    let generateSeq = 0;
     let canceledByUser = false;
+    // v11.6 P1：hideLoading 的延迟隐藏句柄，必须可取消
+    let hideTimer = null;
     const API = {
         // 同源部署时用相对路径；本地 file:// 打开时回退到本地模式
         base: detectBaseURL(),
@@ -134,17 +142,21 @@
             let timedOut = false;
             // v11.5 UX-9：每次生成重置「用户取消」标记；控制器提升到模块级供取消按钮 abort
             canceledByUser = false;
+            const ctrl = new AbortController();
+            const mySeq = ++generateSeq;
+            activeCtrls.add(ctrl);
+            activeGenerateCtrl = ctrl;
+            let timer = null;
             try {
-                activeGenerateCtrl = new AbortController();
                 // v11.5 UX-8：一次性 refresh —— 「再次生成」后首次请求跳过缓存，强制重新请求 AI
                 const refresh = !!state.skipCacheOnce;
                 if (refresh) state.skipCacheOnce = false;
-                const timer = setTimeout(() => { timedOut = true; activeGenerateCtrl.abort(); }, AI_REQUEST_TIMEOUT_MS);
+                timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, AI_REQUEST_TIMEOUT_MS);
                 const res = await fetch(`${this.base}/api/ai/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ city, preferences: prefs, refresh }),
-                    signal: activeGenerateCtrl.signal
+                    signal: ctrl.signal
                 });
                 clearTimeout(timer);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -170,8 +182,14 @@
                 }
                 return buildLocalGuide(city, prefs);
             } finally {
-                activeGenerateCtrl = null;
-                canceledByUser = false;
+                // v11.6 P1：只清理本次请求，不干扰更晚发起的请求。
+                // 原实现无条件 activeGenerateCtrl = null，会让后发请求失去可取消能力。
+                if (timer) clearTimeout(timer);   // 同时修复：异常路径不再遗留 65s 定时器
+                activeCtrls.delete(ctrl);
+                if (activeGenerateCtrl === ctrl) {
+                    activeGenerateCtrl = null;
+                    canceledByUser = false;
+                }
             }
         },
 
@@ -436,7 +454,7 @@
         '石家庄':'河北','唐山':'河北','秦皇岛':'河北','邯郸':'河北','邢台':'河北','保定':'河北','张家口':'河北','承德':'河北','沧州':'河北','廊坊':'河北','衡水':'河北','辛集':'河北','藁城':'河北','晋州':'河北','新乐':'河北','鹿泉':'河北','遵化':'河北','迁安':'河北','武安':'河北','南宫':'河北','沙河':'河北','涿州':'河北','定州':'河北','安国':'河北','高碑店':'河北','泊头':'河北','任丘':'河北','黄骅':'河北','河间':'河北','三河':'河北','霸州':'河北','深州':'河北','乐亭':'河北','迁西':'河北','滦南':'河北','玉田':'河北','滦县':'河北','曹妃甸':'河北','北戴河':'河北','山海关':'河北','南戴河':'河北','兴隆':'河北','围场':'河北','丰宁':'河北','坝上':'河北','白洋淀':'河北','野三坡':'河北','狼牙山':'河北','清东陵':'河北','西柏坡':'河北','正定':'河北','赵县':'河北','井陉':'河北','赞皇':'河北','灵寿':'河北','行唐':'河北','平山':'河北','元氏':'河北','高邑':'河北','深泽':'河北','无极':'河北','赵县':'河北',
         '太原':'山西','大同':'山西','阳泉':'山西','长治':'山西','晋城':'山西','朔州':'山西','晋中':'山西','运城':'山西','忻州':'山西','临汾':'山西','吕梁':'山西','古交':'山西','霍州':'山西','孝义':'山西','介休':'山西','高平':'山西','原平':'山西','侯马':'山西','永济':'山西','河津':'山西','怀仁':'山西','潞城':'山西','平遥':'山西','五台山':'山西','云冈':'山西','壶口':'山西','恒山':'山西','悬空寺':'山西','应县':'山西','宁武':'山西','代县':'山西','繁峙':'山西','定襄':'山西','五寨':'山西','岢岚':'山西','河曲':'山西','保德':'山西','偏关':'山西','原平':'山西','静乐':'山西','神池':'山西','宁武':'山西','五台':'山西','岚县':'山西','方山':'山西','兴县':'山西','临县':'山西','柳林':'山西','石楼':'山西','中阳':'山西','交口':'山西','孝义':'山西','汾阳':'山西','文水':'山西','交城':'山西','兴县':'山西','临县':'山西','阳高':'山西','天镇':'山西','广灵':'山西','灵丘':'山西','浑源':'山西','左云':'山西','右玉':'山西','平鲁':'山西','山阴':'山西','应县':'山西','怀仁':'山西','朔城':'山西',
         '呼和浩特':'内蒙古','包头':'内蒙古','乌海':'内蒙古','赤峰':'内蒙古','通辽':'内蒙古','鄂尔多斯':'内蒙古','呼伦贝尔':'内蒙古','巴彦淖尔':'内蒙古','乌兰察布':'内蒙古','兴安':'内蒙古','锡林郭勒':'内蒙古','阿拉善':'内蒙古','满洲里':'内蒙古','扎兰屯':'内蒙古','牙克石':'内蒙古','根河':'内蒙古','额尔古纳':'内蒙古','乌兰浩特':'内蒙古','阿尔山':'内蒙古','霍林郭勒':'内蒙古','锡林浩特':'内蒙古','二连浩特':'内蒙古','丰镇':'内蒙古','东胜':'内蒙古','临河':'内蒙古','集宁':'内蒙古','海拉尔':'内蒙古','鄂温克':'内蒙古','陈巴尔虎':'内蒙古','新巴尔虎':'内蒙古','达茂':'内蒙古','四子王':'内蒙古','凉城':'内蒙古','察右':'内蒙古','卓资':'内蒙古','兴和':'内蒙古','商都':'内蒙古','化德':'内蒙古','武川':'内蒙古','和林格尔':'内蒙古','托克托':'内蒙古','清水河':'内蒙古','土默特':'内蒙古','达拉特':'内蒙古','准格尔':'内蒙古','鄂托克':'内蒙古','杭锦':'内蒙古','乌审':'内蒙古','伊金霍洛':'内蒙古','阿拉善左':'内蒙古','阿拉善右':'内蒙古','额济纳':'内蒙古','呼伦贝尔':'内蒙古','满洲里':'内蒙古','室韦':'内蒙古','恩和':'内蒙古','临江':'内蒙古','莫尔道嘎':'内蒙古','敖鲁古雅':'内蒙古','根河':'内蒙古','冷极':'内蒙古','额尔古纳':'内蒙古','湿地':'内蒙古','草原':'内蒙古','沙漠':'内蒙古','胡杨':'内蒙古',
-        '香港':'香港','澳门':'澳门','台北':'台湾','高雄':'台湾','台中':'台湾','台南':'台湾','基隆':'台湾','新竹':'台湾','嘉义':'台湾','花莲':'台湾','台东':'台湾','屏东':'台湾','垦丁':'台湾','日月潭':'台湾','阿里山':'台湾','九份':'台湾','平溪':'台湾','淡水':'台湾','野柳':'台湾','太鲁阁':'台湾','清境':'台湾','宜兰':'台湾','澎湖':'台湾','金门':'台湾','马祖':'台湾','绿岛':'台湾','兰屿':'台湾','七星潭':'台湾','西门町':'台湾','101':'台湾','故宫':'台湾','中正纪念堂':'台湾','龙山寺':'台湾','忠孝东路':'台湾','阳明山':'台湾','北投':'台湾','乌来':'台湾','九份':'台湾','金瓜石':'台湾','十分':'台湾','菁桐':'台湾','平溪':'台湾','猴硐':'台湾','侯硐':'台湾','猫村':'台湾','暖暖':'台湾','瑞芳':'台湾','贡寮':'台湾','双溪':'台湾','头城':'台湾','礁溪':'台湾','宜兰':'台湾','罗东':'台湾','苏澳':'台湾','南方澳':'台湾','冬山':'台湾','五结':'台湾','三星':'台湾','大同':'台湾','员山':'台湾','壮围':'台湾','头城':'台湾','礁溪':'台湾','壮围':'台湾','员山':'台湾','三星':'台湾','大同':'台湾','南澳':'台湾','苏澳':'台湾','冬山':'台湾','五结':'台湾','罗东':'台湾','宜兰':'台湾',
+        '香港':'香港','澳门':'澳门','台北':'台湾','高雄':'台湾','台中':'台湾','台南':'台湾','基隆':'台湾','新竹':'台湾','嘉义':'台湾','花莲':'台湾','台东':'台湾','屏东':'台湾','垦丁':'台湾','日月潭':'台湾','阿里山':'台湾','九份':'台湾','平溪':'台湾','淡水':'台湾','野柳':'台湾','太鲁阁':'台湾','清境':'台湾','宜兰':'台湾','澎湖':'台湾','金门':'台湾','马祖':'台湾','绿岛':'台湾','兰屿':'台湾','七星潭':'台湾','西门町':'台湾','101':'台湾','故宫':'台湾','中正纪念堂':'台湾','龙山寺':'台湾','忠孝东路':'台湾','阳明山':'台湾','北投':'台湾','乌来':'台湾','九份':'台湾','金瓜石':'台湾','十分':'台湾','菁桐':'台湾','平溪':'台湾','猴硐':'台湾','侯硐':'台湾','猫村':'台湾','暖暖':'台湾','瑞芳':'台湾','贡寮':'台湾','双溪':'台湾','头城':'台湾','礁溪':'台湾','宜兰':'台湾','罗东':'台湾','苏澳':'台湾','南方澳':'台湾','冬山':'台湾','五结':'台湾','三星':'台湾','员山':'台湾','壮围':'台湾','头城':'台湾','礁溪':'台湾','壮围':'台湾','员山':'台湾','三星':'台湾','南澳':'台湾','苏澳':'台湾','冬山':'台湾','五结':'台湾','罗东':'台湾','宜兰':'台湾',
     };
 
     // 一线城市与新一线城市（用于预算差异化）
@@ -768,7 +786,7 @@
             }
             dom.cityInput.value = urlState.city;
             // 延迟一帧以等待页面渲染完成
-            setTimeout(() => submitCity(urlState.city), 60);
+            setTimeout(() => submitCity(urlState.city, { fromPicker: true }), 60);
         }
     }
 
@@ -858,7 +876,7 @@
             b.type = 'button';
             b.className = 'qc-btn';
             b.textContent = c;
-            b.onclick = (e) => { e.preventDefault(); dom.cityInput.value = c; submitCity(c); };
+            b.onclick = (e) => { e.preventDefault(); dom.cityInput.value = c; submitCity(c, { fromPicker: true }); };
             frag.appendChild(b);
         });
         dom.quickCities.appendChild(frag);
@@ -904,7 +922,7 @@
         `).join('');
 
         dom.rankingList.querySelectorAll('.rank-card').forEach(card => {
-            card.onclick = () => { const city = card.dataset.city; dom.cityInput.value = city; submitCity(city); };
+            card.onclick = () => { const city = card.dataset.city; dom.cityInput.value = city; submitCity(city, { fromPicker: true }); };
         });
     }
 
@@ -950,7 +968,7 @@
                 if (e.target.closest('.hc-share, .hc-del')) return;
                 const city = chip.dataset.city;
                 dom.cityInput.value = city;
-                submitCity(city);
+                submitCity(city, { fromPicker: true });
             };
         });
         // 分享按钮：复制该城市的攻略链接
@@ -994,7 +1012,10 @@
         if (dom.loadingCancel) {
             dom.loadingCancel.addEventListener('click', () => {
                 canceledByUser = true;
-                if (activeGenerateCtrl) {
+                // v11.6 P1：中止全部进行中的请求，而非仅最后一个
+                if (activeCtrls.size) {
+                    activeCtrls.forEach((c) => { try { c.abort(); } catch (_) { /* 已结束的忽略 */ } });
+                } else if (activeGenerateCtrl) {
                     activeGenerateCtrl.abort();   // 触发 fetch AbortError → generateGuide 抛 canceledByUser → 外层回首页
                 } else {
                     // 兜底：请求尚未开始（控制器为空）时直接收尾，避免卡在加载层
@@ -1083,7 +1104,7 @@
                     const city = cur.dataset.city;
                     dom.cityInput.value = city;
                     dom.suggestions.hidden = true;
-                    submitCity(city);
+                    submitCity(city, { fromPicker: true });
                 }
             } else if (e.key === 'Escape') {
                 dom.suggestions.hidden = true;
@@ -1254,14 +1275,23 @@
         `).join('');
         dom.suggestions.hidden = false;
         dom.suggestions.querySelectorAll('.suggestion-item').forEach(item => {
-            item.onmousedown = () => { dom.cityInput.value = item.dataset.city; dom.suggestions.hidden = true; submitCity(item.dataset.city); };
+            item.onmousedown = () => { dom.cityInput.value = item.dataset.city; dom.suggestions.hidden = true; submitCity(item.dataset.city, { fromPicker: true }); };
         });
     }
 
     // ---------- 提交生成 ----------
-    async function submitCity(city) {
+    // v11.6 P1：修复「目的地状态覆盖显式选择」
+    // 原实现 targetCity = state.destination || city，而 state.destination 只在主搜索框
+    // 输入时清空。用户填过「目的地」后再点排行榜/快捷城市/历史/收藏/联想/URL 任一入口，
+    // 仍会生成旧目的地的攻略（实测：目的地填上海 → 点北京 → 请求体 city:"上海"）。
+    // 现约定：显式选择城市（fromPicker）时目的地让位；表单提交时目的地优先。
+    async function submitCity(city, opts = {}) {
+        if (opts.fromPicker) {
+            state.destination = '';
+            if (dom.destinationInput) dom.destinationInput.value = '';
+        }
         // v9.0: 优先使用目的地作为攻略城市
-        const targetCity = state.destination || city;
+        const targetCity = opts.fromPicker ? city : (state.destination || city);
         if (!targetCity) { toast('请输入城市名称', 'error'); return; }
 
         // v10.1: 省份识别 — 用户输入"黑龙江"等省份名时，提示选择具体城市
@@ -2787,6 +2817,9 @@
             loadingTimer = null;
         }
         clearLoadingStageTimers();
+        // v11.6 P1：取消上一次 hideLoading 尚未触发的延迟隐藏，
+        // 否则「取消后立刻重新生成」时，旧定时器会把新加载层立刻关掉
+        if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
         // v10.2: 根据模式显示不同文案
         // v10.10：不再承诺「AI 正在分析」。实测 AI 全链路失败时会静默回退本地数据
         // （耗时 10s 以上），但原文案仍宣称在用 AI，与实际行为不符。
@@ -2820,7 +2853,10 @@
         clearInterval(loadingTimer);
         clearLoadingStageTimers();   // v11.5 UX-9：清理阶段文案定时器，避免加载层关闭后仍改写文案
         dom.loadingBar.style.width = '100%';
-        setTimeout(() => { dom.loading.hidden = true; }, 320);
+        // v11.6 P1：延迟隐藏必须可取消。原实现用裸 setTimeout，取消后 320ms 内重新生成时，
+        // 旧定时器会把「新请求」的加载层关掉，页面在请求进行中变成空白（实测 12s 无反馈）。
+        if (hideTimer) clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => { dom.loading.hidden = true; hideTimer = null; }, 320);
     }
 
     // ---------- 焦点陷阱（P1-8）----------
@@ -2954,7 +2990,7 @@
             </div>
         `).join('');
         dom.favoritesList.querySelectorAll('.fi-btn.view').forEach(b => {
-            b.onclick = () => { closeFavorites(); dom.cityInput.value = b.dataset.city; submitCity(b.dataset.city); };
+            b.onclick = () => { closeFavorites(); dom.cityInput.value = b.dataset.city; submitCity(b.dataset.city, { fromPicker: true }); };
         });
         dom.favoritesList.querySelectorAll('.fi-btn.del').forEach(b => {
             b.onclick = () => {
