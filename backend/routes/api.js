@@ -24,7 +24,16 @@ router.use(rateLimiter(100, 60000));
 // v11.2: 地图功能配置 — 返回高德地图前端 Key 与安全密钥（JS API 2.0 必须成对使用）。
 // Key/Secret 设计为公开值（个人用途 + 高德控制台配域名白名单防护），
 // 未配置时返回空串，前端据此显示配置引导而非地图。
+//
+// v11.6 安全说明（SEC-1 / P1）：secret 即高德「安全密钥」(securityJsCode)，
+// 前端 app.js:2190 会执行 window._AMapSecurityConfig = { securityJsCode: secret }，
+// 这是 JS API 2.0 的官方用法 —— 移除该字段会直接导致地图加载失败，故此处保留。
+// 但该值一旦下发即对任何访问者可见，无法靠域名白名单完全防护。
+// 已做缓解：响应禁止任何缓存（含 CDN/代理/浏览器），避免凭证被中间层长期留存。
+// 遗留项（需产品决策）：彻底消除明文下发需改为高德官方「服务端代理」方案
+// （前端不持有 secret，由后端签名/转发），属功能改造，不在本次安全修复范围内。
 router.get('/config/map', (req, res) => {
+  res.set('Cache-Control', 'no-store, private');
   res.json({
     success: true,
     provider: 'amap',
