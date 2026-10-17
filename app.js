@@ -2826,8 +2826,8 @@
     function openFavorites() {
         renderFavoritesList();
         dom.favoritesModal.hidden = false;
-        // v10.6: 收藏数 ≥ 3 时显示搜索框
-        dom.favSearchWrap.hidden = state.favorites.length < 3;
+        // v11.5 UX-4：原收藏数 ≥3 才显示搜索框；改为「有 1 条收藏即可搜索」，空收藏才隐藏
+        dom.favSearchWrap.hidden = state.favorites.length < 1;
         if (dom.favSearchInput) dom.favSearchInput.value = '';
         // P1-8: 启用焦点陷阱——记录触发元素、焦点移入模态框、Tab 循环、ESC 关闭并恢复焦点
         if (favFocusTrap) favFocusTrap.release();
