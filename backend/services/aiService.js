@@ -563,14 +563,40 @@ JSON 结构如下（字段名保持一致，值用中文）：
     }
     
     // 根据预算筛选住宿
-    if (preferences.budgetRange && adjusted.accommodations) {
-      const budgetFilters = {
-        low: acc => acc.priceRange && parseInt(acc.priceRange) < 300,
-        high: acc => acc.priceRange && parseInt(acc.priceRange) > 500
+    // v11.4 修复 LOG-1（P2）：原实现用 parseInt(acc.priceRange)，而 priceRange 多为对象
+    // （{lowSeason,peakSeason}）或缺失 → NaN → 比较恒 false → 选 low/high 时 accommodations
+    // 被清空、结果页「住宿推荐」整块消失（本地降级是 AI 不可用时最常见路径）。
+    // 改为：字符串取数字前缀、对象解析 lowSeason/peakSeason、缺失则视为「无价格数据」保留不过滤；
+    // 并对「筛选后为空」做兜底（保留全部），杜绝整块消失。
+    if (preferences.budgetRange && Array.isArray(adjusted.accommodations)) {
+      const parsePrice = (priceRange) => {
+        if (priceRange == null) return NaN;
+        if (typeof priceRange === 'number') return priceRange;
+        if (typeof priceRange === 'string') {
+          const m = priceRange.match(/\d+/);
+          return m ? parseInt(m[0], 10) : NaN;
+        }
+        if (typeof priceRange === 'object') {
+          for (const raw of [priceRange.lowSeason, priceRange.peakSeason]) {
+            const m = raw != null ? String(raw).match(/\d+/) : null;
+            if (m) return parseInt(m[0], 10);
+          }
+        }
+        return NaN;
       };
-      const filter = budgetFilters[preferences.budgetRange];
-      if (filter) {
-        adjusted.accommodations = adjusted.accommodations.filter(filter);
+
+      let predicate = null;
+      if (preferences.budgetRange === 'low') {
+        // 无价格数据（NaN）时保留，不因信息缺失而丢弃
+        predicate = acc => { const p = parsePrice(acc && acc.priceRange); return Number.isNaN(p) ? true : p < 300; };
+      } else if (preferences.budgetRange === 'high') {
+        predicate = acc => { const p = parsePrice(acc && acc.priceRange); return Number.isNaN(p) ? true : p > 500; };
+      }
+
+      if (predicate) {
+        const filtered = adjusted.accommodations.filter(predicate);
+        // 兜底：若筛选结果为空则保留全部，避免住宿推荐整块消失
+        adjusted.accommodations = filtered.length > 0 ? filtered : adjusted.accommodations;
       }
     }
     
