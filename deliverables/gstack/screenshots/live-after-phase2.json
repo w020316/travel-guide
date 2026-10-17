@@ -1,0 +1,39 @@
+{
+  "checks": {
+    "uiFingerprint": {
+      "heroAside": true,
+      "inkScroll": true,
+      "inkRoute": true,
+      "heroAsideVisible": true
+    },
+    "resultPage": true,
+    "map": {
+      "sub": "目的地与 16 个行程景点的分布（按天分色，连线为当日游览路线）",
+      "legendVisible": true,
+      "legendText": "第1天第2天第3天",
+      "canvasVisible": true,
+      "hintVisible": false
+    },
+    "dayColorSub": true
+  },
+  "errors": [
+    "console.error: Running the JavaScript URL violates the following Content Security Policy directive 'script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com h",
+    "console.error: Running the JavaScript URL violates the following Content Security Policy directive 'script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com h",
+    "console.error: Loading the script 'https://mapplugin.amap.com/maps/checkredirectcdn?cdnHash=1765790694334&key=46f98061ab1247259f11894f29eafb19&v=2.3.5.6&defaultLocation=112.95",
+    "console.error: Loading the script 'https://mapplugin.amap.com/maps/checkredirectcdn?cdnHash=1765790694334&key=46f98061ab1247259f11894f29eafb19&v=2.3.5.6&defaultLocation=112.95"
+  ],
+  "requestFailed": [
+    "https://jsapi-data4.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/834_381_10?auth_key=1792220723-95043 :: net::ERR_ABORTED",
+    "https://jsapi-data2.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/835_381_10?auth_key=1792220723-96529 :: net::ERR_ABORTED",
+    "https://jsapi-data4.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/833_381_10?auth_key=1792220723-99491 :: net::ERR_ABORTED",
+    "https://jsapi-data2.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/834_380_10?auth_key=1792220723-86495 :: net::ERR_ABORTED",
+    "https://jsapi-data3.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/835_380_10?auth_key=1792220723-66478 :: net::ERR_ABORTED",
+    "https://jsapi-data1.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/833_380_10?auth_key=1792220723-6077- :: net::ERR_ABORTED",
+    "https://jsapi-data5.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/833_379_10?auth_key=1792220723-69753 :: net::ERR_ABORTED",
+    "https://jsapi-data5.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/834_379_10?auth_key=1792220723-95006 :: net::ERR_ABORTED",
+    "https://jsapi-data3.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/835_379_10?auth_key=1792220723-74587 :: net::ERR_ABORTED",
+    "https://jsapi-data4.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/835_378_10?auth_key=1792220723-78536 :: net::ERR_ABORTED",
+    "https://jsapi-data5.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/834_378_10?auth_key=1792220723-19487 :: net::ERR_ABORTED",
+    "https://jsapi-data3.amap.com/tile/26_09_22_00/v2/building_region_road_transit/pbf/0/836_378_10?auth_key=1792220723-36869 :: net::ERR_ABORTED"
+  ]
+}
