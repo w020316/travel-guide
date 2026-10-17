@@ -1,0 +1,484 @@
+{
+  "generatedAt": "2026-10-17T11:29:12.964Z",
+  "base": "http://127.0.0.1:3001/",
+  "blockedHosts": [
+    "fonts.googleapis.com",
+    "fonts.gstatic.com",
+    "html2canvas.hertzen.com"
+  ],
+  "viewports": [
+    {
+      "name": "desktop-1920",
+      "w": 1920,
+      "h": 1080,
+      "navMs": 268,
+      "navErr": null,
+      "overflow": 0,
+      "offenders": [],
+      "blockingStylesheets": [],
+      "docHeight": 2644,
+      "fonts": {
+        "h1": {
+          "family": "Noto Serif SC",
+          "size": "80px"
+        },
+        "body": {
+          "family": "Noto Sans SC",
+          "size": "16px"
+        },
+        "btn": {
+          "family": "Noto Sans SC",
+          "size": "14px"
+        }
+      },
+      "touchSmallCount": 28,
+      "touchSmallSample": [
+        {
+          "tag": "a",
+          "cls": "brand",
+          "w": 111,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "nav-link",
+          "w": 56,
+          "h": 25
+        },
+        {
+          "tag": "a",
+          "cls": "nav-link",
+          "w": 56,
+          "h": 25
+        },
+        {
+          "tag": "button",
+          "cls": "nav-link ghost-btn",
+          "w": 111,
+          "h": 38
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 160,
+          "h": 43
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 160,
+          "h": 43
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 150,
+          "h": 45
+        },
+        {
+          "tag": "select",
+          "cls": "select-ghost",
+          "w": 87,
+          "h": 40
+        }
+      ],
+      "perf": {
+        "domContentLoaded": 256,
+        "loadEvent": 312,
+        "fcp": 660,
+        "fcpPaint": 660
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    {
+      "name": "desktop-1440",
+      "w": 1440,
+      "h": 900,
+      "navMs": 176,
+      "navErr": null,
+      "overflow": 0,
+      "offenders": [],
+      "blockingStylesheets": [],
+      "docHeight": 2644,
+      "fonts": {
+        "h1": {
+          "family": "Noto Serif SC",
+          "size": "80px"
+        },
+        "body": {
+          "family": "Noto Sans SC",
+          "size": "16px"
+        },
+        "btn": {
+          "family": "Noto Sans SC",
+          "size": "14px"
+        }
+      },
+      "touchSmallCount": 28,
+      "touchSmallSample": [
+        {
+          "tag": "a",
+          "cls": "brand",
+          "w": 111,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "nav-link",
+          "w": 56,
+          "h": 25
+        },
+        {
+          "tag": "a",
+          "cls": "nav-link",
+          "w": 56,
+          "h": 25
+        },
+        {
+          "tag": "button",
+          "cls": "nav-link ghost-btn",
+          "w": 111,
+          "h": 38
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 160,
+          "h": 43
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 160,
+          "h": 43
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 150,
+          "h": 45
+        },
+        {
+          "tag": "select",
+          "cls": "select-ghost",
+          "w": 87,
+          "h": 40
+        }
+      ],
+      "perf": {
+        "domContentLoaded": 170,
+        "loadEvent": 213,
+        "fcp": 204,
+        "fcpPaint": 204
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    {
+      "name": "laptop-1366",
+      "w": 1366,
+      "h": 768,
+      "navMs": 62,
+      "navErr": null,
+      "overflow": 0,
+      "offenders": [],
+      "blockingStylesheets": [],
+      "docHeight": 2639,
+      "fonts": {
+        "h1": {
+          "family": "Noto Serif SC",
+          "size": "80px"
+        },
+        "body": {
+          "family": "Noto Sans SC",
+          "size": "16px"
+        },
+        "btn": {
+          "family": "Noto Sans SC",
+          "size": "14px"
+        }
+      },
+      "touchSmallCount": 28,
+      "touchSmallSample": [
+        {
+          "tag": "a",
+          "cls": "brand",
+          "w": 111,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "nav-link",
+          "w": 56,
+          "h": 25
+        },
+        {
+          "tag": "a",
+          "cls": "nav-link",
+          "w": 56,
+          "h": 25
+        },
+        {
+          "tag": "button",
+          "cls": "nav-link ghost-btn",
+          "w": 111,
+          "h": 38
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 160,
+          "h": 43
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 160,
+          "h": 43
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 150,
+          "h": 45
+        },
+        {
+          "tag": "select",
+          "cls": "select-ghost",
+          "w": 87,
+          "h": 40
+        }
+      ],
+      "perf": {
+        "domContentLoaded": 57,
+        "loadEvent": 201,
+        "fcp": 236,
+        "fcpPaint": 236
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    {
+      "name": "tablet-1024",
+      "w": 1024,
+      "h": 768,
+      "navMs": 219,
+      "navErr": null,
+      "overflow": 0,
+      "offenders": [],
+      "blockingStylesheets": [],
+      "docHeight": 3041,
+      "fonts": {
+        "h1": {
+          "family": "Noto Serif SC",
+          "size": "66.56px"
+        },
+        "body": {
+          "family": "Noto Sans SC",
+          "size": "16px"
+        },
+        "btn": {
+          "family": "Noto Sans SC",
+          "size": "14px"
+        }
+      },
+      "touchSmallCount": 28,
+      "touchSmallSample": [
+        {
+          "tag": "a",
+          "cls": "brand",
+          "w": 111,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "cls": "nav-link",
+          "w": 56,
+          "h": 25
+        },
+        {
+          "tag": "a",
+          "cls": "nav-link",
+          "w": 56,
+          "h": 25
+        },
+        {
+          "tag": "button",
+          "cls": "nav-link ghost-btn",
+          "w": 111,
+          "h": 38
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 160,
+          "h": 43
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 160,
+          "h": 43
+        },
+        {
+          "tag": "input",
+          "cls": "input-ghost",
+          "w": 150,
+          "h": 45
+        },
+        {
+          "tag": "select",
+          "cls": "select-ghost",
+          "w": 87,
+          "h": 40
+        }
+      ],
+      "perf": {
+        "domContentLoaded": 213,
+        "loadEvent": 215,
+        "fcp": 276,
+        "fcpPaint": 276
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    {
+      "name": "tablet-768",
+      "w": 768,
+      "h": 1024,
+      "navMs": 149,
+      "navErr": null,
+      "overflow": 0,
+      "offenders": [],
+      "blockingStylesheets": [],
+      "docHeight": 3489,
+      "fonts": {
+        "h1": {
+          "family": "Noto Serif SC",
+          "size": "49.92px"
+        },
+        "body": {
+          "family": "Noto Sans SC",
+          "size": "16px"
+        },
+        "btn": {
+          "family": "Noto Sans SC",
+          "size": "14px"
+        }
+      },
+      "touchSmallCount": 0,
+      "touchSmallSample": [],
+      "perf": {
+        "domContentLoaded": 144,
+        "loadEvent": 189,
+        "fcp": 180,
+        "fcpPaint": 180
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    {
+      "name": "mobile-414",
+      "w": 414,
+      "h": 896,
+      "navMs": 152,
+      "navErr": null,
+      "overflow": 0,
+      "offenders": [],
+      "blockingStylesheets": [],
+      "docHeight": 5886,
+      "fonts": {
+        "h1": {
+          "family": "Noto Serif SC",
+          "size": "44px"
+        },
+        "body": {
+          "family": "Noto Sans SC",
+          "size": "16px"
+        },
+        "btn": {
+          "family": "Noto Sans SC",
+          "size": "14px"
+        }
+      },
+      "touchSmallCount": 0,
+      "touchSmallSample": [],
+      "perf": {
+        "domContentLoaded": 146,
+        "loadEvent": 189,
+        "fcp": 172,
+        "fcpPaint": 172
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    {
+      "name": "mobile-375",
+      "w": 375,
+      "h": 667,
+      "navMs": 193,
+      "navErr": null,
+      "overflow": 0,
+      "offenders": [],
+      "blockingStylesheets": [],
+      "docHeight": 5964,
+      "fonts": {
+        "h1": {
+          "family": "Noto Serif SC",
+          "size": "44px"
+        },
+        "body": {
+          "family": "Noto Sans SC",
+          "size": "16px"
+        },
+        "btn": {
+          "family": "Noto Sans SC",
+          "size": "14px"
+        }
+      },
+      "touchSmallCount": 0,
+      "touchSmallSample": [],
+      "perf": {
+        "domContentLoaded": 188,
+        "loadEvent": 233,
+        "fcp": 200,
+        "fcpPaint": 200
+      },
+      "consoleErrors": [
+        "Failed to load resource: net::ERR_FAILED",
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    }
+  ],
+  "blockingResources": [],
+  "consoleErrors": [
+    "[desktop-1920] Failed to load resource: net::ERR_FAILED",
+    "[desktop-1920] Failed to load resource: net::ERR_FAILED",
+    "[desktop-1440] Failed to load resource: net::ERR_FAILED",
+    "[desktop-1440] Failed to load resource: net::ERR_FAILED",
+    "[laptop-1366] Failed to load resource: net::ERR_FAILED",
+    "[laptop-1366] Failed to load resource: net::ERR_FAILED",
+    "[tablet-1024] Failed to load resource: net::ERR_FAILED",
+    "[tablet-1024] Failed to load resource: net::ERR_FAILED",
+    "[tablet-768] Failed to load resource: net::ERR_FAILED",
+    "[tablet-768] Failed to load resource: net::ERR_FAILED",
+    "[mobile-414] Failed to load resource: net::ERR_FAILED",
+    "[mobile-414] Failed to load resource: net::ERR_FAILED",
+    "[mobile-375] Failed to load resource: net::ERR_FAILED",
+    "[mobile-375] Failed to load resource: net::ERR_FAILED"
+  ],
+  "pageErrors": []
+}
