@@ -46,3 +46,9 @@ services:
       # 以下敏感变量请在 Render 后台手动设置（Environment 标签页）
       - key: AGNES_API_KEY
         sync: false
+      # v11.4 修复 SEC-3：管理员 UID 白名单（逗号分隔的 Firebase UID）。
+      # 登录签发 JWT 时按此判定 role（命中→admin，否则→user）。
+      # 部署后必须在 Render 后台填入实际 UID，否则所有登录用户均为普通用户，
+      # 管理端点（AI 缓存查看/清除、数据同步、修图建议、城市增删改、社交统计）仍会 403。
+      - key: ADMIN_UIDS
+        sync: false

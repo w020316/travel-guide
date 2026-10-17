@@ -61,6 +61,21 @@ class AuthService {
     this.requireAdmin = this.requireAdmin.bind(this);
   }
 
+  /**
+   * v11.4（SEC-3）：按环境变量 ADMIN_UIDS 解析用户角色
+   * ADMIN_UIDS 为逗号分隔的 Firebase UID 白名单；命中 → 'admin'，否则 → 'user'。
+   * 实时读取 process.env（而非构造期缓存），便于测试注入与运行时配置。
+   * @param {string} uid - Firebase 用户 UID
+   * @returns {'admin'|'user'}
+   */
+  _resolveRole(uid) {
+    const adminUids = (process.env.ADMIN_UIDS || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+    return adminUids.includes(String(uid)) ? 'admin' : 'user';
+  }
+
   // 验证Firebase ID Token并生成自定义JWT
   async verifyAndCreateToken(idToken) {
     try {
@@ -80,7 +95,10 @@ class AuthService {
           name: decodedToken.name || '',
           photoURL: decodedToken.picture || '',
           provider: decodedToken.firebase.sign_in_provider,
-          role: 'user', // 默认角色
+          // v11.4 修复 SEC-3（P2）：原恒定写入 role:'user'，导致全站 requireAdmin 端点在
+          // 生产永远 403（权限模型名存实亡）。改为按环境变量 ADMIN_UIDS（逗号分隔 UID 白名单）
+          // 判定：命中 → admin，否则 user。函数内实时读取 process.env，便于测试注入。
+          role: this._resolveRole(decodedToken.uid),
           iat: Math.floor(Date.now() / 1000)
         },
         this.jwtSecret,
@@ -229,4 +247,14 @@ class AuthService {
   }
 }
 
+/**
+ * 仅供单元测试使用：注入/替换内部 firebase auth 实例（生产不使用）
+ * 用于验证 verifyAndCreateToken 的真实签发路径（role 归属）。
+ * @param {Object|null} fakeAuth - 需提供 verifyIdToken(idToken)；传 null 复位
+ */
+function __setAuthForTest(fakeAuth) {
+  auth = fakeAuth;
+}
+
 module.exports = new AuthService();
+module.exports.__setAuthForTest = __setAuthForTest;
