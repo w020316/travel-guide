@@ -267,7 +267,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .ghost-btn { padding: var(--space-8) var(--space-16); border: 1px solid var(--line-2); border-radius: 999px; }
 .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 var(--space-4); background: var(--accent-text); color: var(--paper); border-radius: 9px; font-size: var(--fs-3xs); font-weight: 700; }
 
-/* P1-5: 移动端汉堡菜单（桌面隐藏，≤720px 显示）——沿用暖米纸/赭红/衬线风格 */
+/* P1-5: 移动端汉堡菜单（桌面隐藏，≤768px 显示）——沿用暖米纸/赭红/衬线风格 */
 .nav-menu-btn {
     display: none; /* 移动端由 media query 显示 */
     align-items: center; justify-content: center;
