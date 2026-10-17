@@ -1372,7 +1372,7 @@ travel-guide/
 
 **环境变量**:
 ```
-AGNES_API_KEY=sk-Cw3WSNHCOBCcogmkg9AzyIL41kks5ntryA6O3QRGnprgN2sy
+AGNES_API_KEY=<your-agnes-api-key>   # 切勿在此填写真实值，请在部署平台的环境变量中配置
 AGNES_MODEL=agnes-2.0-flash
 AI_PROVIDER=agnes
 NODE_ENV=production
