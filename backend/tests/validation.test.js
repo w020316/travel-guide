@@ -10,13 +10,19 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import {
+import { createRequire } from 'node:module';
+
+// 与 routes/api.js 保持一致，用 CJS require 加载被测模块。
+// 若用 ESM import，vitest 会为同一文件生成第二个模块实例，覆盖率按不同模块 ID 统计，
+// 与 routes 内部 require 的实例合并时会互相覆盖（实测导致本文件覆盖率被低估）。
+const requireCjs = createRequire(import.meta.url);
+const {
   validateCityIdParam,
   validateCityName,
   validatePagination,
   validateSearchQuery,
   validateCityPayload
-} from '../middleware/validation.js';
+} = requireCjs('../middleware/validation.js');
 
 /** 构造最小可用的 res 替身，记录 status / json 调用 */
 function mockRes() {
