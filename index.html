@@ -125,11 +125,15 @@
                     <div class="search-row">
                         <div class="search-input-wrap">
                             <label for="cityInput" class="sr-only">城市名称</label>
-                            <input type="text" id="cityInput" placeholder="输入城市名，如 成都、丽江、敦煌…" autocomplete="off" aria-label="城市名称" aria-describedby="searchSuggestions">
+                            <input type="text" id="cityInput" placeholder="输入城市名，如 成都、丽江、敦煌…" autocomplete="off" aria-label="城市名称" aria-describedby="searchSuggestions cityInputHint">
                             <div id="searchSuggestions" class="search-suggestions" hidden role="listbox" aria-label="城市建议"></div>
                         </div>
                         <button type="submit" class="btn-primary" id="generateBtn" aria-label="生成旅行攻略">生成攻略</button>
                     </div>
+
+                    <!-- v11.6 R3：输入实时校验提示。aria-live=polite 播报校验结果；
+                         置于 .search-row 之后（非绝对定位），城市联想下拉展开时不被遮蔽 -->
+                    <p class="city-input-hint" id="cityInputHint" aria-live="polite"></p>
 
                     <div class="search-meta">
                         <div class="meta-group">

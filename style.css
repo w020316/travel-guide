@@ -155,7 +155,11 @@
     --section-y: clamp(56px, 7.5vw, 104px);
     --section-y-sm: clamp(40px, 5.5vw, 72px);
     /* Hero 右侧水墨立轴的宽度（随视口伸缩；≤860px 整体收起） */
-    --hero-art-w: clamp(116px, 12vw, 200px);
+    --hero-art-w: clamp(132px, 14.5vw, 248px);
+
+    /* v11.6 R3 章节呼吸位：结果页每 3 个区块之间的「大呼吸」间距
+       （桌面 ~96px，移动端随 clamp 收到 ~64px，不产生横向溢出） */
+    --section-breath: clamp(64px, 8vw, 96px);
 
     /* 圆角统一为 3 种规格 */
     --radius-sm:    8px;   /* 小元素：按钮/标签 */
@@ -698,6 +702,19 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .suggestion-item .s-tags { font-size: var(--fs-2xs); color: var(--muted-2); }
 .suggestion-item .s-title { font-size: var(--fs-2xs); color: var(--muted); }
 
+/* v11.6 R3 表单实时校验：内联提示（小字号 + 既有 --danger 令牌，亮暗双轨）。
+   放在 .search-row 之后的文档流中（非绝对定位），城市联想下拉
+   （.search-input-wrap 内 absolute）展开时提示在其下方、互不遮蔽。 */
+.city-input-hint {
+    display: none;
+    margin: var(--space-8) 0 0;
+    font-size: var(--fs-2xs);
+    line-height: 1.5;
+    color: var(--danger);
+    letter-spacing: .02em;
+}
+.city-input-hint.show { display: block; }
+
 .search-meta {
     display: flex; flex-wrap: wrap; gap: var(--space-28); align-items: center;
     margin-top: var(--space-20); padding-top: var(--space-20); border-top: 1px dashed var(--line);
@@ -758,7 +775,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     background: var(--accent);
 }
 .section-title {
-    font-family: var(--font-display); font-weight: 700; font-size: var(--fs-4xl);
+    font-family: var(--font-display); font-weight: 680; font-size: var(--fs-4xl);
     color: var(--ink); letter-spacing: -.02em; line-height: 1.12;
     font-feature-settings: "palt" 1, "kern" 1;
 }
@@ -811,7 +828,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .rank-card:hover::before { color: var(--accent-soft); transform: scale(1.05); }
 .rank-card .rc-body { position: relative; z-index: 1; }
 .rank-card .rc-name {
-    font-family: var(--serif); font-weight: 700; font-size: var(--fs-xl); color: var(--ink);
+    font-family: var(--serif); font-weight: 680; font-size: var(--fs-xl); color: var(--ink);
     margin-bottom: var(--space-8); letter-spacing: -.01em;
 }
 .rank-card .rc-title { font-size: var(--fs-sm); color: var(--accent-text); margin-bottom: var(--space-16); letter-spacing: .02em; font-weight: 500; }
@@ -858,7 +875,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     border-radius: 50%; animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.loading-title { font-family: var(--serif); font-size: var(--fs-md); font-weight: 600; margin-bottom: var(--space-8); }
+.loading-title { font-family: var(--serif); font-size: var(--fs-md); font-weight: 620; margin-bottom: var(--space-8); }
 .loading-title span { color: var(--accent-text); }
 .loading-sub { font-size: var(--fs-sm); color: var(--muted); margin-bottom: var(--space-24); }
 .loading-bar { height: 3px; background: var(--paper-2); border-radius: 3px; overflow: hidden; }
@@ -872,7 +889,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 .back-btn { font-size: var(--fs-sm); color: var(--ink-2); transition: color .2s; }
 .back-btn:hover { color: var(--accent-text); }
-.result-title { font-family: var(--serif); font-weight: 700; font-size: var(--fs-fluid-title); }
+.result-title { font-family: var(--serif); font-weight: 680; font-size: var(--fs-fluid-title); }
 .result-actions { display: flex; gap: var(--space-8); flex-wrap: wrap; }
 .result-actions .icon-btn { white-space: nowrap; }
 
@@ -967,7 +984,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .gc-head .gc-eyebrow { font-size: var(--fs-2xs); letter-spacing: .2em; color: var(--accent-text); text-transform: uppercase; margin-bottom: var(--space-12); }
 /* v10.10 修复标题层级倒挂：结果页主标题改为 h1（见 index.html），
    攻略正文的标题相应降为 h2，视觉尺寸保持不变 */
-.gc-head h2 { font-family: var(--serif); font-weight: 700; font-size: var(--fs-fluid-h1); line-height: 1.15; color: var(--ink); margin-bottom: var(--space-12); }
+.gc-head h2 { font-family: var(--serif); font-weight: 680; font-size: var(--fs-fluid-h1); line-height: 1.15; color: var(--ink); margin-bottom: var(--space-12); }
 .gc-head .gc-sub { font-size: var(--fs-base); color: var(--muted); }
 .gc-stats { display: flex; flex-wrap: wrap; gap: var(--space-16); margin-top: var(--space-24); }
 .gc-stat { padding: var(--space-12) var(--space-16); background: var(--paper-2); border-radius: var(--radius-sm); font-size: var(--fs-sm); color: var(--muted); }
@@ -1032,8 +1049,27 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .guide-nav-item:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 
 .gc-section { margin-bottom: var(--space-44); }
+/* v11.6 R3 章节呼吸位：长列表每 3 个区块后拉开一次「大呼吸」，并铺一条
+   1px 发丝分隔线（--line-2 亮暗双轨），为密集信息流建立分段节奏。
+   目录锚点不受影响：buildGuideNav 点击跳转基于 getBoundingClientRect
+   实时计算目标位置，margin/伪元素均不改变区块顶点。 */
+.gc-section:nth-of-type(3n):not(:last-child) {
+    position: relative;
+    margin-bottom: var(--section-breath);
+}
+.gc-section:nth-of-type(3n):not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    /* 负值把线放到本区块下方的 margin 空隙正中 */
+    bottom: calc(var(--section-breath) / -2);
+    transform: translateY(50%);
+    height: 1px;
+    background: var(--line-2);
+    opacity: .55;
+}
 .gc-section > h2 {
-    font-family: var(--serif); font-weight: 700; font-size: var(--fs-lg); color: var(--ink);
+    font-family: var(--serif); font-weight: 680; font-size: var(--fs-lg); color: var(--ink);
     margin-bottom: var(--space-20); padding-bottom: var(--space-12); border-bottom: 1px solid var(--line);
     display: flex; align-items: center; gap: var(--space-12);
 }
@@ -1091,7 +1127,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 .weather-main { position: relative; z-index: 1; }
 .weather-temp {
-    font-family: var(--serif); font-size: var(--fs-2xl); font-weight: 700; color: var(--ink);
+    font-family: var(--serif); font-size: var(--fs-2xl); font-weight: 680; color: var(--ink);
     letter-spacing: -.02em; line-height: 1.1;
 }
 .weather-desc {
@@ -1133,7 +1169,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 .food-card:hover { border-color: var(--accent-text); transform: translateY(-3px); box-shadow: 0 8px 24px var(--shadow-3); }
 .food-card:hover::after { opacity: 1; }
-.food-card .fc-name { font-family: var(--serif); font-weight: 700; font-size: var(--fs-md); margin-bottom: var(--space-8); letter-spacing: -.01em; }
+.food-card .fc-name { font-family: var(--serif); font-weight: 680; font-size: var(--fs-md); margin-bottom: var(--space-8); letter-spacing: -.01em; }
 .food-card .fc-desc { font-size: var(--fs-sm); color: var(--muted); margin-bottom: var(--space-16); line-height: 1.65; }
 .food-card .fc-meta { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-sm); padding-top: var(--space-12); border-top: 1px dashed var(--line); }
 .food-card .fc-price { color: var(--accent-text); font-weight: 600; font-size: var(--fs-sm); }
@@ -1142,12 +1178,15 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 
 /* 预算 */
 .budget-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-28); }
-.budget-total { font-family: var(--serif); font-size: var(--fs-3xl); font-weight: 700; color: var(--accent-text); margin-bottom: var(--space-4); }
+.budget-total { font-family: var(--serif); font-size: var(--fs-3xl); font-weight: 680; color: var(--accent-text); margin-bottom: var(--space-4); }
 .budget-label { font-size: var(--fs-sm); color: var(--muted); margin-bottom: var(--space-20); }
 .budget-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-12); }
 .budget-item { padding: var(--space-16); background: var(--paper); border-radius: 8px; }
 .budget-item .bi-label { font-size: var(--fs-2xs); color: var(--muted-2); margin-bottom: var(--space-4); }
 .budget-item .bi-val { font-size: var(--fs-base); font-weight: 600; color: var(--ink); }
+/* v11.6 R3 预算数字滚动计数：JS 把数字 token 包进 .budget-num 并预置
+   min-width（等宽字形），滚动过程中位数增长不引起布局抖动 */
+.budget-num { display: inline-block; }
 
 /* 贴士 */
 .tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-20); }
@@ -1174,7 +1213,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     transition: var(--t-interactive);
 }
 .accommodation-card:hover { border-color: var(--accent-text); transform: translateY(-3px); box-shadow: var(--shadow-hover); }
-.accommodation-card .ac-name { font-family: var(--serif); font-weight: 600; font-size: var(--fs-md); margin-bottom: var(--space-4); }
+.accommodation-card .ac-name { font-family: var(--serif); font-weight: 620; font-size: var(--fs-md); margin-bottom: var(--space-4); }
 .accommodation-card .ac-area { font-size: var(--fs-sm); color: var(--accent-text); margin-bottom: var(--space-12); }
 .accommodation-card .ac-price { font-size: var(--fs-sm); font-weight: 600; color: var(--ink); margin-bottom: var(--space-12); }
 .accommodation-card .ac-features { display: flex; flex-wrap: wrap; gap: var(--space-8); margin-bottom: var(--space-12); }
@@ -1200,7 +1239,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .modal-head { display: flex; justify-content: space-between; align-items: center; padding: var(--space-24) var(--space-28); border-bottom: 1px solid var(--line); }
-.modal-head h3 { font-family: var(--serif); font-size: var(--fs-lg); font-weight: 700; }
+.modal-head h3 { font-family: var(--serif); font-size: var(--fs-lg); font-weight: 680; }
 .modal-close { width: 32px; height: 32px; border-radius: 50%; font-size: var(--fs-lg); color: var(--muted); transition: var(--t-interactive); }
 .modal-close:hover { background: var(--paper-2); color: var(--ink); }
 .modal-body { padding: var(--space-20) var(--space-28); overflow-y: auto; flex: 1; }
@@ -1235,7 +1274,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     transition: var(--t-interactive);
 }
 .fav-item:hover { border-color: var(--accent-text); }
-.fav-item .fi-name { font-family: var(--serif); font-weight: 600; font-size: var(--fs-base); }
+.fav-item .fi-name { font-family: var(--serif); font-weight: 620; font-size: var(--fs-base); }
 .fav-item .fi-title { font-size: var(--fs-2xs); color: var(--muted); }
 .fav-item .fi-actions { display: flex; gap: var(--space-8); }
 .fav-item .fi-btn { font-size: var(--fs-sm); padding: var(--space-8) var(--space-12); border-radius: 6px; border: 1px solid var(--line-2); color: var(--ink-2); transition: var(--t-interactive); }
@@ -1543,7 +1582,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     font-size: var(--fs-sm); color: var(--ink-2);
 }
 .compare-note .compare-route {
-    font-family: var(--serif); font-weight: 600; font-size: var(--fs-sm); color: var(--ink);
+    font-family: var(--serif); font-weight: 620; font-size: var(--fs-sm); color: var(--ink);
 }
 .compare-note .compare-date {
     margin-left: auto; color: var(--muted);
@@ -1575,7 +1614,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     margin-bottom: var(--space-4);
 }
 .compare-card .cc-platform {
-    font-family: var(--serif); font-weight: 700; font-size: var(--fs-base); color: var(--ink);
+    font-family: var(--serif); font-weight: 680; font-size: var(--fs-base); color: var(--ink);
     letter-spacing: -.01em;
 }
 .compare-card .cc-badge {
@@ -1632,7 +1671,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 .reservation-alert .ra-content { flex: 1; min-width: 0; }
 .reservation-alert .ra-title {
-    font-family: var(--serif); font-size: var(--fs-base); font-weight: 700;
+    font-family: var(--serif); font-size: var(--fs-base); font-weight: 680;
     color: var(--accent-dark); margin-bottom: var(--space-16); line-height: 1.5;
 }
 .reservation-alert .ra-list {
@@ -1652,7 +1691,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     margin-bottom: var(--space-8);
 }
 .reservation-alert .ra-name {
-    font-family: var(--serif); font-weight: 600; font-size: var(--fs-sm); color: var(--ink);
+    font-family: var(--serif); font-weight: 620; font-size: var(--fs-sm); color: var(--ink);
 }
 .reservation-alert .ra-advance {
     font-size: var(--fs-3xs); padding: 2px var(--space-8); border-radius: 4px;
@@ -1688,7 +1727,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 .photo-spot-card:hover::before { opacity: 1; }
 .photo-spot-card .ps-name {
-    font-family: var(--serif); font-weight: 700; font-size: var(--fs-md); color: var(--ink);
+    font-family: var(--serif); font-weight: 680; font-size: var(--fs-md); color: var(--ink);
     margin-bottom: var(--space-8); letter-spacing: -.01em;
 }
 .photo-spot-card .ps-desc {
@@ -1730,7 +1769,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 .upload-placeholder svg { color: var(--accent-text); opacity: .8; }
 .upload-placeholder p {
-    font-family: var(--serif); font-size: var(--fs-base); font-weight: 600;
+    font-family: var(--serif); font-size: var(--fs-base); font-weight: 620;
     color: var(--ink); margin-top: var(--space-4);
 }
 .upload-area .upload-hint {
@@ -1771,7 +1810,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     animation: slideUp .25s ease;
 }
 .ai-advice h4 {
-    font-family: var(--serif); font-size: var(--fs-base); font-weight: 700;
+    font-family: var(--serif); font-size: var(--fs-base); font-weight: 680;
     color: var(--accent-dark); margin-bottom: var(--space-16);
     display: flex; align-items: center; gap: var(--space-8);
 }
@@ -1941,7 +1980,7 @@ input[type="date"].input-ghost:focus {
 }
 .suggestion-empty .se-text { flex: 1; min-width: 0; }
 .suggestion-empty .se-title {
-    font-family: var(--serif); font-size: var(--fs-sm); font-weight: 600;
+    font-family: var(--serif); font-size: var(--fs-sm); font-weight: 620;
     color: var(--ink); margin-bottom: var(--space-4);
 }
 .suggestion-empty .se-hint {
@@ -1967,7 +2006,7 @@ input[type="date"].input-ghost:focus {
 }
 .gc-notice .gn-content { flex: 1; min-width: 0; }
 .gc-notice .gn-title {
-    font-family: var(--serif); font-size: var(--fs-sm); font-weight: 700;
+    font-family: var(--serif); font-size: var(--fs-sm); font-weight: 680;
     color: var(--warn-ink); margin-bottom: var(--space-8);
 }
 .gc-notice .gn-desc {
@@ -2236,10 +2275,13 @@ input[type="date"].input-ghost:focus {
     color: var(--paper);
 }
 
-/* 结果页主标题（h1）保持原有视觉尺寸，不因语义修正而改变外观 */
+/* 结果页主标题（h1）保持原有视觉尺寸，不因语义修正而改变外观。
+   v11.6 R3 QA 修复：此块与 :892 重复声明 .result-title，且此处的
+   font-weight:700 同特异性靠后覆盖了 680，浏览器 computed 回到 700。
+   按可变字重中间值方案同步为 680。 */
 .result-title {
     font-family: var(--serif);
-    font-weight: 700;
+    font-weight: 680;
     font-size: var(--fs-fluid-title);
     color: var(--ink);
 }
@@ -2460,22 +2502,37 @@ body::after {
    云海 / 赭红行程线）+ 落款印章，构成「只此一家」的构图记忆点。 */
 .hero-aside {
     position: absolute;
+    /* v11.6 R3：由「右上角浮标」改为「贯穿右侧的视觉柱」。
+       原实现 top:0 高度随内容，立轴悬在标题右上，与标题文字之间隔着
+       100+px 的空对空，构图上是两个互不相干的元素。
+       现改为 top/bottom 双向撑满 + 竖线 align-self:stretch，
+       让栏线贯穿整个 Hero 高度、立轴在其中垂直居中，
+       形成「左文字 / 右栏位」的编辑版式对话关系。 */
     top: 0;
+    bottom: 0;
     right: 0;
     display: flex;
-    align-items: stretch;
+    align-items: center;
     gap: var(--space-12);
     pointer-events: none;
     user-select: none;
+    /* v11.6 R3：视差用独立的 translate 属性，而非 transform ——
+       入场动画 heroAsideIn 占用了 transform，两者若共用会互相覆盖。
+       translate 是可独立合成的属性，与 transform 叠加且不触发重排。
+       老浏览器不支持该属性时自动降级为无视差，不影响布局。 */
+    translate: 0 var(--hero-parallax, 0px);
     animation: heroAsideIn 1.1s .5s both var(--ease-ink);
 }
 @keyframes heroAsideIn {
     from { opacity: 0; transform: translateY(-10px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-/* 竖向栏线：上下渐隐，避免与 hero 边界形成硬接缝 */
+/* 竖向栏线：上下渐隐，避免与 hero 边界形成硬接缝。
+   v11.6 R3：父级改为 align-items:center 后需显式拉伸，否则栏线只跟立轴同高，
+   「贯穿整栏」的编辑版式意图就失效了。 */
 .hero-rule {
     width: 1px;
+    align-self: stretch;
     background: linear-gradient(180deg, transparent, var(--line-2) 10%, var(--line-2) 90%, transparent);
 }
 .hero-aside-body {
@@ -2792,6 +2849,10 @@ body::after {
     }
     .hero-rule { display: none; }
     .hero-aside-body { width: auto; align-items: center; gap: var(--space-12); }
+    /* v11.6 R3：移动端原先把立轴排在表单之后（order:2，其余默认 0），
+       视觉上像「操作完了才想起还有张画」。改为插在副标题与表单之间：
+       阅读流变成 标题 → 说明 → 手记插图 → 操作，更符合编辑刊物的节奏。 */
+    .search-card { order: 3; }
     /* 缩小为「签名尺寸」：≤48vw 且不超过 190px，避免窄屏占满一屏 */
     .ink-scroll { width: min(48vw, 190px); }
     .hero-seal { width: 42px; height: 42px; font-size: 17px; }

@@ -752,6 +752,8 @@
         bindEvents();
         // v10.10 阶段五：启用滚动入场动效（原先无 IntersectionObserver 体系）
         initScrollReveal();
+        // v11.6 R3：Hero 立轴轻量视差（桌面端 / 非 reduce 才启用）
+        initHeroParallax();
         // 检测 URL 参数，自动打开攻略（支持分享链接）
         const urlState = parseUrlState();
         if (urlState && urlState.city) {
@@ -1057,6 +1059,30 @@
             }
         });
 
+        // v11.6 R3：城市输入实时校验（400ms 防抖，独立于下方联想的 160ms 防抖；
+        // 提示渲染在 .search-row 之后的文档流里，联想下拉展开时互不遮蔽）
+        const cityHint = document.getElementById('cityInputHint');
+        let validateTimer;
+        const validateCityInput = (raw) => {
+            if (!cityHint) return;
+            const q = (raw || '').trim();
+            let msg = '';
+            if (q.length > 20) {
+                msg = '城市名过长（超过 20 字），请检查输入';
+            } else if (q && !/[\u4e00-\u9fa5a-zA-Z0-9]/.test(q)) {
+                // 纯符号 / 纯空白：不含任何中英文或数字字符
+                msg = '请输入有效的城市名，如「成都」「丽江」';
+            }
+            if (msg) {
+                cityHint.textContent = msg;
+                cityHint.classList.add('show');
+            } else {
+                // 校验通过或输入为空：提示消失
+                cityHint.textContent = '';
+                cityHint.classList.remove('show');
+            }
+        };
+
         // 搜索建议
         let suggestTimer;
         dom.cityInput.addEventListener('input', () => {
@@ -1066,6 +1092,9 @@
             state.destination = '';
             if (dom.destinationInput) dom.destinationInput.value = '';
             const q = dom.cityInput.value.trim();
+            // v11.6 R3：实时校验独立 400ms 防抖（联想 160ms 优先，校验随后，互不干扰）
+            clearTimeout(validateTimer);
+            validateTimer = setTimeout(() => validateCityInput(dom.cityInput.value), 400);
             if (!q) { dom.suggestions.hidden = true; return; }
             suggestTimer = setTimeout(() => showSuggestions(q), 160);
         });
@@ -2211,6 +2240,9 @@
         // 导致 13 个区块全部硬出现、无入场节奏。此处补挂。
         initScrollReveal();
 
+        // v11.6 R3：预算区块数字滚动计数（进入视口后从 0 滚到目标值，一次性）
+        initBudgetCountUp();
+
         // v10.0: 绑定照片上传事件
         bindPhotoUploadEvents();
 
@@ -3256,6 +3288,39 @@
     // 无障碍：尊重 prefers-reduced-motion，用户要求减少动效时直接跳过（元素保持可见）。
     let revealObserver = null;
 
+    // ---------- v11.6 R3：Hero 立轴轻量视差 ----------
+    // 目的：给首屏一个「纵深」信号，让右侧立轴在滚动时比页面略慢地退后，
+    // 而不是死贴在文档流上。克制优先——系数 0.12、位移上限约 140px，
+    // 超过 Hero 高度即停止计算，避免长页滚动时累积成明显错位。
+    // 只写 CSS 变量（走 translate 属性），不碰 transform，不与入场动画冲突。
+    let heroParallaxBound = false;
+    function initHeroParallax() {
+        if (heroParallaxBound) return;
+        const aside = document.querySelector('.hero-aside');
+        if (!aside) return;
+        // 无障碍：用户要求减少动态效果时完全不做
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        // 移动端立轴是静态排布的「签名尺寸」，视差会破坏阅读流
+        if (!window.matchMedia('(min-width: 861px)').matches) return;
+
+        heroParallaxBound = true;
+        let ticking = false;
+        const MAX_SCROLL = 1200;   // Hero 大致高度，超出后不再更新
+
+        const update = () => {
+            ticking = false;
+            const y = window.scrollY;
+            if (y > MAX_SCROLL) return;
+            aside.style.setProperty('--hero-parallax', (y * 0.12).toFixed(2) + 'px');
+        };
+
+        window.addEventListener('scroll', () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(update);
+        }, { passive: true });
+    }
+
     function initScrollReveal() {
         // 尊重系统「减少动态效果」偏好：直接不启用，元素以默认可见状态呈现
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -3292,6 +3357,126 @@
             el.style.transitionDelay = `${Math.min(idx % 6, 5) * 60}ms`;
             revealObserver.observe(el);
         });
+    }
+
+    // ---------- v11.6 R3：预算数字滚动计数 ----------
+    // 结果页预算区块（.budget-total / .bi-val）进入视口时，金额从 0 滚动到
+    // 目标值。要点：
+    //   1. 只滚动「数字 token」（支持 ¥ 前缀 / 千分位 / 小数 / 区间两端各自滚动），
+    //      文字与单位保持静态，不做任何语义改写（重建走 createTextNode，无注入面）。
+    //   2. 动画前先以终值测量宽度写入 min-width（等宽字形），滚动过程零布局抖动。
+    //   3. 一次性触发：IntersectionObserver 首次进入视口即 unobserve + disconnect。
+    //   4. prefers-reduced-motion: reduce 时整个函数直接返回，数字保持静态。
+    //   5. 时长复用 700ms 入场档（--dur-enter），rAF + ease-out（cubic 1-(1-t)^3）。
+    let budgetCountObserver = null;
+    // 匹配数字 token：千分位「1,500」、小数「88.5」、普通整数；区间「3000-5000」
+    // 会匹配出两个独立 token，各自滚动。
+    const BUDGET_NUM_RE = /\d[\d,]*(?:\.\d+)?/g;
+    // 年份类数字不滚动：如「旺季 2025 年」滚动到 2025 会造成语义错乱。
+    // 判定从严：仅 4 位整数且紧邻「年/于/代」才视为年份，避免把 ¥1900-¥2100
+    // 区间内的正常金额误判为年份而不滚动。
+    // QA 修复：容许数字与年字之间夹空白（如「2026 年」——任务书示例正是此写法），
+    // 向前/向后各取 2 字符窗口、剔除空白后再做邻字判定。
+    function isYearLikeNumber(numStr, text, index) {
+        if (!/^\d{4}$/.test(numStr.replace(/,/g, ''))) return false;
+        const before = text.slice(Math.max(0, index - 2), index).replace(/\s+$/, '');
+        const after = text.slice(index + numStr.length, index + numStr.length + 2).replace(/^\s+/, '');
+        return /[年于]$/.test(before) || /^[年代]/.test(after);
+    }
+
+    function initBudgetCountUp() {
+        // 每次重新渲染攻略都会调用：先释放旧观察器，避免泄漏与重复触发
+        if (budgetCountObserver) { budgetCountObserver.disconnect(); budgetCountObserver = null; }
+        // 无障碍：用户要求减少动效时直接不启用，数字以静态终值呈现
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (!('IntersectionObserver' in window)) return;
+
+        const boxes = document.querySelectorAll('.budget-box');
+        if (!boxes.length) return;
+
+        // 第一步：把金额文本中的数字 token 包进 <span class="budget-num">
+        const watched = [];
+        boxes.forEach((box) => {
+            if (box.dataset.countReady) return;
+            box.dataset.countReady = '1';
+            box.querySelectorAll('.budget-total, .bi-val').forEach((host) => {
+                const text = host.textContent;
+                BUDGET_NUM_RE.lastIndex = 0;
+                if (!text || !BUDGET_NUM_RE.test(text)) return; // 纯文字（如「待估」）保持原样
+
+                BUDGET_NUM_RE.lastIndex = 0;
+                const frag = document.createDocumentFragment();
+                let last = 0;
+                let m;
+                while ((m = BUDGET_NUM_RE.exec(text)) !== null) {
+                    const num = m[0];
+                    const target = Number(num.replace(/,/g, ''));
+                    if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+                    if (!target || target <= 0 || isYearLikeNumber(num, text, m.index)) {
+                        // 0 / 非法 / 年份类：静态保留原样
+                        frag.appendChild(document.createTextNode(num));
+                    } else {
+                        const span = document.createElement('span');
+                        span.className = 'budget-num';
+                        span.textContent = num; // 先以终值渲染，供下方测量最终宽度
+                        span.dataset.target = String(target);
+                        span.dataset.grouped = /,/.test(num) ? '1' : '';
+                        span.dataset.decimals = (num.split('.')[1] || '').length;
+                        frag.appendChild(span);
+                    }
+                    last = m.index + num.length;
+                }
+                if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+                host.textContent = '';
+                host.appendChild(frag);
+            });
+
+            // QA 修复：测量 + min-width 延迟到观察器首次回调内执行（见下方
+            // measureBudgetNums）。原因：initBudgetCountUp 在 renderGuide() 内
+            // 被调用时 #resultPage 仍处于 [hidden]（display:none），此刻
+            // getBoundingClientRect() 恒为 0，在渲染时机测量永远写不进有效宽度。
+            watched.push(box);
+        });
+
+        // 第二步：创建观察器（进入视口后统一启动滚动，每个 box 只触发一次）
+        const DURATION = 700; // 复用 700ms 入场档（--dur-enter）
+        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+        const formatValue = (val, grouped, decimals) => {
+            const rounded = decimals > 0 ? Math.round(val * 10 ** decimals) / 10 ** decimals : Math.round(val);
+            return grouped ? rounded.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+                           : (decimals > 0 ? rounded.toFixed(decimals) : String(rounded));
+        };
+        budgetCountObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                budgetCountObserver.unobserve(entry.target);
+                const spans = entry.target.querySelectorAll('.budget-num');
+                if (!spans.length) return;
+                // QA 修复：区块刚进入视口、必然处于渲染态，此刻以终值测量最终
+                // 宽度写入 min-width —— 滚动过程中位数增长不顶开布局（零抖动）。
+                // 注：此前在渲染时机测量因 #resultPage 尚未 show 而恒得 0。
+                spans.forEach((span) => {
+                    const w = span.getBoundingClientRect().width;
+                    if (w > 0) span.style.minWidth = w + 'px';
+                });
+                const start = performance.now();
+                const step = (now) => {
+                    const p = Math.min((now - start) / DURATION, 1);
+                    const k = easeOutCubic(p);
+                    spans.forEach((span) => {
+                        const target = Number(span.dataset.target);
+                        // p=1 时 formatValue 的输出与原始 token（终值）逐字符一致，
+                        // 因此结束帧无需额外回写。
+                        span.textContent = formatValue(target * k, !!span.dataset.grouped, Number(span.dataset.decimals));
+                    });
+                    if (p < 1) requestAnimationFrame(step);
+                };
+                requestAnimationFrame(step);
+            });
+        }, { rootMargin: '0px 0px -10% 0px', threshold: 0.2 });
+
+        // 第三步：挂载观察（unobserve + disconnect 保证只滚动一次）
+        watched.forEach((box) => budgetCountObserver.observe(box));
     }
 
     // 启动
