@@ -2646,3 +2646,30 @@ body::after {
 @media (max-width: 560px) {
     .gc-head::after { display: none; }
 }
+
+/* =========================================================
+   v11.5 UI-1 · 移动端结果工具条紧凑化
+   ≤720px 原为 2 列网格，6 枚按钮排 3 行，375×667 下 .result-topbar 约 245px（占首屏约 37%）。
+   ≤480px 改 3 列 × 2 行，收紧字号/内边距（保持 ≥44px 触控高度），目标 topbar ≤170px。
+   720–481px 区间保持原 2 列网格不变。
+   ========================================================= */
+@media (max-width: 480px) {
+    .result-topbar {
+        row-gap: 8px;
+        padding-bottom: var(--space-16);
+        margin-bottom: var(--space-24);
+    }
+    .result-topbar .result-actions {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+    .result-topbar .result-actions .icon-btn {
+        min-height: 44px;              /* 触控目标 ≥44px */
+        padding: 6px 8px;
+        font-size: var(--fs-2xs);      /* 12px */
+        line-height: 1.2;
+        white-space: normal;           /* 「分享链接/下载海报/再次生成」允许在窄格内换行 */
+    }
+    /* 网格中「下载海报」主按钮原带 margin-left，会在 3 列网格内造成 4px 错位，此处归零对齐 */
+    .result-topbar .result-actions .icon-btn-primary { margin-left: 0; }
+}
