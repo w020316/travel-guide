@@ -13,7 +13,7 @@
  * 故 production 场景通过「清空 require 缓存 → 重设 env → 重新 require」取得独立实例；
  * 其余场景共用一个 test 环境实例。
  */
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import http from 'node:http';
 import { createRequire } from 'node:module';
 
@@ -67,6 +67,11 @@ let baseUrl;
 
 beforeAll(async () => {
   process.env.NODE_ENV = 'test';
+  // 让天气等外部请求快速失败，避免 /cities/:name 等触发网络（须在 loadApp 前设置）
+  process.env.QWEATHER_API_URL = 'http://127.0.0.1:1/v7';
+  process.env.QWEATHER_GEO_URL = 'http://127.0.0.1:1/v2';
+  process.env.NO_PROXY = '127.0.0.1,localhost';
+  process.env.no_proxy = '127.0.0.1,localhost';
   // 关闭所有真实 AI provider：避免测试触发外网请求（慢/不稳定），强制走本地降级快速返回。
   // 注意用空串而非 delete —— server.js 加载时会 dotenv.config()，会把「已删除」的键从 .env 重新填充，
   // 而空串属「已定义」，dotenv 不会覆盖；provider.isAvailable = Boolean(apiKey) 为空即判定不可用。
@@ -75,6 +80,10 @@ beforeAll(async () => {
   }
   // 避免 storage/social 未初始化导致的噪音；static 与健康检查无需真实数据
   const app = loadApp();
+  // 真实 server.js 在 initializeServer() 里初始化 storage；测试直接 require 需自行初始化，
+  // 使 /cities/:name 等能取到城市数据。须在 loadApp（会清缓存）之后 require 以拿到同一实例。
+  const storage = requireCjs('../services/storage.js');
+  await storage.initialize(null);
   ({ server, baseUrl } = await startServer(app));
 }, 60000);
 
@@ -215,6 +224,31 @@ describe('Q-4：鉴权边界（更多 requireAdmin 端点）', () => {
       body: JSON.stringify({ city: '北京' })
     });
     expect(res.status).toBe(401);
+  }, 20000);
+});
+
+describe('LOG-3：/cities/:name 浏览记录（可选认证）', () => {
+  function social() {
+    return requireCjs('../services/socialService.js');
+  }
+
+  it('登录用户访问城市详情应记录一次浏览', async () => {
+    const recordSpy = vi.spyOn(social(), 'recordView').mockResolvedValue({ success: true });
+    const token = requireCjs('../services/authService.js').createTestToken({ uid: 'browse-u', role: 'user' });
+    const res = await fetch(baseUrl + '/api/cities/' + encodeURIComponent('北京'), {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    expect(res.status).toBe(200);
+    expect(recordSpy).toHaveBeenCalledWith('cities', '北京', 'browse-u');
+    recordSpy.mockRestore();
+  }, 20000);
+
+  it('匿名访问城市详情不记录浏览，但请求照常成功', async () => {
+    const recordSpy = vi.spyOn(social(), 'recordView').mockResolvedValue({ success: true });
+    const res = await fetch(baseUrl + '/api/cities/' + encodeURIComponent('北京'));
+    expect(res.status).toBe(200);
+    expect(recordSpy).not.toHaveBeenCalled();
+    recordSpy.mockRestore();
   }, 20000);
 });
 

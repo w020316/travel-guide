@@ -616,7 +616,10 @@ router.get('/cities/search', validateSearchQuery, async (req, res) => {
 });
 
 // 获取城市详情(含实时信息)
-router.get('/cities/:name', validateCityName, async (req, res) => {
+// v11.4 修复 LOG-3（P2）：原路由未挂任何认证中间件，下方 if (req.user) 恒为 undefined，
+// 浏览记录分支永不执行（功能静默失效）。此处挂 optionalAuth（有 token 则校验注入，
+// 无/无效 token 静默继续），使「登录用户浏览记一次」的意图真正生效，匿名访问不受影响。
+router.get('/cities/:name', authService.optionalAuth, validateCityName, async (req, res) => {
   try {
     const city = await storage.getCity(req.params.name);
 
