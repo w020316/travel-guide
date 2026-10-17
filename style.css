@@ -2703,3 +2703,21 @@ body::after {
 }
 .gc-map-hint .gc-map-retry:hover { background: var(--accent, #9e3f2c); color: #fff; }
 .gc-map-hint .gc-map-retry:focus-visible { outline: 2px solid var(--accent, #9e3f2c); outline-offset: 2px; }
+
+/* =========================================================
+   v11.5 UX-9 · 加载卡「取消」按钮
+   与现有描边按钮同风格；焦点环用 --accent-text 与站内一致。
+   ========================================================= */
+.loading-cancel {
+    margin-top: 20px;
+    padding: 8px 20px;
+    font-size: var(--fs-sm, 14px);
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: var(--t-interactive);
+}
+.loading-cancel:hover { border-color: var(--accent-text); color: var(--accent-text); }
+.loading-cancel:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }

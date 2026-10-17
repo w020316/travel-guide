@@ -115,6 +115,9 @@
     }
 
     // ---------- API 客户端 ----------
+    // v11.5 UX-9：当前进行中的生成请求控制器（供加载层「取消」按钮 abort）与「用户主动取消」标记
+    let activeGenerateCtrl = null;
+    let canceledByUser = false;
     const API = {
         // 同源部署时用相对路径；本地 file:// 打开时回退到本地模式
         base: detectBaseURL(),
@@ -127,14 +130,16 @@
             // 65s = 后端 AI_TOTAL_BUDGET_MS 60s + 5s 缓冲。
             const AI_REQUEST_TIMEOUT_MS = 65000;
             let timedOut = false;
+            // v11.5 UX-9：每次生成重置「用户取消」标记；控制器提升到模块级供取消按钮 abort
+            canceledByUser = false;
             try {
-                const ctrl = new AbortController();
-                const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, AI_REQUEST_TIMEOUT_MS);
+                activeGenerateCtrl = new AbortController();
+                const timer = setTimeout(() => { timedOut = true; activeGenerateCtrl.abort(); }, AI_REQUEST_TIMEOUT_MS);
                 const res = await fetch(`${this.base}/api/ai/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ city, preferences: prefs }),
-                    signal: ctrl.signal
+                    signal: activeGenerateCtrl.signal
                 });
                 clearTimeout(timer);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -142,10 +147,16 @@
                 if (json.success && json.data) return json.data;
                 throw new Error(json.error || '生成失败');
             } catch (e) {
-                // v11.4 修复 Q-3③：区分「超时/取消 abort」与「生成失败」，提示更准确
                 const aborted = e && e.name === 'AbortError';
+                // v11.5 UX-9：用户主动取消 → 不回落本地，抛特定错误交由外层回首页
+                if (aborted && canceledByUser) {
+                    const err = new Error('已取消生成');
+                    err.canceledByUser = true;
+                    throw err;
+                }
+                // v11.4 修复 Q-3③：区分「超时/取消 abort」与「生成失败」，提示更准确
                 if (aborted) {
-                    console.warn('后端生成超时/取消，回退本地数据');
+                    console.warn('后端生成超时，回退本地数据');
                     if (window.__toast) {
                         window.__toast(timedOut ? '生成超时，已切换本地数据' : '请求已取消，已切换本地数据', { duration: 4000 });
                     }
@@ -153,6 +164,9 @@
                     console.warn('后端生成失败，回退本地数据:', e.message);
                 }
                 return buildLocalGuide(city, prefs);
+            } finally {
+                activeGenerateCtrl = null;
+                canceledByUser = false;
             }
         },
 
@@ -688,7 +702,7 @@
         travelDateInput: $('travelDateInput'),
         quickCities: $('quickCities'), rankingList: $('rankingList'),
         historySection: $('historySection'), historyList: $('recentHistoryList'), clearHistoryBtn: $('clearHistoryBtn'),
-        loading: $('loading'), loadingCity: $('loadingCity'), loadingSub: $('loadingSub'), loadingBar: $('loadingBar'),
+        loading: $('loading'), loadingCity: $('loadingCity'), loadingSub: $('loadingSub'), loadingBar: $('loadingBar'), loadingCancel: $('loadingCancel'),
         resultPage: $('resultPage'), homePage: $('homePage'),
         resultTitle: $('resultTitle'), guideContent: $('guideContent'), poster: $('poster'),
         backBtn: $('backBtn'), favoriteBtn: $('favoriteBtn'), copyTextBtn: $('copyTextBtn'), downloadPosterBtn: $('downloadPosterBtn'),
@@ -970,6 +984,21 @@
     // ---------- 事件绑定 ----------
     function bindEvents() {
         dom.form.addEventListener('submit', (e) => { e.preventDefault(); submitCity(dom.cityInput.value.trim()); });
+
+        // v11.5 UX-9：加载层「取消」按钮 → 中止进行中的生成请求，回首页（不回落本地）
+        if (dom.loadingCancel) {
+            dom.loadingCancel.addEventListener('click', () => {
+                canceledByUser = true;
+                if (activeGenerateCtrl) {
+                    activeGenerateCtrl.abort();   // 触发 fetch AbortError → generateGuide 抛 canceledByUser → 外层回首页
+                } else {
+                    // 兜底：请求尚未开始（控制器为空）时直接收尾，避免卡在加载层
+                    hideLoading();
+                    showHome();
+                    toast('已取消生成', 'info');
+                }
+            });
+        }
 
         // 天数
         dom.dayPills.querySelectorAll('.pill').forEach(p => {
@@ -1298,6 +1327,12 @@
             showResult();
         } catch (e) {
             hideLoading();
+            // v11.5 UX-9：用户主动取消 → 回首页 + 提示，不计为生成失败
+            if (e && e.canceledByUser) {
+                toast('已取消生成', 'info');
+                showHome();
+                return;
+            }
             toast('生成失败：' + e.message, 'error');
         }
     }
@@ -2728,6 +2763,13 @@
 
     // ---------- 加载 ----------
     let loadingTimer;
+    let loadingStageTimers = [];   // v11.5 UX-9：阶段文案定时器
+    function clearLoadingStageTimers() {
+        if (loadingStageTimers.length) {
+            loadingStageTimers.forEach(t => clearTimeout(t));
+            loadingStageTimers = [];
+        }
+    }
     function showLoading(city) {
         dom.loadingCity.textContent = city;
         // 修复 P2：进入 showLoading 前先清理上一个定时器，避免快速连续触发导致 setInterval 泄漏
@@ -2735,6 +2777,7 @@
             clearInterval(loadingTimer);
             loadingTimer = null;
         }
+        clearLoadingStageTimers();
         // v10.2: 根据模式显示不同文案
         // v10.10：不再承诺「AI 正在分析」。实测 AI 全链路失败时会静默回退本地数据
         // （耗时 10s 以上），但原文案仍宣称在用 AI，与实际行为不符。
@@ -2745,17 +2788,28 @@
             : '正在为你规划行程，整理景点、美食与预算…';
         dom.loadingBar.style.width = '0%';
         dom.loading.hidden = false;
+
+        // v11.5 UX-9：加载文案随耗时阶段化推进（仅 AI 模式；本地模式秒回，保持单一文案）
+        if (!isLocal) {
+            const stages = [
+                [5000, '正在编排每日行程与路线…'],
+                [12000, '正在整理美食与预算建议…'],
+                [20000, 'AI 深度思考中，预计还需 10–20 秒…']
+            ];
+            for (const [delay, text] of stages) {
+                loadingStageTimers.push(setTimeout(() => { dom.loadingSub.textContent = text; }, delay));
+            }
+        }
+
         let p = 0;
         loadingTimer = setInterval(() => {
             p = Math.min(p + Math.random() * 14, 92);
             dom.loadingBar.style.width = p + '%';
-            // 修复 P3：本地模式与 AI 模式文案完全一致，合并分支
-            if (p > 30) dom.loadingSub.textContent = '正在匹配你的旅行偏好…';
-            if (p > 65) dom.loadingSub.textContent = '排版生成专属海报…';
         }, 420);
     }
     function hideLoading() {
         clearInterval(loadingTimer);
+        clearLoadingStageTimers();   // v11.5 UX-9：清理阶段文案定时器，避免加载层关闭后仍改写文案
         dom.loadingBar.style.width = '100%';
         setTimeout(() => { dom.loading.hidden = true; }, 320);
     }
