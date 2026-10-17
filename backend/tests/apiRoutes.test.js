@@ -57,8 +57,10 @@ beforeAll(async () => {
     throw new Error('测试前置失败：storage 未加载到城市数据，后续断言将全部失真');
   }
 
-  const mod = await import('../routes/api.js');
-  const apiRouter = mod.default || mod;
+  // 用 CJS require 加载路由，确保与 routes/api.js 内部 require 的是同一模块实例。
+  // 若用 ESM import，vitest 会生成第二个实例，覆盖率按不同模块 ID 统计并互相覆盖，
+  // 导致 api.js 的覆盖率被系统性低估（实测相差 10+ 个百分点）。
+  const apiRouter = requireCjs('../routes/api.js');
 
   const app = express();
   app.use(express.json());
