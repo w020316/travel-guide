@@ -2673,3 +2673,33 @@ body::after {
     /* 网格中「下载海报」主按钮原带 margin-left，会在 3 列网格内造成 4px 错位，此处归零对齐 */
     .result-topbar .result-actions .icon-btn-primary { margin-left: 0; }
 }
+
+/* =========================================================
+   v11.5 UX-7 · 地图降级态：收缩空白 + 重试按钮
+   失败时给 .gc-map-box 加 .is-degraded 令高度自适应（消除约 250px 空白），
+   并在提示内提供「重试」按钮（重试成功后 initGuideMap 移除该类，恢复固定高度）。
+   ========================================================= */
+.gc-map-box.is-degraded {
+    height: auto;
+    min-height: 0;
+}
+/* hint 默认 position:absolute(inset:0) 不参与父级高度计算，若仅令 box height:auto 会塌缩到
+   ~2px 并把提示/重试按钮裁掉。降级时改为 static，使容器高度收缩到「提示内容」的真实高度。 */
+.gc-map-box.is-degraded .gc-map-hint {
+    position: static;
+}
+.gc-map-hint .gc-map-retry {
+    align-self: flex-start;
+    margin-top: 4px;
+    padding: 6px 16px;
+    font-size: var(--fs-2xs, 12px);
+    font-weight: 600;
+    color: var(--accent, #9e3f2c);
+    background: transparent;
+    border: 1px solid var(--accent, #9e3f2c);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+}
+.gc-map-hint .gc-map-retry:hover { background: var(--accent, #9e3f2c); color: #fff; }
+.gc-map-hint .gc-map-retry:focus-visible { outline: 2px solid var(--accent, #9e3f2c); outline-offset: 2px; }
