@@ -412,18 +412,34 @@ describe('AI 生成入参收敛与调用契约', () => {
     expect(body).toEqual({ success: true, advice: '提高对比度' });
   });
 
-  it('【缺陷锁定】GET/DELETE /ai/cache 缺 verifyCustomToken，管理员也恒 403', async () => {
-    // 现状：两条路由只挂 requireAdmin，req.user 从未被赋值 → requireAdmin 必然拒绝。
-    // 这意味着「查看/清除 AI 缓存」在生产对任何人都不可用（功能静默失效，非越权）。
-    // 修复方式：在 requireAdmin 前补 authService.verifyCustomToken。
-    // 本用例锁定现状，修复后应改为断言 200 —— 请同步修改此用例。
-    const view = await api('/api/ai/cache', { token: adminToken });
-    expect(view.status).toBe(403);
-    expect(view.body.error).toBe('需要管理员权限');
+  it('GET/DELETE /ai/cache：无 token 401、非管理员 403、管理员 200', async () => {
+    // 回归 v11.7 修复：此前两条路由只挂 requireAdmin、缺 verifyCustomToken，
+    // req.user 恒 undefined → 管理员也恒 403（功能死锁）。补齐后三层鉴权应逐级放行。
+    const noToken = await api('/api/ai/cache');
+    expect(noToken.status).toBe(401);
+    expect(noToken.body.error).toBe('未提供认证令牌');
 
+    const forbidden = await api('/api/ai/cache', { token: userToken });
+    expect(forbidden.status).toBe(403);
+    expect(forbidden.body.error).toBe('需要管理员权限');
+
+    const cacheSpy = vi.spyOn(aiService, 'getCacheStats').mockReturnValue({ size: 3, max: 100 });
+    const view = await api('/api/ai/cache', { token: adminToken });
+    expect(view.status).toBe(200);
+    expect(view.body).toEqual({ success: true, stats: { size: 3, max: 100 } });
+    expect(cacheSpy).toHaveBeenCalledTimes(1);
+
+    const noTokenDelete = await api('/api/ai/cache', { method: 'DELETE' });
+    expect(noTokenDelete.status).toBe(401);
+
+    const forbiddenDelete = await api('/api/ai/cache', { method: 'DELETE', token: userToken });
+    expect(forbiddenDelete.status).toBe(403);
+
+    const clearSpy = vi.spyOn(aiService, 'clearCache').mockImplementation(() => {});
     const cleared = await api('/api/ai/cache', { method: 'DELETE', token: adminToken });
-    expect(cleared.status).toBe(403);
-    expect(cleared.body.error).toBe('需要管理员权限');
+    expect(cleared.status).toBe(200);
+    expect(cleared.body).toEqual({ success: true, message: 'AI缓存已清除' });
+    expect(clearSpy).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -555,12 +571,21 @@ describe('数据同步接口 —— 成功与 404 分支', () => {
     expect(expanded.body.message).toBe('缓存已清除');
   });
 
-  it('【缺陷锁定】GET /social/stats 缺 verifyCustomToken，管理员也恒 403', async () => {
-    // 同 /ai/cache：只挂 requireAdmin 未挂 verifyCustomToken，req.user 恒 undefined。
-    const { status, body } = await api('/api/social/stats', { token: adminToken });
+  it('GET /social/stats：无 token 401、非管理员 403、管理员 200', async () => {
+    // 回归 v11.7 修复：此前只挂 requireAdmin、缺 verifyCustomToken，管理员也恒 403。
+    const noToken = await api('/api/social/stats');
+    expect(noToken.status).toBe(401);
+    expect(noToken.body.error).toBe('未提供认证令牌');
 
-    expect(status).toBe(403);
-    expect(body).toEqual({ success: false, error: '需要管理员权限' });
+    const forbidden = await api('/api/social/stats', { token: userToken });
+    expect(forbidden.status).toBe(403);
+    expect(forbidden.body.error).toBe('需要管理员权限');
+
+    const ok = await api('/api/social/stats', { token: adminToken });
+    expect(ok.status).toBe(200);
+    expect(ok.body.success).toBe(true);
+    expect(ok.body.stats.mode).toBe('memory');
+    expect(ok.body.stats.initialized).toBe(false);
   });
 });
 

@@ -201,7 +201,7 @@ router.post('/ai/generate-batch', authService.verifyCustomToken, authService.req
 });
 
 // 获取AI缓存状态
-router.get('/ai/cache', authService.requireAdmin, async (req, res) => {
+router.get('/ai/cache', authService.verifyCustomToken, authService.requireAdmin, async (req, res) => {
   try {
     const stats = aiService.getCacheStats();
     res.json({ success: true, stats });
@@ -226,7 +226,7 @@ router.post('/ai/edit-photo', authService.verifyCustomToken, authService.require
 });
 
 // 清除AI缓存
-router.delete('/ai/cache', authService.requireAdmin, async (req, res) => {
+router.delete('/ai/cache', authService.verifyCustomToken, authService.requireAdmin, async (req, res) => {
   try {
     aiService.clearCache();
     res.json({ success: true, message: 'AI缓存已清除' });
@@ -487,7 +487,7 @@ router.get('/trending/social', async (req, res) => {
 });
 
 // 获取社交系统统计
-router.get('/social/stats', authService.requireAdmin, async (req, res) => {
+router.get('/social/stats', authService.verifyCustomToken, authService.requireAdmin, async (req, res) => {
   try {
     const stats = socialService.getStats();
     res.json({ success: true, stats });
