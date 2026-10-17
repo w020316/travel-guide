@@ -161,6 +161,7 @@
     --radius-sm:    8px;   /* 小元素：按钮/标签 */
     --radius:       12px;  /* 中元素：卡片/输入框 */
     --radius-lg:    16px;  /* 大元素：弹窗/容器 */
+    --radius-pill:  999px; /* 胶囊：目录条/圆形标签（v11.6 目录导航引入） */
 
     /* 分层阴影系统（替代单一塑料阴影） */
     --shadow-sm:    0 1px 2px rgba(28,26,23,.04), 0 2px 4px rgba(28,26,23,.03);
@@ -957,6 +958,11 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 
 /* ---------- 攻略正文 ---------- */
 .guide-content { font-size: var(--fs-base); color: var(--ink-2); }
+
+/* v11.6：grid 子项默认 min-width:auto，会被内部不换行内容（如目录条）
+   撑破父网格，导致整页横向溢出（实测 375 视口溢出 848px）。
+   显式归零让子项可收缩，内部再由自身 overflow-x 承接滚动。 */
+.guide-col { min-width: 0; }
 .gc-head { margin-bottom: var(--space-36); padding-bottom: var(--space-28); border-bottom: 1px solid var(--line); }
 .gc-head .gc-eyebrow { font-size: var(--fs-2xs); letter-spacing: .2em; color: var(--accent-text); text-transform: uppercase; margin-bottom: var(--space-12); }
 /* v10.10 修复标题层级倒挂：结果页主标题改为 h1（见 index.html），
@@ -966,6 +972,64 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .gc-stats { display: flex; flex-wrap: wrap; gap: var(--space-16); margin-top: var(--space-24); }
 .gc-stat { padding: var(--space-12) var(--space-16); background: var(--paper-2); border-radius: var(--radius-sm); font-size: var(--fs-sm); color: var(--muted); }
 .gc-stat strong { color: var(--ink); font-weight: 600; }
+
+/* =========================================================
+   v11.6 结果页目录导航
+   ---------------------------------------------------------
+   驱动数据：阶段四实测结果页高 7980px（约 8 屏）、13 个区块，
+   用户难以定位目标区块。
+   设计取向：编辑刊物的「栏目索引」——横向胶囊条，粘顶可横滚，
+   当前区块高亮。不用侧边 sidebar，避免破坏 ≤768px 单列布局。
+   背景用不透明 --paper 而非毛玻璃：滚动时正文不会从目录下透出，
+   同时避开 backdrop-filter 在低端设备上的合成开销。
+   ========================================================= */
+.guide-nav {
+    position: sticky;
+    top: var(--space-8);
+    z-index: 20;
+    display: flex;
+    gap: var(--space-4);
+    margin-bottom: var(--space-28);
+    padding: var(--space-4);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.guide-nav::-webkit-scrollbar { display: none; }
+
+.guide-nav-item {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap-min);        /* 48px，符合移动端触摸基线 */
+    padding: 0 var(--space-16);
+    border-radius: var(--radius-pill);
+    font-size: var(--fs-2xs);
+    font-family: var(--sans);
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: var(--t-interactive);
+}
+.guide-nav-item:hover { color: var(--ink); background: var(--paper-2); }
+.guide-nav-item:active { transform: scale(.97); }
+.guide-nav-item.is-active {
+    color: var(--paper);
+    background: var(--accent-text);   /* 6.14:1，品牌实底用 accent-text 而非 accent */
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .guide-nav { border-radius: var(--radius-sm); }
+    .guide-nav-item { padding: 0 var(--space-12); }
+}
+
+/* 键盘焦点在横滚目录中需要清晰可见，否则 :focus-visible 全局环会被容器裁切 */
+.guide-nav-item:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 
 .gc-section { margin-bottom: var(--space-44); }
 .gc-section > h2 {

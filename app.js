@@ -2201,11 +2201,78 @@
 
         dom.guideContent.innerHTML = sections.join('') || '<div class="empty-guide">暂无攻略数据</div>';
 
+        // v11.6 阶段五：生成结果页目录导航
+        // 驱动数据：阶段四实测结果页高 7980px（约 8 屏）、13 个内容区块，
+        // 用户难以定位「预算」「美食」等目标区块，SUS 扣分项之一。
+        buildGuideNav();
+
         // v10.0: 绑定照片上传事件
         bindPhotoUploadEvents();
 
         // v11.2: 初始化行程地图（异步，失败不影响攻略渲染）
         initGuideMap();
+    }
+
+    // ---------- v11.6：结果页目录导航 ----------
+    // 设计取向：编辑设计的「栏目索引」而非工具型 sidebar —— 横向胶囊条，
+    // 粘顶、可横滚、当前区块高亮。移动端不占侧边空间，符合 ≤768px 的单列布局。
+    let guideNavObserver = null;
+    function buildGuideNav() {
+        const root = dom.guideContent;
+        if (!root) return;
+        // 清理上一次的观察器，避免切换城市后累积
+        if (guideNavObserver) { guideNavObserver.disconnect(); guideNavObserver = null; }
+
+        const secs = Array.from(root.querySelectorAll('.gc-section'));
+        if (secs.length < 4) return; // 区块太少，目录没有价值
+
+        const items = [];
+        secs.forEach((sec, i) => {
+            const h2 = sec.querySelector('h2');
+            if (!h2) return;
+            // 标题形如「①每日行程」，去掉开头的序号 span 文本
+            const idxEl = h2.querySelector('.gc-idx');
+            const label = (idxEl ? h2.textContent.replace(idxEl.textContent, '') : h2.textContent).trim();
+            if (!label) return;
+            const id = `gsec-${i}`;
+            sec.id = id;
+            sec.setAttribute('data-nav-label', label);
+            items.push({ id, label });
+        });
+        if (items.length < 4) return;
+
+        const nav = document.createElement('nav');
+        nav.className = 'guide-nav';
+        nav.setAttribute('aria-label', '攻略目录');
+        nav.innerHTML = items.map((it, i) =>
+            `<a class="guide-nav-item${i === 0 ? ' is-active' : ''}" href="#${it.id}">${escapeHtml(it.label)}</a>`
+        ).join('');
+        root.insertBefore(nav, root.firstChild);
+
+        // 点击：平滑滚动并让出 sticky 目录的高度
+        nav.addEventListener('click', (e) => {
+            const a = e.target.closest('.guide-nav-item');
+            if (!a) return;
+            e.preventDefault();
+            const target = document.getElementById(a.getAttribute('href').slice(1));
+            if (!target) return;
+            const navH = nav.getBoundingClientRect().height + 16;
+            const y = target.getBoundingClientRect().top + window.scrollY - navH;
+            const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
+            a.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduce ? 'auto' : 'smooth' });
+        });
+
+        // 滚动高亮：以视口上 1/3 处为判定线，避免长区块刚露头就抢高亮
+        const links = Array.from(nav.querySelectorAll('.guide-nav-item'));
+        guideNavObserver = new IntersectionObserver((entries) => {
+            entries.forEach((en) => {
+                if (!en.isIntersecting) return;
+                const id = en.target.id;
+                links.forEach((l) => l.classList.toggle('is-active', l.getAttribute('href') === '#' + id));
+            });
+        }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+        secs.forEach((s) => { if (s.id) guideNavObserver.observe(s); });
     }
 
     // ---------- v11.2: 行程地图（高德地图 JS API 2.0，非默认场景：用户自备 Key+安全密钥）----------
