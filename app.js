@@ -2206,6 +2206,11 @@
         // 用户难以定位「预算」「美食」等目标区块，SUS 扣分项之一。
         buildGuideNav();
 
+        // v11.6 阶段五：结果页区块此前从未被 reveal 观察器覆盖
+        // （initScrollReveal 只在页面初始化时跑一次，且选择器不含 .gc-section），
+        // 导致 13 个区块全部硬出现、无入场节奏。此处补挂。
+        initScrollReveal();
+
         // v10.0: 绑定照片上传事件
         bindPhotoUploadEvents();
 
@@ -3260,9 +3265,12 @@
         if (!('IntersectionObserver' in window)) return;
 
         const targets = document.querySelectorAll(
-            '.section-head, .rank-card, .history-list, .search-card'
+            '.section-head, .rank-card, .history-list, .search-card, .gc-section'
         );
         if (!targets.length) return;
+
+        // v11.6：结果页每次重新渲染都会再次调用本函数，先释放旧观察器避免泄漏
+        if (revealObserver) { revealObserver.disconnect(); revealObserver = null; }
 
         revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -3277,6 +3285,8 @@
         });
 
         targets.forEach((el, idx) => {
+            // v11.6：已入场的元素保持可见，不重播动画（结果页二次渲染时首页元素已 in）
+            if (el.classList.contains('in')) return;
             el.classList.add('reveal');
             // 同组元素按序错开 60ms，形成瀑布节奏；上限 6 档避免长尾等待
             el.style.transitionDelay = `${Math.min(idx % 6, 5) * 60}ms`;
