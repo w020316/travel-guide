@@ -1,0 +1,102 @@
+{
+  "total": 9,
+  "pass": 9,
+  "fail": 0,
+  "results": [
+    {
+      "name": "R1.result-title computed=680",
+      "pass": true,
+      "detail": {
+        "computed": "680"
+      }
+    },
+    {
+      "name": "R2a.before viewport: no min-width (new intended behavior)",
+      "pass": true,
+      "detail": {
+        "minWidths": [
+          "(none)",
+          "(none)",
+          "(none)",
+          "(none)",
+          "(none)",
+          "(none)"
+        ]
+      }
+    },
+    {
+      "name": "R2b.animation runs",
+      "pass": true,
+      "detail": {}
+    },
+    {
+      "name": "R2c.min-width written at animation start (fix for Bug-2)",
+      "pass": true,
+      "detail": {
+        "minWidths": [
+          "80.3281px",
+          "63.3281px",
+          "27.8438px",
+          "27.8438px",
+          "27.8438px",
+          "27.8438px"
+        ]
+      }
+    },
+    {
+      "name": "R2d.span widths stable mid vs final (no jitter)",
+      "pass": true,
+      "detail": {
+        "mid": [
+          80.6,
+          63.5,
+          27.8,
+          27.8,
+          27.8,
+          27.8
+        ],
+        "fin": [
+          80.3,
+          63.3,
+          27.8,
+          27.8,
+          27.8,
+          27.8
+        ]
+      }
+    },
+    {
+      "name": "R2e.final text == initial token",
+      "pass": true,
+      "detail": {
+        "final": [
+          "1573",
+          "787",
+          "276",
+          "773",
+          "414",
+          "110"
+        ]
+      }
+    },
+    {
+      "name": "R2f.min-width persists after animation",
+      "pass": true,
+      "detail": {}
+    },
+    {
+      "name": "R2g.trigger once (scroll away/back no re-animation)",
+      "pass": true,
+      "detail": {}
+    },
+    {
+      "name": "R3.reduced-motion: no spans, sections visible",
+      "pass": true,
+      "detail": {
+        "spans": 0,
+        "op": "1"
+      }
+    }
+  ],
+  "pageErrors": []
+}
