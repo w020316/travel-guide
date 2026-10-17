@@ -27,7 +27,12 @@ export default defineConfig({
         'utils/**/*.js',
         'services/**/*.js',
         'middleware/**/*.js',
-        'routes/**/*.js'
+        'routes/**/*.js',
+        // v11.4 修复 Q-7：补齐覆盖率口径缺口 —— models/（City.js）、data/（expandedCitiesLoader.js
+        // 即 PERF-1/PERF-2 所在）、mcp/（mcp/server.js）此前完全未纳入统计，缺陷即便有测试也不计入。
+        'models/**/*.js',
+        'data/**/*.js',
+        'mcp/**/*.js'
       ],
       exclude: ['node_modules/**', 'tests/**']
     }

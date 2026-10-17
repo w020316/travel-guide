@@ -4,6 +4,8 @@ const crypto = require('crypto');
 
 let cachedCities = null;
 let lastLoadTime = null;
+// v11.4 修复 PERF-1：缓存已加载数据的「原始内容哈希」，用于判断是否真的需要重载。
+let cachedHash = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
 
 // 数据版本控制
@@ -227,27 +229,40 @@ function generateDataHash(data) {
 /**
  * 加载扩展城市数据库（627个城市）
  * 直接 require 数据文件，文件末尾已 module.exports = EXPANDED_CITIES
+ *
+ * v11.4 修复 PERF-1（P2）：原实现每次调用都 `delete require.cache[...]` 后重新 require
+ * 249,437B 模块并对 527 城逐个 validate+sanitize（每 5 分钟在请求路径上重跑，造成周期性
+ * 同步阻塞与对象 churn，且与 storage 已加载的同一份数据形成双份常驻）。
+ * 改为「单份常驻 + 内容哈希」：
+ *  - 数据文件为随包发布的静态资源，运行期不会变化；require 由 Node 模块缓存托管，不再 delete。
+ *  - 记录原始内容的哈希（generateDataHash）；仅当哈希与上次加载不一致时才重新校验/重建。
+ *  - 校验结果写入新对象，不修改 require 返回的 rawData，避免污染模块缓存。
  */
 function loadExpandedCities() {
     try {
         const expandedPath = path.join(__dirname, '../../data/expandedCities.js');
 
         if (fs.existsSync(expandedPath)) {
-            console.log(`📂 正在加载扩展城市数据库...`);
             const startTime = Date.now();
 
-            // 直接 require 加载（文件已 module.exports）
-            delete require.cache[require.resolve('../../data/expandedCities.js')];
-            const citiesData = require('../../data/expandedCities.js');
-            const loadTime = Date.now() - startTime;
+            // 直接 require 加载（Node 模块缓存，不再 delete require.cache）
+            const rawData = require('../../data/expandedCities.js');
 
-            if (!citiesData || typeof citiesData !== 'object') {
+            if (!rawData || typeof rawData !== 'object') {
                 throw new Error('加载的数据不是有效对象');
             }
 
+            // 内容哈希：与上次加载一致则直接复用（不重复校验 527 城）
+            const rawHash = generateDataHash(rawData);
+            if (cachedCities && cachedHash === rawHash) {
+                return cachedCities;
+            }
+
+            console.log(`📂 正在加载扩展城市数据库...`);
+
             // 数据统计和验证
             const stats = {
-                totalCities: Object.keys(citiesData).length,
+                totalCities: Object.keys(rawData).length,
                 validCities: 0,
                 invalidCities: 0,
                 totalWarnings: 0,
@@ -255,33 +270,36 @@ function loadExpandedCities() {
                 seasonDistribution: {}
             };
 
-            // 验证每个城市数据
-            for (const [cityName, rawCityData] of Object.entries(citiesData)) {
+            // 校验并生成新对象（不修改 rawData）
+            const processed = {};
+            for (const [cityName, rawCityData] of Object.entries(rawData)) {
                 const validation = validateCityData(cityName, rawCityData);
 
                 if (validation.valid) {
                     stats.validCities++;
-                    citiesData[cityName] = sanitizeCityData(rawCityData);
                 } else {
                     stats.invalidCities++;
                     console.warn(`⚠️ 城市 "${cityName}" 数据验证失败:`, validation.errors);
-                    // 尝试修复数据
-                    citiesData[cityName] = sanitizeCityData(rawCityData);
                 }
+                // 无论是否通过校验都做标准化清洗（与原行为一致，失败时尽量修复）
+                processed[cityName] = sanitizeCityData(rawCityData);
 
                 stats.totalWarnings += validation.warnings.length;
 
                 // 统计标签分布
-                if (citiesData[cityName]?.tags) {
-                    for (const tag of citiesData[cityName].tags) {
+                if (processed[cityName]?.tags) {
+                    for (const tag of processed[cityName].tags) {
                         stats.tagsCount[tag] = (stats.tagsCount[tag] || 0) + 1;
                     }
                 }
 
                 // 统计季节分布
-                const season = citiesData[cityName]?.season || '未知';
+                const season = processed[cityName]?.season || '未知';
                 stats.seasonDistribution[season] = (stats.seasonDistribution[season] || 0) + 1;
             }
+
+            cachedHash = rawHash;
+            const loadTime = Date.now() - startTime;
 
             console.log(`✅ 扩展城市数据库加载成功:`);
             console.log(`   📊 总计: ${stats.totalCities} 个城市`);
@@ -291,7 +309,7 @@ function loadExpandedCities() {
             console.log(`   🏷️ 标签种类: ${Object.keys(stats.tagsCount).length}`);
             console.log(`   📦 版本: ${DATA_VERSION}`);
 
-            return citiesData;
+            return processed;
         } else {
             console.log('⚠️ 未找到扩展城市数据库文件，使用内置数据');
             return require('./cities');
@@ -762,6 +780,7 @@ function exportCities(format = 'json', options = {}) {
 function clearCache() {
     cachedCities = null;
     lastLoadTime = null;
+    cachedHash = null; // v11.4 PERF-1：同步清空哈希，下次访问触发重载
     console.log('🗑️ 城市数据缓存已清除');
 }
 
