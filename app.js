@@ -2106,7 +2106,7 @@
                         <span class="compare-route">${hasOrigin ? `${escapeHtml(g.origin)} → ${escapeHtml(g.destination || g.city)}` : `目的地：${escapeHtml(g.destination || g.city)}`}</span>
                         <span class="compare-date">${formatDate()}</span>
                     </div>
-                    ${hasOrigin ? '' : '<p class="compare-tip" style="background:#FFF8E7;border-left:3px solid #E8C875;">未填写出发地，以下链接直达各平台首页，请手动输入出发地与日期后搜索。</p>'}
+                    ${hasOrigin ? '' : '<p class="compare-tip compare-tip--warn">未填写出发地，以下链接直达各平台首页，请手动输入出发地与日期后搜索。</p>'}
                     <div class="compare-grid">
                         ${ticketLinks.map(t => `
                             <a class="compare-card" href="${escapeHtml(t.url)}" target="_blank" rel="noopener noreferrer">

@@ -385,24 +385,6 @@
    排除令牌覆盖，这里再显式复位 color-scheme，让原生控件 / 滚动条回到亮色。 */
 :root[data-theme="light"] { color-scheme: light; }
 
-/* 兼容补丁：app.js 在「未填写出发地」时给 .compare-tip 写了内联浅色警告底
-   （style="background:#FFF8E7;border-left:3px solid #E8C875"）。暗色下
-   该浅底与提亮后的 --muted 文字仅 2.56:1，故在暗色下强制回落到语义令牌。
-   根治方案是 app.js 去掉内联色值、改用 .gc-notice 一类语义类；
-   届时本补丁可整段删除。 */
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .compare-tip[style] {
-        background: var(--warn-bg) !important;
-        border-left-color: var(--warn-line) !important;
-        color: var(--warn-ink) !important;
-    }
-}
-:root[data-theme="dark"] .compare-tip[style] {
-    background: var(--warn-bg) !important;
-    border-left-color: var(--warn-line) !important;
-    color: var(--warn-ink) !important;
-}
-
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
@@ -1558,6 +1540,16 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     background: var(--paper-2); border-radius: var(--radius-sm);
     font-size: var(--fs-2xs); color: var(--muted); line-height: 1.6;
     border-left: 2px dashed var(--line-2);
+}
+
+/* v11.6：未填写出发地的提示改用语义类，不再由 app.js 内联色值。
+   原内联 style="background:#FFF8E7;border-left:3px solid #E8C875" 无法随主题
+   切换，暗色下浅底与提亮后的文字仅 2.56:1。改用 --warn-* 令牌后亮暗两套
+   均随主题自动适配，且无需 !important 补丁。 */
+.compare-tip--warn {
+    background: var(--warn-bg);
+    border-left-color: var(--warn-line);
+    color: var(--warn-ink);
 }
 
 /* ---------- 景点预约提醒 ---------- */
