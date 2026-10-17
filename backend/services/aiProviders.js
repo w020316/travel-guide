@@ -330,7 +330,10 @@ class WenxinProvider extends BaseAIProvider {
     return this._cachedAccessToken;
   }
 
-  async chat(prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT) {
+  // v11.4 修复 LOG-2（P2）：补齐第 3 参 timeoutMs。基类与其它 provider 均为
+  // chat(prompt, systemPrompt, timeoutMs)，而文心此前缺该参 → aiService._chatWithBudget
+  // 传入的预算裁剪超时被静默忽略（补全请求恒用硬编码 60000）。现与基类契约一致。
+  async chat(prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT, timeoutMs = null) {
     console.log('📡 调用文心一言API...');
 
     // Step 1: 获取 access_token（带缓存）
@@ -350,7 +353,8 @@ class WenxinProvider extends BaseAIProvider {
       },
       {
         headers: { 'Content-Type': 'application/json' },
-        timeout: 60000
+        // v11.4：尊重调用方传入的 timeoutMs（预算裁剪），未传则回退 60s
+        timeout: timeoutMs || 60000
       }
     );
 

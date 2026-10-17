@@ -336,6 +336,32 @@ describe('AI Providers', () => {
       const secondCompletionCall = mockPost.mock.calls[2];
       expect(secondCompletionCall[0]).toContain('access_token=cached-token');
     });
+
+    it('v11.4（LOG-2）：chat 应尊重调用方 timeoutMs（传 1500 → 补全请求 timeout=1500）', async () => {
+      mockPost.mockResolvedValueOnce({ data: { access_token: 'tok', expires_in: 2592000 } });
+      mockPost.mockResolvedValueOnce({ data: { result: 'ok' } });
+
+      process.env.WENXIN_CLIENT_ID = 'cid';
+      process.env.WENXIN_CLIENT_SECRET = 'csecret';
+      const provider = new aiProviders.WenxinProvider({ name: 'W', baseUrl: 'https://x', model: 'm', apiKey: '' });
+
+      await provider.chat('hi', undefined, 1500);
+      const completionCall = mockPost.mock.calls[1];
+      expect(completionCall[2].timeout).toBe(1500);
+    });
+
+    it('v11.4（LOG-2）：未传 timeoutMs 时补全请求回退 60000（保持原默认）', async () => {
+      mockPost.mockResolvedValueOnce({ data: { access_token: 'tok2', expires_in: 2592000 } });
+      mockPost.mockResolvedValueOnce({ data: { result: 'ok' } });
+
+      process.env.WENXIN_CLIENT_ID = 'cid';
+      process.env.WENXIN_CLIENT_SECRET = 'csecret';
+      const provider = new aiProviders.WenxinProvider({ name: 'W', baseUrl: 'https://x', model: 'm', apiKey: '' });
+
+      await provider.chat('hi');
+      const completionCall = mockPost.mock.calls[1];
+      expect(completionCall[2].timeout).toBe(60000);
+    });
   });
 
   describe('DEFAULT_SYSTEM_PROMPT', () => {
