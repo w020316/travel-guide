@@ -3040,19 +3040,47 @@
         );
     }
 
+    // v11.6 P0：html2canvas 改为按需加载
+    // 原实现以 <script defer> 从 CDN 引入。defer 脚本按文档顺序执行，
+    // 一旦 CDN 挂起（国内访问 hertzen.com 常态超时），app.js 永不执行 → 整站白屏。
+    // 现改为：本地文件 + 首次点击「下载海报」时才注入，失败可重试，不阻塞任何首屏逻辑。
+    let html2canvasPromise = null;
+    function ensureHtml2Canvas() {
+        if (typeof window.html2canvas === 'function') return Promise.resolve(window.html2canvas);
+        if (html2canvasPromise) return html2canvasPromise;
+        html2canvasPromise = new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'lib/html2canvas.min.js';
+            s.async = true;
+            s.onload = () => {
+                if (typeof window.html2canvas === 'function') resolve(window.html2canvas);
+                else reject(new Error('html2canvas 未正确挂载'));
+            };
+            s.onerror = () => reject(new Error('html2canvas 加载失败'));
+            document.head.appendChild(s);
+        }).catch((err) => {
+            html2canvasPromise = null; // 允许下次点击重试
+            throw err;
+        });
+        return html2canvasPromise;
+    }
+
     function downloadPoster() {
-        if (typeof html2canvas === 'undefined') { toast('海报组件未加载，请刷新重试', 'error'); return; }
         const node = dom.poster;
+        if (!node) { toast('海报尚未生成', 'error'); return; }
         toast('正在生成海报…');
-        html2canvas(node, { scale: 2, backgroundColor: null, useCORS: true }).then(canvas => {
-            const link = document.createElement('a');
-            // v10.4: 文件名带城市+日期，方便用户管理
-            const datePart = state.travelDate ? `-${state.travelDate}` : '';
-            link.download = `${state.currentCity || '旅行'}${datePart}-海报.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            toast('海报已下载', 'success');
-        }).catch(() => toast('海报生成失败，请检查网络后重试', 'error'));
+        ensureHtml2Canvas()
+            .then((fn) => fn(node, { scale: 2, backgroundColor: null, useCORS: true }))
+            .then((canvas) => {
+                const link = document.createElement('a');
+                // v10.4: 文件名带城市+日期，方便用户管理
+                const datePart = state.travelDate ? `-${state.travelDate}` : '';
+                link.download = `${state.currentCity || '旅行'}${datePart}-海报.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                toast('海报已下载', 'success');
+            })
+            .catch(() => toast('海报生成失败，请稍后重试', 'error'));
     }
 
     function downloadFile(name, content) {

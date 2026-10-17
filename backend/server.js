@@ -163,6 +163,14 @@ const STATIC_ASSET_WHITELIST = new Set([
   '/data/expandedCities.js' // 前端城市数据库（index.html / sw.js CORE_ASSETS 引用）
 ]);
 
+// v11.6 P0：字体与 html2canvas 本地化后新增的静态资源。
+// 用受控正则而非目录前缀放行，避免把 /lib/ 整个目录暴露出去。
+const STATIC_ASSET_PATTERNS = [
+  /^\/lib\/fonts\/[a-z0-9-]+\.woff2$/i,   // 子集化字体（noto-serif-sc / noto-sans-sc）
+  /^\/lib\/fonts\/fonts\.css$/i,          // @font-face 声明
+  /^\/lib\/html2canvas\.min\.js$/i        // 海报导出（按需加载）
+];
+
 // 敏感路径黑名单（纵深防御：显式拒绝并返回 403）
 const SENSITIVE_PATHS = ['/backend', '/node_modules', '/.env', '/.git', '/.trae', '/package.json', '/package-lock.json', '/render.yaml'];
 app.use((req, res, next) => {
@@ -174,7 +182,11 @@ app.use((req, res, next) => {
 
 // 静态资源白名单网关：仅放行白名单资源与根路径，其余一律 404（杜绝文件存在性探测）
 app.use((req, res, next) => {
-  if (req.path === '/' || STATIC_ASSET_WHITELIST.has(req.path)) {
+  if (
+    req.path === '/' ||
+    STATIC_ASSET_WHITELIST.has(req.path) ||
+    STATIC_ASSET_PATTERNS.some(re => re.test(req.path))
+  ) {
     return next();
   }
   return res.status(404).json({ success: false, error: '资源不存在' });

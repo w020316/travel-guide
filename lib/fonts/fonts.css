@@ -1,0 +1,39 @@
+/* =========================================================
+   行纪 XING JI — 自托管字体声明
+   ---------------------------------------------------------
+   替代原先对 Google Fonts CDN 的运行时依赖。
+
+   原实现的问题（实测）：
+   - Google Fonts 对中文字体按 unicode-range 分片，单字重即 92 个
+     @font-face，页面共声明 808 个 FontFace
+   - 页面中文内容触发 112+ 个 woff2 分片并发请求
+   - fonts.gstatic.com 在中国大陆不可达时请求挂起，导致 load 事件
+     永不触发（实测 ≥45s 超时）
+
+   现方案：Noto Sans SC / Noto Serif SC 子集化为单个可变字体文件
+   （GB2312 一级汉字 4145 字形，wght 轴覆盖全部字重）
+   - 请求数：112+ → 2
+   - 外部依赖：0
+   - 许可证：SIL OFL 1.1（详见 lib/fonts/README.md）
+
+   注意：font-family 名称必须与 style.css 的 --serif / --sans
+   回退链首项保持一致，否则不会命中。
+   ========================================================= */
+
+/* 衬线：页面级展示标题（h1 / hero / 区块标题） */
+@font-face {
+  font-family: 'Noto Serif SC';
+  src: url('./noto-serif-sc-subset.woff2') format('woff2-variations');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 无衬线：正文与控件 */
+@font-face {
+  font-family: 'Noto Sans SC';
+  src: url('./noto-sans-sc-subset.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}

@@ -12,7 +12,7 @@
          并产生控制台警告。防点击劫持由后端响应头承担（server.js 的 helmet
          已下发 frame-ancestors 'none' 与 X-Frame-Options），meta 只保留静态资源策略。 -->
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' https://html2canvas.hertzen.com https://webapi.amap.com https://restapi.amap.com https://jsapi-service.amap.com 'unsafe-eval'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com https://webapi.amap.com https://*.amap.com; connect-src 'self' https://restapi.amap.com https://*.amap.com; worker-src 'self' blob:; base-uri 'self'; form-action 'self'">
+          content="default-src 'self'; script-src 'self' https://webapi.amap.com https://restapi.amap.com https://jsapi-service.amap.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://*.is.autonavi.com https://autnapi.amap.com https://vdata.amap.com https://webapi.amap.com https://*.amap.com; connect-src 'self' https://restapi.amap.com https://*.amap.com; worker-src 'self' blob:; base-uri 'self'; form-action 'self'">
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
@@ -22,16 +22,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="行纪">
 
-    <!-- 字体：衬线展示 + 无衬线正文 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- 字体：衬线展示 + 无衬线正文（自托管，无外部依赖）
+         v11.6 P0：原为 Google Fonts CDN 同步引入，中文按 unicode-range 拆成
+         808 个 FontFace / 112+ 个 woff2 分片，国内不可达时 load 事件永不触发
+         （实测 ≥45s 超时）。现改为 lib/fonts/ 下的子集化可变字体，2 个请求。 -->
+    <link rel="preload" href="lib/fonts/noto-serif-sc-subset.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="lib/fonts/fonts.css">
 
-    <!-- 海报导出（安全修复 P0：添加 SRI 完整性校验，CDN 被劫持时浏览器拒绝执行） -->
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"
-            integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H"
-            crossorigin="anonymous"
-            defer></script>
+    <!-- 海报导出：html2canvas 已本地化到 lib/，并由 app.js 在点击时按需加载
+         v11.6 P0：原为 CDN + defer，与 app.js 同为 defer 会串行执行，
+         CDN 挂起时 app.js 永不执行 → 整站白屏。现改为按需动态注入。 -->
 
     <link rel="stylesheet" href="style.css">
 </head>
