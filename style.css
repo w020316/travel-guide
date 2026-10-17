@@ -4,6 +4,10 @@
    ========================================================= */
 
 :root {
+    /* 原生表单控件 / 滚动条跟随主题。暗色取值见文件顶部「暗色模式」区块，
+       手动切换由 :root[data-theme] 覆盖（light 可压过系统暗色）。 */
+    color-scheme: light;
+
     /* =========================================================
        色彩系统 v10.10
        设计约束：H=25 橙色相 + 同色相灰阶 + 1 个低饱和强调色
@@ -164,8 +168,239 @@
     --shadow-lg:    0 1px 2px rgba(28,26,23,.04), 0 8px 16px rgba(28,26,23,.06), 0 24px 48px rgba(28,26,23,.08);
     --shadow-hover: 0 1px 2px rgba(28,26,23,.04), 0 8px 24px rgba(28,26,23,.08), 0 24px 56px rgba(28,26,23,.10);
 
+    /* =========================================================
+       主题适配令牌（v11.6 · 暗色模式）
+       以下取值原先散落在组件规则中硬编码。收敛为令牌后，
+       暗色模式只需覆盖 :root 即可全局生效，组件规则无需按主题逐条改写。
+       暗色取值与推导见文件顶部「暗色模式」区块。
+       ========================================================= */
+    /* 半透明层 */
+    --header-bg:      rgba(250,247,242,.82);  /* 吸顶导航毛玻璃底 */
+    --overlay-page:   rgba(250,247,242,.94);  /* 加载全屏遮罩 */
+    --overlay-ink:    rgba(28,26,23,.5);      /* 弹窗背景遮罩 */
+    --overlay-media:  rgba(28,26,23,.7);      /* 图片上的浮层按钮底 */
+    --on-media:       #FAF7F2;                /* 图片浮层反白字：始终为浅色，不随主题反转 */
+    /* 高光 / 描边 */
+    --highlight-1:    rgba(255,255,255,.6);   /* 卡片顶部 1px 内高光 */
+    --highlight-2:    rgba(255,255,255,.8);
+    --highlight-3:    rgba(255,255,255,.7);
+    --highlight-4:    rgba(255,255,255,.14);
+    --highlight-line: rgba(255,255,255,.8);   /* 搜索卡顶部渐变高光线 */
+    --on-ink-line:    rgba(255,255,255,.45);  /* 深底 toast 内按钮描边 */
+    /* 投影浓度分档（暗色下统一改为更深的黑 + 更高透明度） */
+    --shadow-1:       rgba(28,26,23,.04);
+    --shadow-2:       rgba(28,26,23,.06);
+    --shadow-3:       rgba(28,26,23,.08);
+    --shadow-4:       rgba(28,26,23,.10);
+    --shadow-5:       rgba(28,26,23,.05);
+    --shadow-6:       rgba(28,26,23,.16);
+    --shadow-7:       rgba(28,26,23,.20);
+    /* Hero 氛围层 */
+    --hero-glow-warm: rgba(200,85,61,.12);
+    --hero-glow-cool: rgba(122,139,111,.12);
+    --hero-vignette:  rgba(28,26,23,.06);
+    /* 纹理层混合模式：亮色用 multiply 让噪点「沉」进纸里，暗色需反转为 screen */
+    --noise-hero-blend:   multiply;
+    --noise-hero-opacity: .3;
+    --noise-page-blend:   multiply;
+    --noise-page-opacity: .16;
+    --hero-grid-opacity:  .2;
+    /* 语义浅底 / 描边 */
+    --accent-border:  rgba(158,63,44,.18);
+    --danger-soft:    rgba(178,58,48,.10);
+    --invalid-glow:   rgba(158,63,44,.10);
+
     /* 触摸目标下限（WCAG 2.5.5 / iOS HIG） */
     --tap-min: 48px;
+}
+
+/* =========================================================
+   暗色模式 v11.6
+   ---------------------------------------------------------
+   推导（承接 DESIGN.md §0/§1）：
+   1. 不做明度反转。原设计是「暖米纸 + 深墨字」，暗色对应
+      「深墨底 + 暖白字」—— 底色取 #17140F（H≈37，与亮色
+      --paper #FAF7F2 同一暖色轴），文字取 #F3EDE3（同为暖白），
+      避免落到冷灰/蓝黑，破坏「旧书页」的品牌定位。
+   2. 品牌赭红在深底上会「变暗」。#C8553D 对 #17140F 仅 5.6:1，
+      作装饰尚可，作正文偏紧；故文本版重新取更亮的 #E9907A
+      （对 paper 7.64:1），装饰版取 #D9705A（5.61:1，门槛 3:1）。
+      两者仍是同一色相，视觉上还是那枚赭红。
+   3. 语义色（success/danger/gold/warn）同步提亮，保证深底可读。
+   4. 阴影在深底几乎不可见：改为「纯黑 + 更高透明度」，
+      并保留卡片描边承担层级（--line-2 提升到 3.73:1）。
+   5. 半透明遮罩提高不透明度（.5 → .66），否则深底上分不出层。
+   6. 噪点/网格纹理：亮色靠 multiply 压进纸里，深底需反转为
+      screen 才看得见；网格线不透明度同步上调。
+   两种触发方式共用同一组取值：
+   · 系统跟随 → @media (prefers-color-scheme: dark)
+   · 手动切换 → :root[data-theme="dark"]（为后续切换按钮预留）
+   手动 data-theme="light" 通过 :not() 排除，优先级高于系统暗色。
+   ========================================================= */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+
+        /* 底 / 面：深墨，保持暖色轴 */
+        --paper:        #17140F;
+        --paper-2:      #1E1A14;
+        --surface:      #1C1813;
+        --surface-2:    #241F18;
+        /* 文字：暖白三档，对 paper 分别 15.77 / 12.03 / 6.78:1 */
+        --ink:          #F3EDE3;
+        --ink-2:        #D9D0C2;
+        --muted:        #A69C8C;
+        --muted-2:      #9A9182;
+        /* 分隔线：--line 为纯装饰发丝线；--line-2 承担控件边界，3.73:1 */
+        --line:         #332D24;
+        --line-2:       #7A6F5E;
+
+        /* 品牌赭红：装饰 / 文本双令牌同步提亮 */
+        --accent:       #D9705A;
+        --accent-text:  #E9907A;
+        --accent-dark:  #F2A78F;
+        --accent-soft:  #3B221A;
+        /* 印章保持原朱红：印面自带浅色反白字，5.24:1 不随主题变化 */
+        --seal:         #B2432C;
+        --seal-ink:     #FBF6F0;
+
+        /* 语义色提亮 */
+        --gold:         #D7A855;
+        --success:      #6CBE93;
+        --danger:       #F08A7A;
+        --warn-bg:      #2E2413;
+        --warn-line:    #6B5324;
+        --warn-ink:     #F2DCA6;
+
+        /* 阴影：纯黑 + 更高透明度，保证深底上仍有层级 */
+        --shadow-sm:    0 1px 2px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.28);
+        --shadow:       0 1px 2px rgba(0,0,0,.40), 0 4px 8px rgba(0,0,0,.34), 0 12px 24px rgba(0,0,0,.30);
+        --shadow-lg:    0 1px 2px rgba(0,0,0,.45), 0 8px 16px rgba(0,0,0,.38), 0 24px 48px rgba(0,0,0,.34);
+        --shadow-hover: 0 1px 2px rgba(0,0,0,.45), 0 8px 24px rgba(0,0,0,.42), 0 24px 56px rgba(0,0,0,.38);
+
+        /* 半透明层：深底上需更实，才能与页面分层 */
+        --header-bg:      rgba(23,20,15,.82);
+        --overlay-page:   rgba(23,20,15,.94);
+        --overlay-ink:    rgba(0,0,0,.66);
+        --overlay-media:  rgba(10,8,6,.72);
+        --on-media:       #F5EFE5;
+        /* 高光在深底上要极克制，否则变成「描白边」的廉价感 */
+        --highlight-1:    rgba(255,255,255,.06);
+        --highlight-2:    rgba(255,255,255,.09);
+        --highlight-3:    rgba(255,255,255,.08);
+        --highlight-4:    rgba(23,20,15,.12);
+        --highlight-line: rgba(255,255,255,.12);
+        --on-ink-line:    rgba(23,20,15,.35);
+        --shadow-1:       rgba(0,0,0,.28);
+        --shadow-2:       rgba(0,0,0,.36);
+        --shadow-3:       rgba(0,0,0,.45);
+        --shadow-4:       rgba(0,0,0,.52);
+        --shadow-5:       rgba(0,0,0,.30);
+        --shadow-6:       rgba(0,0,0,.55);
+        --shadow-7:       rgba(0,0,0,.62);
+        /* Hero 氛围：暖光略提、冷光压暗，避免深底上出现灰雾 */
+        --hero-glow-warm: rgba(217,112,90,.16);
+        --hero-glow-cool: rgba(150,168,138,.07);
+        --hero-vignette:  rgba(0,0,0,.45);
+        /* 纹理：multiply 在深底等于不可见，反转为 screen */
+        --noise-hero-blend:   screen;
+        --noise-hero-opacity: .18;
+        --noise-page-blend:   screen;
+        --noise-page-opacity: .10;
+        --hero-grid-opacity:  .42;
+        /* 语义浅底 / 描边 */
+        --accent-border:  rgba(233,144,122,.30);
+        --danger-soft:    rgba(240,138,122,.16);
+        --invalid-glow:   rgba(240,138,122,.20);
+    }
+}
+
+/* 手动暗色：与系统跟随同一组取值（CSS 无法跨媒体查询复用声明块，
+   此处为镜像定义，修改时两处必须同步）。 */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --paper:        #17140F;
+    --paper-2:      #1E1A14;
+    --surface:      #1C1813;
+    --surface-2:    #241F18;
+    --ink:          #F3EDE3;
+    --ink-2:        #D9D0C2;
+    --muted:        #A69C8C;
+    --muted-2:      #9A9182;
+    --line:         #332D24;
+    --line-2:       #7A6F5E;
+
+    --accent:       #D9705A;
+    --accent-text:  #E9907A;
+    --accent-dark:  #F2A78F;
+    --accent-soft:  #3B221A;
+    --seal:         #B2432C;
+    --seal-ink:     #FBF6F0;
+
+    --gold:         #D7A855;
+    --success:      #6CBE93;
+    --danger:       #F08A7A;
+    --warn-bg:      #2E2413;
+    --warn-line:    #6B5324;
+    --warn-ink:     #F2DCA6;
+
+    --shadow-sm:    0 1px 2px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.28);
+    --shadow:       0 1px 2px rgba(0,0,0,.40), 0 4px 8px rgba(0,0,0,.34), 0 12px 24px rgba(0,0,0,.30);
+    --shadow-lg:    0 1px 2px rgba(0,0,0,.45), 0 8px 16px rgba(0,0,0,.38), 0 24px 48px rgba(0,0,0,.34);
+    --shadow-hover: 0 1px 2px rgba(0,0,0,.45), 0 8px 24px rgba(0,0,0,.42), 0 24px 56px rgba(0,0,0,.38);
+
+    --header-bg:      rgba(23,20,15,.82);
+    --overlay-page:   rgba(23,20,15,.94);
+    --overlay-ink:    rgba(0,0,0,.66);
+    --overlay-media:  rgba(10,8,6,.72);
+    --on-media:       #F5EFE5;
+    --highlight-1:    rgba(255,255,255,.06);
+    --highlight-2:    rgba(255,255,255,.09);
+    --highlight-3:    rgba(255,255,255,.08);
+    --highlight-4:    rgba(23,20,15,.12);
+    --highlight-line: rgba(255,255,255,.12);
+    --on-ink-line:    rgba(23,20,15,.35);
+    --shadow-1:       rgba(0,0,0,.28);
+    --shadow-2:       rgba(0,0,0,.36);
+    --shadow-3:       rgba(0,0,0,.45);
+    --shadow-4:       rgba(0,0,0,.52);
+    --shadow-5:       rgba(0,0,0,.30);
+    --shadow-6:       rgba(0,0,0,.55);
+    --shadow-7:       rgba(0,0,0,.62);
+    --hero-glow-warm: rgba(217,112,90,.16);
+    --hero-glow-cool: rgba(150,168,138,.07);
+    --hero-vignette:  rgba(0,0,0,.45);
+    --noise-hero-blend:   screen;
+    --noise-hero-opacity: .18;
+    --noise-page-blend:   screen;
+    --noise-page-opacity: .10;
+    --hero-grid-opacity:  .42;
+    --accent-border:  rgba(233,144,122,.30);
+    --danger-soft:    rgba(240,138,122,.16);
+    --invalid-glow:   rgba(240,138,122,.20);
+}
+
+/* 手动亮色：压过系统暗色。上面媒体查询已用 :not([data-theme="light"])
+   排除令牌覆盖，这里再显式复位 color-scheme，让原生控件 / 滚动条回到亮色。 */
+:root[data-theme="light"] { color-scheme: light; }
+
+/* 兼容补丁：app.js 在「未填写出发地」时给 .compare-tip 写了内联浅色警告底
+   （style="background:#FFF8E7;border-left:3px solid #E8C875"）。暗色下
+   该浅底与提亮后的 --muted 文字仅 2.56:1，故在暗色下强制回落到语义令牌。
+   根治方案是 app.js 去掉内联色值、改用 .gc-notice 一类语义类；
+   届时本补丁可整段删除。 */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .compare-tip[style] {
+        background: var(--warn-bg) !important;
+        border-left-color: var(--warn-line) !important;
+        color: var(--warn-ink) !important;
+    }
+}
+:root[data-theme="dark"] .compare-tip[style] {
+    background: var(--warn-bg) !important;
+    border-left-color: var(--warn-line) !important;
+    color: var(--warn-ink) !important;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -244,7 +479,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 /* ---------- 顶部导航 ---------- */
 .site-header {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(250,247,242,.82);
+    background: var(--header-bg);
     backdrop-filter: saturate(180%) blur(14px);
     -webkit-backdrop-filter: saturate(180%) blur(14px);
     border-bottom: 1px solid var(--line);
@@ -323,8 +558,8 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .hero-bg {
     position: absolute; inset: 0;
     background:
-        radial-gradient(900px 500px at 78% -10%, rgba(200,85,61,.12), transparent 60%),
-        radial-gradient(700px 400px at 8% 30%, rgba(122,139,111,.12), transparent 55%);
+        radial-gradient(900px 500px at 78% -10%, var(--hero-glow-warm), transparent 60%),
+        radial-gradient(700px 400px at 8% 30%, var(--hero-glow-cool), transparent 55%);
     pointer-events: none;
 }
 .hero-bg::before {
@@ -333,7 +568,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
         linear-gradient(var(--line) 1px, transparent 1px),
         linear-gradient(90deg, var(--line) 1px, transparent 1px);
     background-size: 64px 64px;
-    opacity: .2;
+    opacity: var(--hero-grid-opacity);
     -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
             mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
 }
@@ -342,13 +577,13 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .hero-bg::after {
     content: ''; position: absolute; inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    opacity: .3; pointer-events: none; mix-blend-mode: multiply;
+    opacity: var(--noise-hero-opacity); pointer-events: none; mix-blend-mode: var(--noise-hero-blend);
     -webkit-mask-image: linear-gradient(180deg, #000 62%, transparent 100%);
             mask-image: linear-gradient(180deg, #000 62%, transparent 100%);
 }
 /* 暗角：边缘压暗聚焦视觉中心 */
 .hero-bg::before {
-    box-shadow: inset 0 0 200px 60px rgba(28,26,23,.06);
+    box-shadow: inset 0 0 200px 60px var(--hero-vignette);
 }
 .hero-inner { position: relative; animation: heroFadeIn .8s cubic-bezier(.2,.7,.3,1); }
 @keyframes heroFadeIn {
@@ -431,15 +666,15 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     border-radius: var(--radius);
     padding: var(--space-28);
     box-shadow:
-        0 1px 2px rgba(28,26,23,.04),
-        0 4px 12px rgba(28,26,23,.06),
-        0 12px 32px rgba(28,26,23,.05);
+        0 1px 2px var(--shadow-1),
+        0 4px 12px var(--shadow-2),
+        0 12px 32px var(--shadow-5);
     max-width: 880px;
     position: relative;
 }
 .search-card::before {
     content: ''; position: absolute; top: 0; left: 24px; right: 24px;
-    height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.8), transparent);
+    height: 1px; background: linear-gradient(90deg, transparent, var(--highlight-line), transparent);
 }
 .search-row { display: flex; gap: var(--space-12); }
 .search-input-wrap { position: relative; flex: 1; }
@@ -571,9 +806,9 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .rank-card::after {
     content: ''; position: absolute; inset: 0; border-radius: var(--radius);
     box-shadow:
-        0 1px 2px rgba(28,26,23,.04),
-        0 8px 24px rgba(28,26,23,.08),
-        0 24px 48px rgba(28,26,23,.06);
+        0 1px 2px var(--shadow-1),
+        0 8px 24px var(--shadow-3),
+        0 24px 48px var(--shadow-2);
     opacity: 0; transition: opacity .4s; pointer-events: none;
 }
 .rank-card:hover::after { opacity: 1; }
@@ -626,7 +861,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 /* ---------- 加载 ---------- */
 .loading-overlay {
     position: fixed; inset: 0; z-index: 100;
-    background: rgba(250,247,242,.94);
+    background: var(--overlay-page);
     backdrop-filter: blur(8px);
     display: grid; place-items: center;
 }
@@ -726,7 +961,8 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .poster.style-fresh .p-bot { border-color: #C9DCCF; }
 .poster.style-vintage { background: linear-gradient(160deg, #2B1810 0%, #4A2E1C 100%); color: #F4E4C8; }
 .poster.style-vintage .p-bot { border-color: rgba(244,228,200,.25); }
-.poster.style-minimal { background: var(--surface); color: #1C1A17; border: 1px solid #E4DDD1; }
+/* 海报为导出 PNG 的独立视觉系统，不随主题反转；此风格固定为亮色画布 */
+.poster.style-minimal { background: #FEFDFB; color: #1C1A17; border: 1px solid #E4DDD1; }
 .poster.style-minimal .p-bot { border-color: #E4DDD1; }
 .poster.style-ink { background: linear-gradient(160deg, #F5F2EA 0%, #EDE6D6 100%); color: #1A1A1A; }
 .poster.style-ink .p-city { text-shadow: none; }
@@ -768,7 +1004,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     background: linear-gradient(180deg, var(--accent), transparent);
     opacity: 0; transition: opacity .3s;
 }
-.route-day:hover { box-shadow: 0 4px 16px rgba(28,26,23,.06); transform: translateX(2px); }
+.route-day:hover { box-shadow: 0 4px 16px var(--shadow-2); transform: translateX(2px); }
 .route-day:hover::before { opacity: 1; }
 .route-day-head { display: flex; align-items: baseline; gap: var(--space-16); margin-bottom: var(--space-16); }
 .route-day-num {
@@ -849,7 +1085,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     background: radial-gradient(circle at top right, var(--accent-soft), transparent 70%);
     opacity: 0; transition: opacity .3s;
 }
-.food-card:hover { border-color: var(--accent-text); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(28,26,23,.08); }
+.food-card:hover { border-color: var(--accent-text); transform: translateY(-3px); box-shadow: 0 8px 24px var(--shadow-3); }
 .food-card:hover::after { opacity: 1; }
 .food-card .fc-name { font-family: var(--serif); font-weight: 700; font-size: var(--fs-md); margin-bottom: var(--space-8); letter-spacing: -.01em; }
 .food-card .fc-desc { font-size: var(--fs-sm); color: var(--muted); margin-bottom: var(--space-16); line-height: 1.65; }
@@ -905,7 +1141,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 /* ---------- 收藏弹层 ---------- */
 .modal-overlay {
     position: fixed; inset: 0; z-index: 90;
-    background: rgba(28,26,23,.5);
+    background: var(--overlay-ink);
     backdrop-filter: blur(6px);
     display: grid; place-items: center; padding: var(--space-24);
     animation: fadeIn .2s ease;
@@ -978,7 +1214,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 .toast-action {
     background: transparent;
     color: inherit;
-    border: 1px solid rgba(255,255,255,.45);
+    border: 1px solid var(--on-ink-line);
     padding: var(--space-4) var(--space-12);
     border-radius: 999px;
     font-size: var(--fs-sm);
@@ -1046,7 +1282,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 
 .rank-card, .food-card, .accommodation-card, .transport-card, .budget-box {
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+    box-shadow: inset 0 1px 0 var(--highlight-1);
 }
 
 /* 输入框聚焦变体：强调态 */
@@ -1056,7 +1292,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 #cityInput:focus {
     border-color: var(--accent-text);
     background: var(--surface);
-    box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent-text), inset 0 1px 0 rgba(255,255,255,.8);
+    box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent-text), inset 0 1px 0 var(--highlight-2);
 }
 
 /* ---------- 攻略外链（v8.0 新增）---------- */
@@ -1125,7 +1361,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     margin-left: 2px;
 }
 .history-chip .hc-del:hover {
-    color: var(--danger); background: rgba(178,58,48,.10);
+    color: var(--danger); background: var(--danger-soft);
 }
 .history-chip .hc-del svg { display: block; }
 .history-chip:hover .hc-del { color: var(--muted); }
@@ -1159,7 +1395,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(28,26,23,.20);
+    box-shadow: 0 4px 16px var(--shadow-7);
     z-index: 40;
     opacity: 0;
     transform: translateY(20px);
@@ -1276,7 +1512,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
     padding: var(--space-20) var(--space-20); position: relative; overflow: hidden;
     transition: var(--t-interactive);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+    box-shadow: inset 0 1px 0 var(--highlight-1);
 }
 .compare-card::after {
     content: ''; position: absolute; top: 0; right: 0; width: 50px; height: 50px;
@@ -1285,7 +1521,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 .compare-card:hover {
     border-color: var(--accent-text); transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(28,26,23,.08);
+    box-shadow: 0 8px 24px var(--shadow-3);
 }
 .compare-card:hover::after { opacity: 1; }
 .compare-card .cc-head {
@@ -1353,7 +1589,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 .reservation-alert .ra-item:hover {
     border-color: var(--accent-text); transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(28,26,23,.06);
+    box-shadow: 0 4px 12px var(--shadow-2);
 }
 .reservation-alert .ra-item-head {
     display: flex; align-items: center; justify-content: space-between; gap: var(--space-8);
@@ -1383,7 +1619,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
     padding: var(--space-20) var(--space-24); position: relative; overflow: hidden;
     transition: var(--t-interactive);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+    box-shadow: inset 0 1px 0 var(--highlight-1);
 }
 .photo-spot-card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -1392,7 +1628,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
 }
 .photo-spot-card:hover {
     border-color: var(--accent-text); transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(28,26,23,.08);
+    box-shadow: 0 8px 24px var(--shadow-3);
 }
 .photo-spot-card:hover::before { opacity: 1; }
 .photo-spot-card .ps-name {
@@ -1454,14 +1690,14 @@ input, select, textarea { font-family: inherit; font-size: inherit; line-height:
     background: var(--paper-2); border: 1px solid var(--line);
     transition: var(--t-interactive);
 }
-.photo-item:hover { border-color: var(--accent-text); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(28,26,23,.1); }
+.photo-item:hover { border-color: var(--accent-text); transform: translateY(-2px); box-shadow: 0 4px 12px var(--shadow-4); }
 .photo-item img {
     width: 100%; height: 100%; object-fit: cover; display: block;
 }
 .photo-item .photo-delete {
     position: absolute; top: 6px; right: 6px;
     width: 22px; height: 22px; border-radius: 50%;
-    background: rgba(28,26,23,.7); color: var(--paper);
+    background: var(--overlay-media); color: var(--on-media);
     font-size: var(--fs-sm); line-height: 1;
     display: grid; place-items: center;
     opacity: 0; transition: var(--t-interactive);
@@ -1734,7 +1970,7 @@ input[type="date"].input-ghost:focus {
     border-color: var(--danger);
 }
 .input-ghost:invalid:not(:placeholder-shown) {
-    box-shadow: 0 0 0 3px rgba(158,63,44,.10);
+    box-shadow: 0 0 0 3px var(--invalid-glow);
 }
 
 /* ---------- 2. 滚动入场动效体系 ---------- */
@@ -1983,7 +2219,7 @@ input[type="date"].input-ghost:focus {
 .gc-source-ai {
     background: var(--accent-soft);
     color: var(--accent-text);
-    border-color: rgba(158, 63, 44, .18);
+    border-color: var(--accent-border);
 }
 .gc-source-local {
     background: var(--warn-bg);
@@ -2015,7 +2251,7 @@ input[type="date"].input-ghost:focus {
 .weather-source-real {
     background: var(--accent-soft);
     color: var(--accent-text);
-    border-color: rgba(158, 63, 44, .18);
+    border-color: var(--accent-border);
 }
 .weather-source-simulated {
     background: var(--warn-bg);
@@ -2147,8 +2383,8 @@ input[type="date"].input-ghost:focus {
 
 /* ---------- 1. 纸感底纹 ---------- */
 /* 叠一层极淡的宣纸纤维噪点。fixed 定位使滚动时不重绘像素；
-   pointer-events:none 不拦截任何交互；mix-blend-mode:multiply 让噪点
-   像纸浆一样「沉」进底色而非浮在表面。z-index 低于 header(50)/modal(90)，
+   pointer-events:none 不拦截任何交互；亮色用 mix-blend-mode:multiply 让噪点
+   像纸浆一样「沉」进底色而非浮在表面，暗色反转为 screen（见主题令牌）。z-index 低于 header(50)/modal(90)，
    仅作用于内容层，避免与 backdrop-filter 叠加产生色偏。 */
 body::after {
     content: '';
@@ -2158,8 +2394,8 @@ body::after {
     pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 320'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
     background-size: 320px 320px;
-    opacity: .16;
-    mix-blend-mode: multiply;
+    opacity: var(--noise-page-opacity);
+    mix-blend-mode: var(--noise-page-blend);
 }
 
 /* ---------- 2. Hero 落款 + 原创水墨「立轴」装置 ---------- */
@@ -2408,7 +2644,7 @@ body::after {
 /* 5.2 品牌标：hover 微抬 + 印色加深，呼应印章语言 */
 .brand-mark {
     border-radius: 7px;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), 0 2px 8px rgba(28, 26, 23, .16);
+    box-shadow: inset 0 0 0 1px var(--highlight-4), 0 2px 8px var(--shadow-6);
     transition: transform var(--dur-base) var(--ease-spring), background-color var(--dur-base) var(--ease-out);
 }
 .brand:hover .brand-mark { background: var(--seal); transform: rotate(-3deg) scale(1.04); }
@@ -2435,10 +2671,10 @@ body::after {
     border-radius: var(--radius-lg);
     border-color: var(--line);
     box-shadow:
-        0 1px 0 rgba(255, 255, 255, .7) inset,
-        0 1px 2px rgba(28, 26, 23, .04),
-        0 6px 20px rgba(28, 26, 23, .05),
-        0 20px 48px rgba(28, 26, 23, .05);
+        0 1px 0 var(--highlight-3) inset,
+        0 1px 2px var(--shadow-1),
+        0 6px 20px var(--shadow-5),
+        0 20px 48px var(--shadow-5);
 }
 /* 6.2 区块头右侧的说明：加一道发丝线做「编辑注」感 */
 .section-aside { letter-spacing: .02em; }
